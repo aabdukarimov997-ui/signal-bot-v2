@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parent.parent / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    BOT_TOKEN: str
+    BOT_USERNAME: str = ""
+
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "signal_bot"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = ""
+
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+
+    PRIVATE_CHANNEL_ID: str = ""
+    FREE_CHANNEL_LINK: str = ""
+
+    CARD_NUMBER: str = ""
+    CARD_HOLDER: str = ""
+
+    ADMIN_IDS: str = "[]"
+
+    SOCIAL_INSTAGRAM: str = ""
+    SOCIAL_TWITTER: str = ""
+    SOCIAL_YOUTUBE: str = ""
+    SOCIAL_WEBSITE: str = ""
+
+    @property
+    def admin_ids(self) -> list[int]:
+        return json.loads(self.ADMIN_IDS)
+
+    DB_TYPE: str = "postgresql"  # "postgresql" or "sqlite"
+
+    @property
+    def db_url(self) -> str:
+        if self.DB_TYPE == "sqlite":
+            return f"sqlite+aiosqlite:///{self.DB_NAME}"
+        return (
+            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+
+settings = Settings()

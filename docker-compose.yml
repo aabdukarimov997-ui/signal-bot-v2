@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: signal_bot_v2
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_db_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  bot:
+    build: .
+    restart: always
+    depends_on:
+      - db
+      - redis
+    environment:
+      BOT_TOKEN: "${BOT_TOKEN}"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: signal_bot_v2
+      DB_USER: postgres
+      DB_PASSWORD: your_db_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ADMIN_IDS: "${ADMIN_IDS}"
+      PRIVATE_CHANNEL_ID: "${PRIVATE_CHANNEL_ID}"
+      CARD_NUMBER: "${CARD_NUMBER}"
+      CARD_HOLDER: "${CARD_HOLDER}"
+      BOT_USERNAME: "${BOT_USERNAME}"
+      SOCIAL_INSTAGRAM: "${SOCIAL_INSTAGRAM}"
+      SOCIAL_TWITTER: "${SOCIAL_TWITTER}"
+      SOCIAL_YOUTUBE: "${SOCIAL_YOUTUBE}"
+      SOCIAL_WEBSITE: "${SOCIAL_WEBSITE}"
+      FREE_CHANNEL_LINK: "${FREE_CHANNEL_LINK}"
+
+volumes:
+  pgdata:
