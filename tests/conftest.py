@@ -16,6 +16,7 @@ os.environ.setdefault("DB_PASSWORD", "test")
 os.environ.setdefault("PRIVATE_CHANNEL_ID", "-1001234567890")
 os.environ.setdefault("CARD_NUMBER", "8600-0000-0000-0000")
 os.environ.setdefault("ADMIN_IDS", "[12345]")
+os.environ.setdefault("ADMIN_LINK", "@test_admin")
 os.environ.setdefault("BOT_USERNAME", "test_bot")
 
 from bot.models.base import Base

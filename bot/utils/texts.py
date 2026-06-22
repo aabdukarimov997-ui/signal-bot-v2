@@ -102,7 +102,7 @@ SOCIAL_TEXT = "🌐 <b>Ijtimoiy tarmoqlar</b>\n\nQuyidagi havolalar orqali bizni
 HELP_TEXT = (
     "☎️ <b>Yordam</b>\n\n"
     "Savollaringiz bo'lsa, admin bilan bog'laning:\n"
-    "📩 @treder7090\n\n"
+    "📩 {admin_link}\n\n"
     "<b>Qoidalar:</b>\n"
     "• Kanal linklarini tarqatish mumkin emas\n"
     "• Faqat admin contact"
