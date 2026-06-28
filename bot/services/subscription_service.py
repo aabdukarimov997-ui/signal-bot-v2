@@ -15,9 +15,9 @@ async def get_active_subscription(user_id: str) -> Optional[Subscription]:
             select(Subscription).where(
                 Subscription.user_id == user_id,
                 Subscription.status == "active",
-            )
+            ).order_by(Subscription.end_date.desc())
         )
-        return result.scalar_one_or_none()
+        return result.scalars().first()
 
 
 async def create_subscription(
@@ -49,9 +49,9 @@ async def extend_subscription(user_id: str, extra_days: int) -> Optional[Subscri
             select(Subscription).where(
                 Subscription.user_id == user_id,
                 Subscription.status == "active",
-            )
+            ).order_by(Subscription.end_date.desc())
         )
-        sub = result.scalar_one_or_none()
+        sub = result.scalars().first()
         if sub:
             sub.end_date = sub.end_date + timedelta(days=extra_days)
         return sub
@@ -94,11 +94,11 @@ async def get_expiring_soon(days_left: int) -> list[Subscription]:
         return list(result.scalars().all())
 
 
-async def get_all_tariffs() -> list[SignalTariff]:
+async def get_all_tariffs(product_type: str = "signal") -> list[SignalTariff]:
     async with get_session() as session:
         result = await session.execute(
             select(SignalTariff)
-            .where(SignalTariff.is_active == True)
+            .where(SignalTariff.is_active == True, SignalTariff.product_type == product_type)
             .order_by(SignalTariff.sort_order, SignalTariff.price)
         )
         return list(result.scalars().all())

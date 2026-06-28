@@ -11,6 +11,9 @@ START_TEXT = (
 # Signal
 SIGNAL_TEXT = "📈 <b>Signal kanal</b>\n\nO'zingizga mos tarifni tanlang:"
 
+# Course
+COURSE_TEXT = "📚 <b>Darslar</b>\n\nO'zingizga mos tarifni tanlang:"
+
 # Payment Method
 PAYMENT_METHOD_TEXT = "💳 <b>To'lov usulini tanlang:</b>"
 
@@ -24,6 +27,18 @@ STARS_PAYMENT_TEXT = (
 STARS_SUCCESS_TEXT = (
     "✅ <b>To'lov muvaffaqiyatli amalga oshirildi!</b>\n\n"
     "Obunangiz faollashtirildi. Signal kanaliga invite link yuborildi."
+)
+
+STARS_SUCCESS_COURSE_TEXT = (
+    "✅ <b>To'lov muvaffaqiyatli amalga oshirildi!</b>\n\n"
+    "Obunangiz faollashtirildi. Darslar kanaliga invite link yuborildi."
+)
+
+PAYMENT_APPROVED_COURSE_TEXT = (
+    "✅ <b>To'lov tasdiqlandi!</b>\n\n"
+    "Obunangiz faollashtirildi. Darslar kanaliga invite link:\n"
+    "{invite_link}\n\n"
+    "Omad tilaymiz! 🚀"
 )
 
 # Card Payment
@@ -156,4 +171,29 @@ SUBSCRIPTION_EXPIRED = (
     "❌ <b>Obunangiz tugadi.</b>\n\n"
     "Signal kanaliga kirish huquqi yopildi.\n"
     "Qayta obuna bo'lish uchun 📈 Signal kanal bo'limiga o'ting."
+)
+
+# Course subscription expiry reminders
+REMINDER_7_DAYS_COURSE = (
+    "⏳ <b>Eslatma!</b>\n\n"
+    "Darslar kanaliga obunangiz <b>7 kundan</b> keyin tugaydi.\n"
+    "Obunani uzaytirish uchun 📚 Darslar bo'limiga o'ting."
+)
+
+REMINDER_3_DAYS_COURSE = (
+    "⏳ <b>Eslatma!</b>\n\n"
+    "Darslar kanaliga obunangiz <b>3 kundan</b> keyin tugaydi.\n"
+    "Obunani uzaytirishni unutmang!"
+)
+
+REMINDER_1_DAY_COURSE = (
+    "⏳ <b>Eslatma!</b>\n\n"
+    "Darslar kanaliga obunangiz <b>1 kundan</b> keyin tugaydi!\n"
+    "Obunani uzaytirish uchun 📚 Darslar bo'limiga o'ting."
+)
+
+SUBSCRIPTION_EXPIRED_COURSE = (
+    "❌ <b>Darslar obunangiz tugadi.</b>\n\n"
+    "Darslar kanaliga kirish huquqi yopildi.\n"
+    "Qayta obuna bo'lish uchun 📚 Darslar bo'limiga o'ting."
 )

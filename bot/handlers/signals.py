@@ -19,6 +19,7 @@ from bot.services.payment_service import create_payment, get_payment_by_id
 from bot.services.channel_service import create_invite_link
 from bot.services.promo_service import validate_promo, apply_promo
 from bot.services.user_service import add_referral_bonus_days
+from bot.services.settings_service import get_setting, get_admin_ids
 from bot.utils.keyboards import (
     tariff_selection_kb,
     payment_method_kb,
@@ -31,10 +32,12 @@ from bot.utils.texts import (
     PAYMENT_METHOD_TEXT,
     STARS_PAYMENT_TEXT,
     STARS_SUCCESS_TEXT,
+    STARS_SUCCESS_COURSE_TEXT,
     CARD_PAYMENT_TEXT,
     CHECK_UPLOAD_TEXT,
     CHECK_RECEIVED_TEXT,
     PAYMENT_APPROVED_TEXT,
+    PAYMENT_APPROVED_COURSE_TEXT,
     PAYMENT_REJECTED_TEXT,
     ADMIN_PAYMENT_NOTIFICATION,
 )
@@ -48,7 +51,7 @@ signal_router = Router()
 
 @signal_router.message(F.text == "📈 Signal kanal")
 async def signal_menu_handler(message: Message) -> None:
-    tariffs = await get_all_tariffs()
+    tariffs = await get_all_tariffs("signal")
     text = SIGNAL_TEXT
     if not tariffs:
         text += "\n\n❌ Hozircha tariflar mavjud emas."
@@ -57,8 +60,11 @@ async def signal_menu_handler(message: Message) -> None:
 
 @signal_router.callback_query(F.data == "back_tariffs")
 async def back_tariffs_handler(callback: CallbackQuery) -> None:
-    tariffs = await get_all_tariffs()
-    await safe_edit(callback.message, SIGNAL_TEXT, reply_markup=tariff_selection_kb(tariffs))
+    tariffs = await get_all_tariffs("signal")
+    text = SIGNAL_TEXT
+    for t in tariffs:
+        text += f"\n• {t.label} — ${float(t.price):.0f}"
+    await safe_edit(callback.message, text, reply_markup=tariff_selection_kb(tariffs))
     await callback.answer()
 
 
@@ -108,7 +114,10 @@ async def stars_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    stars_amount = tariff.stars_price  # USD * 100 = Telegram Stars
+    # Get Stars price from DB settings (per duration), fallback to ×50 formula
+    stars_key = f"stars_{tariff.duration_months}_month"
+    stars_from_db = await get_setting(stars_key)
+    stars_amount = int(stars_from_db) if stars_from_db else tariff.stars_price
 
     prices = [LabeledPrice(label=tariff.label, amount=stars_amount)]
     await bot.send_invoice(
@@ -134,46 +143,50 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
     payload = message.successful_payment.invoice_payload
     telegram_charge_id = message.successful_payment.telegram_payment_charge_id
     provider_charge_id = message.successful_payment.provider_payment_charge_id
-    total_amount = message.successful_payment.total_amount / 100  # Convert back to USD
+    total_amount = message.successful_payment.total_amount / 100
 
-    # Parse tariff_id from payload: signal_stars_{tariff_id}
+    # Parse payload: signal_stars_{tariff_id} or course_stars_{tariff_id}
     parts = payload.split("_")
     if len(parts) < 3:
         await message.answer("❌ Xatolik yuz berdi.")
         return
 
+    product_type = parts[0]  # "signal" or "course"
     tariff_id = parts[2]
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await message.answer("❌ Tarif topilmadi.")
         return
 
-    # Create invite link
-    invite_link = await create_invite_link(bot, settings.PRIVATE_CHANNEL_ID)
+    # Determine channel based on product_type
+    if product_type == "course":
+        channel_id = await get_setting("course_channel_id") or ""
+        success_text = STARS_SUCCESS_COURSE_TEXT
+    else:
+        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        success_text = STARS_SUCCESS_TEXT
 
-    # Create subscription
-    # Check referral bonus days
+    invite_link = await create_invite_link(bot, channel_id) if channel_id else None
+
     bonus_days = user.referral_bonus_days or 0
-    # Reset bonus days after use
     if bonus_days > 0:
         user.referral_bonus_days = 0
 
     sub = await create_subscription(user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
 
-    # Record payment
     await create_payment(
         user_id=user.id,
-        product_type="signal",
+        product_type=product_type,
         product_id=tariff.id,
         amount=total_amount,
         currency="XTR",
         payment_method="stars",
-        status="approved" if True else "pending",
+        status="approved",
         telegram_charge_id=telegram_charge_id,
         provider_charge_id=provider_charge_id,
     )
 
-    text = STARS_SUCCESS_TEXT
+    text = success_text
     if invite_link:
         text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>"
     await message.answer(text)
@@ -189,9 +202,11 @@ async def card_payment_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    card_num = await get_setting("card_number") or settings.CARD_NUMBER
+    card_own = await get_setting("card_owner") or settings.CARD_HOLDER
     text = CARD_PAYMENT_TEXT.format(
-        card_number=settings.CARD_NUMBER,
-        card_holder=settings.CARD_HOLDER,
+        card_number=card_num,
+        card_holder=card_own,
     )
     await safe_edit(callback.message, text, reply_markup=card_payment_kb(tariff.id))
     await callback.answer()
@@ -236,7 +251,7 @@ async def receipt_received_handler(message: Message, user: User, state: FSMConte
         amount=float(tariff.price),
         time=format_date(payment.created_at),
     )
-    for admin_id in settings.admin_ids:
+    for admin_id in await get_admin_ids():
         try:
             msg = await bot.send_photo(
                 chat_id=admin_id,
@@ -261,7 +276,7 @@ async def invalid_receipt_handler(message: Message) -> None:
 
 @signal_router.callback_query(F.data.startswith("approve_"))
 async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
-    if user.telegram_id not in settings.admin_ids:
+    if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 
@@ -287,8 +302,16 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
         await callback.answer("❌ Xatolik", show_alert=True)
         return
 
-    # Create subscription + invite link
-    invite_link = await create_invite_link(bot, settings.PRIVATE_CHANNEL_ID)
+    # Determine channel and text based on product_type
+    product_type = payment.product_type or "signal"
+    if product_type == "course":
+        channel_id = await get_setting("course_channel_id") or ""
+        approved_text = PAYMENT_APPROVED_COURSE_TEXT
+    else:
+        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        approved_text = PAYMENT_APPROVED_TEXT
+
+    invite_link = await create_invite_link(bot, channel_id) if channel_id else None
     bonus_days = target_user.referral_bonus_days or 0
     if bonus_days > 0:
         target_user.referral_bonus_days = 0
@@ -296,7 +319,7 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
 
     # Notify user
     try:
-        text = PAYMENT_APPROVED_TEXT.format(invite_link=invite_link or "❌ Link yaratilmadi")
+        text = approved_text.format(invite_link=invite_link or "❌ Link yaratilmadi")
         await bot.send_message(chat_id=target_user.telegram_id, text=text)
     except Exception:
         pass
@@ -312,7 +335,7 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
 
 @signal_router.callback_query(F.data.startswith("reject_"))
 async def reject_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
-    if user.telegram_id not in settings.admin_ids:
+    if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 

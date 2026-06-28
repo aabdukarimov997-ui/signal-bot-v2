@@ -9,6 +9,10 @@ class PaymentStates(StatesGroup):
     waiting_approval = State()
 
 
+class CoursePaymentStates(StatesGroup):
+    upload_receipt = State()
+
+
 class AdminSocialStates(StatesGroup):
     waiting_instagram = State()
     waiting_twitter = State()
@@ -21,3 +25,14 @@ class AdminAddTariffStates(StatesGroup):
     waiting_name = State()
     waiting_duration = State()
     waiting_price = State()
+
+
+class AdminEditTariffStates(StatesGroup):
+    waiting_tariff_id = State()
+    waiting_field = State()
+    waiting_value = State()
+
+
+class AdminSettingsStates(StatesGroup):
+    waiting_setting_value = State()
+    waiting_import_json = State()

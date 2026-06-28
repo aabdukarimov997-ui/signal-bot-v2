@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.settings_service import get_admin_ids
 from bot.services.payment_service import get_total_revenue, get_today_revenue
 from bot.services.subscription_service import get_active_subscription_count
 from bot.services.user_service import get_user_count
@@ -14,7 +15,7 @@ admin_stats_router = Router()
 
 @admin_stats_router.callback_query(F.data == "admin_stats")
 async def admin_stats_handler(callback: CallbackQuery, user: User) -> None:
-    if user.telegram_id not in settings.admin_ids:
+    if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 

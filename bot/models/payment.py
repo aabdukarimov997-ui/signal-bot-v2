@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Float, ForeignKey, Numeric, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.models.base import Base, BaseMixin
@@ -29,6 +29,6 @@ class Payment(BaseMixin, Base):
     provider_charge_id: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
 
     reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    reviewed_by: Mapped[Optional[int]] = mapped_column(nullable=True)
+    reviewed_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
 
     user = relationship("User", back_populates="payments")

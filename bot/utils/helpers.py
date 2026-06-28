@@ -10,12 +10,15 @@ async def safe_edit(
     reply_markup: Union[InlineKeyboardMarkup, None] = None,
     disable_web_page_preview: bool = True,
 ) -> bool:
-    """Edit message text safely, ignoring 'message is not modified' errors."""
+    """Edit message text/caption safely, ignoring 'message is not modified' errors."""
     try:
-        await message.edit_text(text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
+        if message.photo:
+            await message.edit_caption(caption=text, reply_markup=reply_markup)
+        else:
+            await message.edit_text(text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
         return True
     except TelegramBadRequest as e:
-        if "message is not modified" in str(e).lower():
+        if "message is not modified" in str(e).lower() or "no text in the message to edit" in str(e).lower():
             return False
         raise
 

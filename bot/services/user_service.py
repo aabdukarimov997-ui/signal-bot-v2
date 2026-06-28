@@ -89,3 +89,11 @@ async def add_referral_bonus_days(user_id: str, days: int) -> None:
         user = result.scalar_one_or_none()
         if user:
             user.referral_bonus_days = (user.referral_bonus_days or 0) + days
+
+
+async def get_all_user_telegram_ids() -> list[int]:
+    async with get_session() as session:
+        result = await session.execute(
+            select(User.telegram_id).where(User.is_banned == False)
+        )
+        return list(result.scalars().all())

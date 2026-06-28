@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, BigInteger, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bot.models.base import Base, BaseMixin
@@ -10,7 +10,7 @@ from bot.models.base import Base, BaseMixin
 class User(BaseMixin, Base):
     __tablename__ = "users"
 
-    telegram_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False, index=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False, index=True)
     username: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     full_name: Mapped[str] = mapped_column(String(256), nullable=False)
     language: Mapped[str] = mapped_column(String(10), default="uz")

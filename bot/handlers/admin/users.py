@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.settings_service import get_admin_ids
 from bot.services.user_service import get_all_users, ban_user, unban_user
 from bot.utils.helpers import safe_edit, format_date
 
@@ -12,7 +13,7 @@ admin_users_router = Router()
 
 @admin_users_router.callback_query(F.data == "admin_users")
 async def admin_users_handler(callback: CallbackQuery, user: User) -> None:
-    if user.telegram_id not in settings.admin_ids:
+    if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 

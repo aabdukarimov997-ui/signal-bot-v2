@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.settings_service import get_admin_ids
 from bot.services.payment_service import get_pending_payments
 from bot.utils.keyboards import admin_approval_kb
 from bot.utils.texts import ADMIN_PAYMENTS_EMPTY, ADMIN_PAYMENT_NOTIFICATION
@@ -14,7 +15,7 @@ admin_payments_router = Router()
 
 @admin_payments_router.callback_query(F.data == "admin_payments")
 async def admin_payments_handler(callback: CallbackQuery, user: User) -> None:
-    if user.telegram_id not in settings.admin_ids:
+    if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 

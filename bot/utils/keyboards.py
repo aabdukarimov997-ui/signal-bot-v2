@@ -10,9 +10,10 @@ from bot.models.tariff import SignalTariff
 def main_menu_kb() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📈 Signal kanal")],
+            [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
             [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
-            [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar"), KeyboardButton(text="☎️ Yordam")],
+            [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
+            [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
         ],
         resize_keyboard=True,
     )
@@ -122,19 +123,26 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
+            [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],
         ]
     )
 
 
 def admin_tariffs_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
-    buttons = [
-        [InlineKeyboardButton(
-            text=f"{'✅' if t.is_active else '❌'} {t.label} — ${float(t.price):.0f}",
-            callback_data=f"admin_tariff_{t.id}",
-        )]
-        for t in tariffs
-    ]
+    buttons = []
+    for t in tariffs:
+        row = [
+            InlineKeyboardButton(
+                text=f"{'✅' if t.is_active else '❌'} {t.label} — ${float(t.price):.0f}",
+                callback_data=f"admin_tariff_{t.id}",
+            ),
+            InlineKeyboardButton(
+                text="✏️",
+                callback_data=f"edit_tariff_{t.id}",
+            ),
+        ]
+        buttons.append(row)
     buttons.append([InlineKeyboardButton(text="➕ Yangi tarif", callback_data="admin_add_tariff")])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -149,5 +157,38 @@ def admin_social_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🌐 Website", callback_data="admin_social_website")],
             [InlineKeyboardButton(text="🆓 Bepul kanal", callback_data="admin_social_free")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
+
+
+# ─── Course Tariffs (Inline) ─────────────────────────────────────────
+
+def course_tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(
+            text=f"{t.name} — ${float(t.price):.0f}",
+            callback_data=f"course_tariff_{t.id}",
+        )]
+        for t in tariffs
+    ]
+    buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_main")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def course_payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"course_stars_{tariff_id}")],
+            [InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"course_card_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_course_tariffs")],
+        ]
+    )
+
+
+def course_card_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Chek yuborish", callback_data=f"course_upload_check_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
         ]
     )

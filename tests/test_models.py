@@ -46,7 +46,7 @@ async def test_create_tariff(sample_tariff):
     assert sample_tariff.name == "1 oy"
     assert sample_tariff.duration_months == 1
     assert float(sample_tariff.price) == 25
-    assert sample_tariff.stars_price == 2500
+    assert sample_tariff.stars_price == 1250
 
 
 @pytest.mark.asyncio

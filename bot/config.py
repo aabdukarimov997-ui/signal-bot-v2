@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     CARD_HOLDER: str = ""
 
     ADMIN_IDS: str = "[]"
-    ADMIN_LINK: str = "@treder7090"
+    ADMIN_LINK: str = "@admin"
 
     SOCIAL_INSTAGRAM: str = ""
     SOCIAL_TWITTER: str = ""
