@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     CARD_NUMBER: str = ""
     CARD_HOLDER: str = ""
 
+    TON_WALLET_ADDRESS: str = ""
+
     ADMIN_IDS: str = "[]"
     ADMIN_LINK: str = "@admin"
 
@@ -51,6 +53,15 @@ class Settings(BaseSettings):
             return f"sqlite+aiosqlite:///{self.DB_NAME}"
         return (
             f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+    @property
+    def db_url_sync(self) -> str:
+        if self.DB_TYPE == "sqlite":
+            return f"sqlite:///{self.DB_NAME}"
+        return (
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 

@@ -5,45 +5,52 @@ services:
     image: postgres:16-alpine
     restart: always
     environment:
-      POSTGRES_DB: signal_bot_v2
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: your_db_password
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${DB_NAME:-signal_bot_v2}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - bot-net
 
   redis:
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redisdata:/data
+    networks:
+      - bot-net
 
   bot:
     build: .
     restart: always
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
     environment:
-      BOT_TOKEN: "${BOT_TOKEN}"
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: signal_bot_v2
-      DB_USER: postgres
-      DB_PASSWORD: your_db_password
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      ADMIN_IDS: "${ADMIN_IDS}"
-      PRIVATE_CHANNEL_ID: "${PRIVATE_CHANNEL_ID}"
-      CARD_NUMBER: "${CARD_NUMBER}"
-      CARD_HOLDER: "${CARD_HOLDER}"
-      BOT_USERNAME: "${BOT_USERNAME}"
-      SOCIAL_INSTAGRAM: "${SOCIAL_INSTAGRAM}"
-      SOCIAL_TWITTER: "${SOCIAL_TWITTER}"
-      SOCIAL_YOUTUBE: "${SOCIAL_YOUTUBE}"
-      SOCIAL_WEBSITE: "${SOCIAL_WEBSITE}"
-      FREE_CHANNEL_LINK: "${FREE_CHANNEL_LINK}"
+    networks:
+      - bot-net
+
+networks:
+  bot-net:
 
 volumes:
   pgdata:
+  redisdata:

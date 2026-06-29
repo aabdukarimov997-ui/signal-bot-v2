@@ -40,11 +40,13 @@ async def admin_payments_handler(callback: CallbackQuery, user: User) -> None:
         if not target_user or not tariff:
             continue
 
+        method_label = "🔗 TRON TRC20" if payment.payment_method == "tron_trc20" else ("⭐ Stars" if payment.payment_method == "stars" else "💳 Karta/Check")
         text = ADMIN_PAYMENT_NOTIFICATION.format(
             full_name=target_user.full_name,
             telegram_id=target_user.telegram_id,
             tariff_name=tariff.label,
             amount=float(payment.amount),
+            payment_method=method_label,
             time=format_date(payment.created_at),
         )
 

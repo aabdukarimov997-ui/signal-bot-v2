@@ -62,6 +62,27 @@ CHECK_RECEIVED_TEXT = (
     "Bu jarayon bir necha daqiqa olishi mumkin."
 )
 
+# TRON TRC20 Payment
+TRON_PAYMENT_TEXT = (
+    "🔗 <b>TRON TRC20 (USDT) orqali to'lov</b>\n\n"
+    "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
+    "<code>{wallet_address}</code>\n\n"
+    "⚠️ <b>Muhim:</b> Faqat TRC20 (TRON) network orqali yuboring!\n\n"
+    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+)
+
+TRON_UPLOAD_TEXT = (
+    "📤 <b>Skrinshot yuboring</b>\n\n"
+    "TRON wallet ilovasidagi to'lov skrinshotini yuboring.\n"
+    "Admin tekshirib, tasdiqlaydi."
+)
+
+TRON_RECEIVED_TEXT = (
+    "✅ <b>Skrinshot qabul qilindi!</b>\n\n"
+    "Admin tekshiruvidan so'ng sizga xabar beramiz.\n"
+    "Bu jarayon bir necha daqiqa olishi mumkin."
+)
+
 # Payment Approved
 PAYMENT_APPROVED_TEXT = (
     "✅ <b>To'lov tasdiqlandi!</b>\n\n"
@@ -79,11 +100,12 @@ PAYMENT_REJECTED_TEXT = (
 
 # Admin Notification
 ADMIN_PAYMENT_NOTIFICATION = (
-    "💳 <b>Yangi to'lov cheki</b>\n\n"
+    "💳 <b>Yangi to'lov</b>\n\n"
     "👤 Foydalanuvchi: {full_name}\n"
     "🆔 ID: {telegram_id}\n"
     "💰 Tarif: {tariff_name}\n"
     "💵 Summa: ${amount}\n"
+    "🔗 Usul: {payment_method}\n"
     "📅 Vaqt: {time}\n\n"
     "Quyidagi tugmalar orqali tasdiqlang yoki rad eting:"
 )
