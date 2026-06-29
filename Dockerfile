@@ -18,6 +18,4 @@ COPY . .
 
 USER botuser
 
-EXPOSE 8080
-
 ENTRYPOINT ["bash", "/app/entrypoint.sh"]

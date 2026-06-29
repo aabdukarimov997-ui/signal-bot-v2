@@ -11,3 +11,6 @@ build/
 venv/
 .pytest_cache/
 .aider*
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4
