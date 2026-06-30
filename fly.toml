@@ -1,0 +1,22 @@
+app = "signal-bot-v2"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = false
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[processes]
+  app = "bash /app/entrypoint.sh"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

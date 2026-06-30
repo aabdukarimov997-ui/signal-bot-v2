@@ -18,6 +18,7 @@ from bot.utils.keyboards import (
     course_payment_method_kb,
     course_card_payment_kb,
     course_tron_payment_kb,
+    course_bnb_payment_kb,
     check_uploaded_kb,
     admin_approval_kb,
 )
@@ -30,6 +31,9 @@ from bot.utils.texts import (
     TRON_PAYMENT_TEXT,
     TRON_UPLOAD_TEXT,
     TRON_RECEIVED_TEXT,
+    BNB_PAYMENT_TEXT,
+    BNB_UPLOAD_TEXT,
+    BNB_RECEIVED_TEXT,
     PAYMENT_APPROVED_COURSE_TEXT,
     PAYMENT_REJECTED_TEXT,
     ADMIN_PAYMENT_NOTIFICATION,
@@ -223,6 +227,35 @@ async def course_upload_tron_handler(callback: CallbackQuery, state: FSMContext)
     await callback.answer()
 
 
+# ─── BNB BEP20 Payment (Course) ───────────────────────────────────────
+
+@course_router.callback_query(F.data.startswith("course_bnb_"))
+async def course_bnb_payment_handler(callback: CallbackQuery) -> None:
+    tariff_id = callback.data.replace("course_bnb_", "")
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await callback.answer("❌ Tarif topilmadi", show_alert=True)
+        return
+
+    wallet_addr = await get_setting("bnb_wallet_address")
+    if not wallet_addr:
+        await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
+        return
+
+    text = BNB_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
+    await callback.answer()
+
+
+@course_router.callback_query(F.data.startswith("course_upload_bnb_"))
+async def course_upload_bnb_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    tariff_id = callback.data.replace("course_upload_bnb_", "")
+    await state.set_state(CoursePaymentStates.upload_receipt)
+    await state.update_data(tariff_id=tariff_id, payment_method="bnb")
+    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=None)
+    await callback.answer()
+
+
 @course_router.message(CoursePaymentStates.upload_receipt, F.photo)
 async def course_receipt_received_handler(message: Message, user: User, state: FSMContext, bot: Bot) -> None:
     data = await state.get_data()
@@ -245,7 +278,12 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         photo_file_id=photo_file_id,
     )
 
-    method_label = "🔗 TRON TRC20" if payment_method == "tron_trc20" else "💳 Karta/Check"
+    if payment_method == "tron_trc20":
+        method_label = "🔗 TRON TRC20"
+    elif payment_method == "bnb":
+        method_label = "🟡 BNB BEP20"
+    else:
+        method_label = "💳 Karta/Check"
     admin_text = ADMIN_PAYMENT_NOTIFICATION.format(
         full_name=user.full_name,
         telegram_id=user.telegram_id,
@@ -274,7 +312,15 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         except Exception:
             pass
 
-    receipt_text = TRON_RECEIVED_TEXT if payment_method == "tron_trc20" else CHECK_RECEIVED_TEXT
+    receipt_text = (
+        BNB_RECEIVED_TEXT
+        if payment_method == "bnb"
+        else (
+            TRON_RECEIVED_TEXT
+            if payment_method == "tron_trc20"
+            else CHECK_RECEIVED_TEXT
+        )
+    )
     await message.answer(receipt_text, reply_markup=check_uploaded_kb())
     await state.clear()
 

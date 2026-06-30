@@ -83,6 +83,27 @@ TRON_RECEIVED_TEXT = (
     "Bu jarayon bir necha daqiqa olishi mumkin."
 )
 
+# BNB BEP20 Payment
+BNB_PAYMENT_TEXT = (
+    "🟡 <b>BNB BEP20 (USDT) orqali to'lov</b>\n\n"
+    "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
+    "<code>{wallet_address}</code>\n\n"
+    "⚠️ <b>Muhim:</b> Faqat BEP20 (BSC) network orqali yuboring!\n\n"
+    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+)
+
+BNB_UPLOAD_TEXT = (
+    "📤 <b>Skrinshot yuboring</b>\n\n"
+    "BNB wallet ilovasidagi to'lov skrinshotini yuboring.\n"
+    "Admin tekshirib, tasdiqlaydi."
+)
+
+BNB_RECEIVED_TEXT = (
+    "✅ <b>Skrinshot qabul qilindi!</b>\n\n"
+    "Admin tekshiruvidan so'ng sizga xabar beramiz.\n"
+    "Bu jarayon bir necha daqiqa olishi mumkin."
+)
+
 # Payment Approved
 PAYMENT_APPROVED_TEXT = (
     "✅ <b>To'lov tasdiqlandi!</b>\n\n"

@@ -41,6 +41,7 @@ def payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"stars_{tariff_id}")],
             [InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"card_{tariff_id}")],
             [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"tron_{tariff_id}")],
+            [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"bnb_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_tariffs")],
         ]
     )
@@ -73,6 +74,17 @@ def tron_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"upload_tron_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
+        ]
+    )
+
+
+# ─── BNB BEP20 Payment ───────────────────────────────────────────────
+
+def bnb_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"upload_bnb_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
         ]
     )
@@ -211,6 +223,15 @@ def course_tron_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"course_upload_tron_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
+        ]
+    )
+
+
+def course_bnb_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"course_upload_bnb_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
         ]
     )
