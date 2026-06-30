@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,11 +17,13 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     BOT_USERNAME: str = ""
 
+    DB_TYPE: str = "postgresql"
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_NAME: str = "signal_bot"
     DB_USER: str = "postgres"
     DB_PASSWORD: str = ""
+    DATABASE_URL: str = ""
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -32,6 +35,7 @@ class Settings(BaseSettings):
     CARD_HOLDER: str = ""
 
     TON_WALLET_ADDRESS: str = ""
+    BNB_WALLET_ADDRESS: str = ""
 
     ADMIN_IDS: str = "[]"
     ADMIN_LINK: str = "@admin"
@@ -45,10 +49,15 @@ class Settings(BaseSettings):
     def admin_ids(self) -> list[int]:
         return json.loads(self.ADMIN_IDS)
 
-    DB_TYPE: str = "postgresql"  # "postgresql" or "sqlite"
-
     @property
     def db_url(self) -> str:
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite+aiosqlite:///{self.DB_NAME}"
         return (
@@ -58,6 +67,11 @@ class Settings(BaseSettings):
 
     @property
     def db_url_sync(self) -> str:
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
+            if "+asyncpg" in url:
+                url = url.replace("+asyncpg", "")
+            return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite:///{self.DB_NAME}"
         return (
