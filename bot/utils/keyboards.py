@@ -132,22 +132,26 @@ def social_kb(
     free_channel: str = "",
 ) -> InlineKeyboardMarkup:
     def ensure_url(val: str) -> str:
+        if not val:
+            return ""
         if val.startswith("@"):
             return f"https://t.me/{val[1:]}"
-        if val and not val.startswith("http"):
-            return f"https://{val}"
-        return val
+        if val.startswith("http://") or val.startswith("https://"):
+            return val
+        if val.startswith("/") or "." not in val:
+            return ""
+        return f"https://{val}"
 
     buttons = []
-    if instagram:
+    if instagram and ensure_url(instagram):
         buttons.append([InlineKeyboardButton(text="📷 Instagram", url=ensure_url(instagram))])
-    if twitter:
+    if twitter and ensure_url(twitter):
         buttons.append([InlineKeyboardButton(text="🐦 Twitter (X)", url=ensure_url(twitter))])
-    if youtube:
+    if youtube and ensure_url(youtube):
         buttons.append([InlineKeyboardButton(text="▶️ YouTube", url=ensure_url(youtube))])
-    if website:
+    if website and ensure_url(website):
         buttons.append([InlineKeyboardButton(text="🌐 Website", url=ensure_url(website))])
-    if free_channel:
+    if free_channel and ensure_url(free_channel):
         buttons.append([InlineKeyboardButton(text="🆓 Bepul kanal", url=ensure_url(free_channel))])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_main")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
