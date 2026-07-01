@@ -45,7 +45,8 @@ async def start_handler(message: Message, command: CommandObject, user: User) ->
     if not welcome_msg:
         welcome_msg = START_TEXT
 
-    await message.answer(welcome_msg, reply_markup=main_menu_kb())
+    is_admin = user.telegram_id in await get_admin_ids()
+    await message.answer(welcome_msg, reply_markup=main_menu_kb(is_admin=is_admin))
 
 
 @start_router.message(Command("setup"))
@@ -62,10 +63,11 @@ async def setup_command_handler(message: Message, user: User, state: FSMContext)
 
 
 @start_router.callback_query(lambda c: c.data == "back_main")
-async def back_main_handler(callback: CallbackQuery) -> None:
+async def back_main_handler(callback: CallbackQuery, user: User) -> None:
     welcome_msg = await get_setting("welcome_message")
     if not welcome_msg:
         welcome_msg = START_TEXT
+    is_admin = user.telegram_id in await get_admin_ids()
     await callback.message.edit_text(welcome_msg, reply_markup=None)
-    await callback.message.answer(welcome_msg, reply_markup=main_menu_kb())
+    await callback.message.answer(welcome_msg, reply_markup=main_menu_kb(is_admin=is_admin))
     await callback.answer()

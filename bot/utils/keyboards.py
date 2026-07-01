@@ -7,16 +7,16 @@ from bot.models.tariff import SignalTariff
 
 # ─── Main Menu (Reply Keyboard) ───────────────────────────────────────
 
-def main_menu_kb() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
-            [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
-            [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
-            [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
-        ],
-        resize_keyboard=True,
-    )
+def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
+    keyboard = [
+        [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
+        [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
+        [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
+        [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
+    ]
+    if is_admin:
+        keyboard.append([KeyboardButton(text="🔐 Admin panel")])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 # ─── Signal Tariffs (Inline) ──────────────────────────────────────────

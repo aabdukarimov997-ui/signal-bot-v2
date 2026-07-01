@@ -12,11 +12,10 @@ admin_router = Router()
 
 
 # Global admin filter on the parent router — protects ALL sub-handlers
-@admin_router.message(Command("admin"))
+@admin_router.message(or_f(Command("admin"), F.text == "🔐 Admin panel"))
 async def admin_entry_handler(message: Message, user: User) -> None:
-    admin_ids = await get_admin_ids()
-    if user.telegram_id not in admin_ids:
-        await message.answer(f"⛔ Sizning Telegram ID: <b>{user.telegram_id}</b>\nAdmin IDs: {admin_ids}\nIltimos admin ID ni qo'shing.")
+    if user.telegram_id not in await get_admin_ids():
+        await message.answer(NOT_ADMIN)
         return
     await message.answer(ADMIN_WELCOME, reply_markup=admin_menu_kb())
 
