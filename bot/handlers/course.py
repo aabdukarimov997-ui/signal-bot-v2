@@ -21,6 +21,7 @@ from bot.utils.keyboards import (
     course_bnb_payment_kb,
     check_uploaded_kb,
     admin_approval_kb,
+    cancel_upload_kb,
 )
 from bot.utils.texts import (
     PAYMENT_METHOD_TEXT,
@@ -194,7 +195,7 @@ async def course_upload_check_handler(callback: CallbackQuery, state: FSMContext
     tariff_id = callback.data.replace("course_upload_check_", "")
     await state.set_state(CoursePaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="check")
-    await safe_edit(callback.message, CHECK_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, CHECK_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -223,7 +224,7 @@ async def course_upload_tron_handler(callback: CallbackQuery, state: FSMContext)
     tariff_id = callback.data.replace("course_upload_tron_", "")
     await state.set_state(CoursePaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="tron_trc20")
-    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -252,7 +253,7 @@ async def course_upload_bnb_handler(callback: CallbackQuery, state: FSMContext) 
     tariff_id = callback.data.replace("course_upload_bnb_", "")
     await state.set_state(CoursePaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="bnb")
-    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -328,3 +329,14 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
 @course_router.message(CoursePaymentStates.upload_receipt)
 async def course_invalid_receipt_handler(message: Message) -> None:
     await message.answer("❌ Iltimos, rasm (skrinshot) yuboring.")
+
+
+@course_router.callback_query(F.data == "cancel_upload", CoursePaymentStates.upload_receipt)
+async def course_cancel_upload_handler(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    await state.clear()
+    tariffs = await get_all_tariffs("course")
+    course_name = await get_setting("course_tariff_name") or "Darslar"
+    course_description = await get_setting("course_description") or ""
+    text = _build_course_text(course_name, course_description, tariffs)
+    await safe_edit(callback.message, text, reply_markup=course_tariff_selection_kb(tariffs))
+    await callback.answer("❌ Bekor qilindi")

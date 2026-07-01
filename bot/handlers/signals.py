@@ -28,6 +28,7 @@ from bot.utils.keyboards import (
     bnb_payment_kb,
     check_uploaded_kb,
     admin_approval_kb,
+    cancel_upload_kb,
 )
 from bot.utils.texts import (
     SIGNAL_TEXT,
@@ -123,7 +124,7 @@ async def stars_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
         return
 
     # Get Stars price from DB settings (per duration), fallback to ×50 formula
-    stars_key = f"stars_{tariff.duration_months}_month"
+    stars_key = f"starsst_{tariff.duration_months}_month"
     stars_from_db = await get_setting(stars_key)
     stars_amount = int(stars_from_db) if stars_from_db else tariff.stars_price
 
@@ -225,7 +226,7 @@ async def upload_check_handler(callback: CallbackQuery, state: FSMContext) -> No
     tariff_id = callback.data.replace("upload_check_", "")
     await state.set_state(PaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="check")
-    await safe_edit(callback.message, CHECK_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, CHECK_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -289,6 +290,21 @@ async def invalid_receipt_handler(message: Message) -> None:
     await message.answer("❌ Iltimos, rasm (skrinshot) yuboring.")
 
 
+@signal_router.callback_query(F.data == "cancel_upload", PaymentStates.upload_receipt)
+async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
+    tariff_id = data.get("tariff_id", "")
+    await state.clear()
+    if tariff_id:
+        tariff = await get_tariff_by_id(tariff_id)
+        if tariff:
+            await safe_edit(callback.message, SIGNAL_TEXT, reply_markup=tariff_selection_kb(await get_all_tariffs("signal")))
+            await callback.answer("❌ Bekor qilindi")
+            return
+    await safe_edit(callback.message, SIGNAL_TEXT, reply_markup=tariff_selection_kb(await get_all_tariffs("signal")))
+    await callback.answer("❌ Bekor qilindi")
+
+
 # ─── TRON TRC20 Payment ──────────────────────────────────────────────
 
 @signal_router.callback_query(F.data.startswith("tron_"))
@@ -334,7 +350,7 @@ async def upload_tron_handler(callback: CallbackQuery, state: FSMContext) -> Non
     tariff_id = callback.data.replace("upload_tron_", "")
     await state.set_state(PaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="tron_trc20")
-    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -343,7 +359,7 @@ async def upload_bnb_handler(callback: CallbackQuery, state: FSMContext) -> None
     tariff_id = callback.data.replace("upload_bnb_", "")
     await state.set_state(PaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="bnb")
-    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=None)
+    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 

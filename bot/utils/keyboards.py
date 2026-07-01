@@ -99,6 +99,15 @@ def check_uploaded_kb() -> InlineKeyboardMarkup:
         ]
     )
 
+# ─── Cancel Upload (for FSM receipt states) ──────────────────────────
+
+def cancel_upload_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_upload")],
+        ]
+    )
+
 
 # ─── Admin Approval Buttons ──────────────────────────────────────────
 
@@ -122,17 +131,24 @@ def social_kb(
     website: str = "",
     free_channel: str = "",
 ) -> InlineKeyboardMarkup:
+    def ensure_url(val: str) -> str:
+        if val.startswith("@"):
+            return f"https://t.me/{val[1:]}"
+        if val and not val.startswith("http"):
+            return f"https://{val}"
+        return val
+
     buttons = []
     if instagram:
-        buttons.append([InlineKeyboardButton(text="📷 Instagram", url=instagram)])
+        buttons.append([InlineKeyboardButton(text="📷 Instagram", url=ensure_url(instagram))])
     if twitter:
-        buttons.append([InlineKeyboardButton(text="🐦 Twitter (X)", url=twitter)])
+        buttons.append([InlineKeyboardButton(text="🐦 Twitter (X)", url=ensure_url(twitter))])
     if youtube:
-        buttons.append([InlineKeyboardButton(text="▶️ YouTube", url=youtube)])
+        buttons.append([InlineKeyboardButton(text="▶️ YouTube", url=ensure_url(youtube))])
     if website:
-        buttons.append([InlineKeyboardButton(text="🌐 Website", url=website)])
+        buttons.append([InlineKeyboardButton(text="🌐 Website", url=ensure_url(website))])
     if free_channel:
-        buttons.append([InlineKeyboardButton(text="🆓 Bepul kanal", url=free_channel)])
+        buttons.append([InlineKeyboardButton(text="🆓 Bepul kanal", url=ensure_url(free_channel))])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_main")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
