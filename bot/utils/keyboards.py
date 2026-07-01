@@ -144,6 +144,7 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="💳 To'lovlar", callback_data="admin_payments")],
             [InlineKeyboardButton(text="📊 Tariflar", callback_data="admin_tariffs")],
+            [InlineKeyboardButton(text="📋 Obunalar", callback_data="admin_subs")],
             [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
@@ -233,5 +234,47 @@ def course_bnb_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"course_upload_bnb_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
+        ]
+    )
+
+
+# ─── Admin Subscriptions ─────────────────────────────────────────────
+
+def admin_subs_menu_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="➕ Signal obuna qo'shish", callback_data="admin_add_signal_sub")],
+            [InlineKeyboardButton(text="📚 Kurs obuna qo'shish", callback_data="admin_add_course_sub")],
+            [InlineKeyboardButton(text="✅ Faol obunalar", callback_data="admin_list_active_subs")],
+            [InlineKeyboardButton(text="⏰ Tugagan obunalar", callback_data="admin_list_expired_subs")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
+
+
+def admin_sub_confirm_kb(product_type: str) -> InlineKeyboardMarkup:
+    confirm_data = f"admin_confirm_sub_{product_type}"
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=confirm_data)],
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="admin_cancel_sub")],
+        ]
+    )
+
+
+def admin_subs_back_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="admin_cancel_sub")],
+        ]
+    )
+
+
+def admin_subs_list_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Faol obunalar", callback_data="admin_list_active_subs")],
+            [InlineKeyboardButton(text="⏰ Tugagan obunalar", callback_data="admin_list_expired_subs")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_subs")],
         ]
     )

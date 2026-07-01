@@ -128,3 +128,60 @@ async def ban_user_subscriptions(user_id: str) -> None:
         )
         for sub in result.scalars().all():
             sub.status = "cancelled"
+
+
+async def admin_create_subscription(
+    user_id: str,
+    duration_days: int,
+    price: float,
+    product_type: str = "signal",
+    invite_link: Optional[str] = None,
+) -> Subscription:
+    """Admin-only: create subscription with custom duration and price."""
+    async with get_session() as session:
+        now = datetime.now(timezone.utc)
+
+        tariff_name = f"{duration_days} kun" if duration_days < 30 else f"{duration_days // 30} oy"
+        tariff = SignalTariff(
+            name=tariff_name,
+            duration_months=max(1, duration_days // 30),
+            price=price,
+            product_type=product_type,
+            is_active=True,
+            sort_order=999,
+        )
+        session.add(tariff)
+        await session.flush()
+
+        sub = Subscription(
+            user_id=user_id,
+            tariff_id=tariff.id,
+            start_date=now,
+            end_date=now + timedelta(days=duration_days),
+            status="active",
+            invite_link=invite_link,
+        )
+        session.add(sub)
+        await session.flush()
+        return sub
+
+
+async def get_all_subscriptions(status: Optional[str] = None) -> list:
+    """Get all subscriptions with user info, optionally filtered by status."""
+    async with get_session() as session:
+        query = (
+            select(Subscription, User)
+            .join(User, Subscription.user_id == User.id)
+            .order_by(Subscription.end_date.desc())
+        )
+        if status:
+            query = query.where(Subscription.status == status)
+        result = await session.execute(query)
+        rows = result.all()
+        subs = []
+        for sub, user_obj in rows:
+            sub.telegram_id = user_obj.telegram_id
+            sub.user_full_name = user_obj.full_name
+            sub.duration_days = (sub.end_date - sub.start_date).days
+            subs.append(sub)
+        return subs

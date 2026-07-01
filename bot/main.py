@@ -23,6 +23,7 @@ from bot.handlers.admin.stats import admin_stats_router
 from bot.handlers.admin.users import admin_users_router
 from bot.handlers.admin.social import admin_social_router
 from bot.handlers.admin.settings import admin_settings_router
+from bot.handlers.admin.subscriptions import admin_subs_router
 from bot.middlewares.auth import AuthMiddleware
 from bot.scheduler.setup import setup_scheduler, start_scheduler
 
@@ -52,6 +53,7 @@ def register_routers() -> None:
     dp.include_router(admin_users_router)
     dp.include_router(admin_social_router)
     dp.include_router(admin_settings_router)
+    dp.include_router(admin_subs_router)
 
 
 def register_middlewares() -> None:
