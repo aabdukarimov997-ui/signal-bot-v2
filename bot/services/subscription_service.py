@@ -137,17 +137,17 @@ async def admin_create_subscription(
     product_type: str = "signal",
     invite_link: Optional[str] = None,
 ) -> Subscription:
-    """Admin-only: create subscription with custom duration and price."""
+    """Admin-only: create subscription with custom duration and price. Hidden from user menus."""
     async with get_session() as session:
         now = datetime.now(timezone.utc)
 
-        tariff_name = f"{duration_days} kun" if duration_days < 30 else f"{duration_days // 30} oy"
+        tariff_name = f"Admin: {duration_days} kun"
         tariff = SignalTariff(
             name=tariff_name,
             duration_months=max(1, duration_days // 30),
             price=price,
             product_type=product_type,
-            is_active=True,
+            is_active=False,
             sort_order=999,
         )
         session.add(tariff)
@@ -185,3 +185,15 @@ async def get_all_subscriptions(status: Optional[str] = None) -> list:
             sub.duration_days = (sub.end_date - sub.start_date).days
             subs.append(sub)
         return subs
+
+
+async def cancel_subscription_by_id(sub_id: str) -> Optional[Subscription]:
+    """Cancel a subscription by its ID."""
+    async with get_session() as session:
+        result = await session.execute(
+            select(Subscription).where(Subscription.id == sub_id)
+        )
+        sub = result.scalar_one_or_none()
+        if sub:
+            sub.status = "cancelled"
+        return sub
