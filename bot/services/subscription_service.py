@@ -81,14 +81,21 @@ async def expire_all_expired_subscriptions() -> list[Subscription]:
 
 
 async def get_expiring_soon(days_left: int) -> list[Subscription]:
+    """Subs expiring exactly `days_left` days from now (24h window).
+
+    The reminder job runs once a day, so a one-day window means each
+    subscription matches each reminder tier (7/3/1) at most once —
+    no repeated or overlapping reminders.
+    """
     async with get_session() as session:
         now = datetime.now(timezone.utc)
-        target = now + timedelta(days=days_left)
+        window_end = now + timedelta(days=days_left)
+        window_start = window_end - timedelta(days=1)
         result = await session.execute(
             select(Subscription).join(User, Subscription.user_id == User.id).where(
                 Subscription.status == "active",
-                Subscription.end_date <= target,
-                Subscription.end_date > now,
+                Subscription.end_date <= window_end,
+                Subscription.end_date > window_start,
             )
         )
         return list(result.scalars().all())
