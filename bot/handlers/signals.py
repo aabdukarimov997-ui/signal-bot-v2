@@ -402,7 +402,12 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
         channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
         approved_text = PAYMENT_APPROVED_TEXT
 
-    invite_link = await create_invite_link(bot, channel_id) if channel_id else None
+    # Har tasdiqlangan to'lovda alohida, 1 kishilik, 24 soatlik yangi havola
+    invite_link = (
+        await create_invite_link(bot, channel_id, member_limit=1, expire_hours=24)
+        if channel_id
+        else None
+    )
     bonus_days = target_user.referral_bonus_days or 0
     if bonus_days > 0:
         target_user.referral_bonus_days = 0
