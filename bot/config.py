@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     PRIVATE_CHANNEL_ID: str = ""
     FREE_CHANNEL_LINK: str = ""
+    INVITE_LINK_URL: str = ""
 
     CARD_NUMBER: str = ""
     CARD_HOLDER: str = ""

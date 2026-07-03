@@ -143,7 +143,7 @@ async def seed_defaults_from_env() -> None:
         "card_owner": env_settings.CARD_HOLDER,
         "visa_card_number": "",
         "visa_card_holder": "",
-        "invite_link_url": "https://t.me/+89m3dCxpmOFmN2E6",
+        "invite_link_url": env_settings.INVITE_LINK_URL or "https://t.me/+89m3dCxpmOFmN2E6",
         "ton_wallet_address": env_settings.TON_WALLET_ADDRESS,
         "tron_qr_code": "",
         "bnb_wallet_address": "",
