@@ -9,6 +9,7 @@ from bot.services.subscription_service import get_active_subscription_count
 from bot.services.user_service import get_user_count
 from bot.utils.texts import ADMIN_STATS_TEXT
 from bot.utils.helpers import safe_edit
+from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
 
 admin_stats_router = Router()
 
@@ -30,5 +31,7 @@ async def admin_stats_handler(callback: CallbackQuery, user: User) -> None:
         revenue=revenue,
         today_revenue=today_revenue,
     )
-    await safe_edit(callback.message, text)
+    await safe_edit(callback.message, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+    ]))
     await callback.answer()

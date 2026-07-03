@@ -6,9 +6,9 @@ from aiogram.types import ChatInviteLink
 
 
 async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> Optional[str]:
-    """Create a one-time invite link valid for 3 hours."""
+    """Create a one-time invite link valid for 10 seconds."""
     try:
-        expire_date = datetime.now(timezone.utc) + timedelta(hours=3)
+        expire_date = datetime.now(timezone.utc) + timedelta(seconds=10)
         link: ChatInviteLink = await bot.create_chat_invite_link(
             chat_id=chat_id,
             member_limit=member_limit,
@@ -17,6 +17,22 @@ async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> O
         return link.invite_link
     except Exception:
         return None
+
+
+async def get_invite_link(bot: Bot, chat_id: str) -> Optional[str]:
+    """Get invite link — try dynamic first, fall back to DB setting."""
+    # Try creating a fresh one-time link
+    link = await create_invite_link(bot, chat_id)
+    if link:
+        return link
+
+    # Fallback: static link from DB settings
+    from bot.services.settings_service import get_setting
+    invite_url = await get_setting("invite_link_url")
+    if invite_url:
+        return invite_url
+
+    return None
 
 
 async def ban_channel_member(bot: Bot, chat_id: str, user_id: int) -> bool:

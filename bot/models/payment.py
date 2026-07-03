@@ -15,7 +15,7 @@ class Payment(BaseMixin, Base):
     product_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(16), default="USD")
-    payment_method: Mapped[str] = mapped_column(String(32), nullable=False)  # stars, card, check
+    payment_method: Mapped[str] = mapped_column(String(32), nullable=False)  # stars, card, check, visa, tron_trc20, bnb
     status: Mapped[str] = mapped_column(String(32), default="pending")  # pending, approved, rejected
     promo_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     discount: Mapped[float] = mapped_column(Numeric(10, 2), default=0)

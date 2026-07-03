@@ -11,9 +11,16 @@ from bot.utils.texts import ADMIN_WELCOME, NOT_ADMIN
 admin_router = Router()
 
 
-# Global admin filter on the parent router — protects ALL sub-handlers
 @admin_router.message(Command("admin"))
 async def admin_entry_handler(message: Message, user: User) -> None:
+    if user.telegram_id not in await get_admin_ids():
+        await message.answer(NOT_ADMIN)
+        return
+    await message.answer(ADMIN_WELCOME, reply_markup=admin_menu_kb())
+
+
+@admin_router.message(F.text == "🔐 Admin panel")
+async def admin_button_handler(message: Message, user: User) -> None:
     if user.telegram_id not in await get_admin_ids():
         await message.answer(NOT_ADMIN)
         return

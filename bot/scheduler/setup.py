@@ -22,6 +22,11 @@ def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
         from bot.scheduler.jobs import send_expiry_reminders_job
         await send_expiry_reminders_job(bot)
 
+    @scheduler.scheduled_job(IntervalTrigger(hours=6))
+    async def verify_membership_job():
+        from bot.scheduler.jobs import verify_channel_membership_job
+        await verify_channel_membership_job(bot)
+
 
 def start_scheduler() -> None:
     scheduler.start()

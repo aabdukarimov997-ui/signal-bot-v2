@@ -7,16 +7,16 @@ from bot.models.tariff import SignalTariff
 
 # ─── Main Menu (Reply Keyboard) ───────────────────────────────────────
 
-def main_menu_kb() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
-            [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
-            [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
-            [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
-        ],
-        resize_keyboard=True,
-    )
+def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
+    keyboard = [
+        [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
+        [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
+        [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
+        [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
+    ]
+    if is_admin:
+        keyboard.append([KeyboardButton(text="🔐 Admin panel")])
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 # ─── Signal Tariffs (Inline) ──────────────────────────────────────────
@@ -38,11 +38,22 @@ def tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
 def payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"stars_{tariff_id}")],
-            [InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"card_{tariff_id}")],
+            [InlineKeyboardButton(text="💳 Visa karta", callback_data=f"visa_{tariff_id}")],
+            [InlineKeyboardButton(text="💳 UZCARD/HUMO", callback_data=f"card_{tariff_id}")],
             [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"tron_{tariff_id}")],
             [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"bnb_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_tariffs")],
+        ]
+    )
+
+
+# ─── Visa Payment ────────────────────────────────────────────────────
+
+def visa_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"upload_visa_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
         ]
     )
 
@@ -100,6 +111,26 @@ def check_uploaded_kb() -> InlineKeyboardMarkup:
     )
 
 
+# ─── Cancel Upload (FSM exit) ────────────────────────────────────────
+
+def cancel_upload_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_upload")],
+        ]
+    )
+
+
+# ─── Refresh Invite Link ─────────────────────────────────────────────
+
+def refresh_link_kb(product_type: str = "signal") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔗 Yangi link olish", callback_data=f"refresh_link_{product_type}")],
+        ]
+    )
+
+
 # ─── Admin Approval Buttons ──────────────────────────────────────────
 
 def admin_approval_kb(payment_id: str) -> InlineKeyboardMarkup:
@@ -122,17 +153,26 @@ def social_kb(
     website: str = "",
     free_channel: str = "",
 ) -> InlineKeyboardMarkup:
+    def ensure_url(val: str) -> str:
+        if val.startswith("@"):
+            return f"https://t.me/{val[1:]}"
+        if val.startswith("/"):
+            return f"https://t.me/{val[1:]}"
+        if val and not val.startswith("http"):
+            return f"https://{val}"
+        return val
+
     buttons = []
     if instagram:
-        buttons.append([InlineKeyboardButton(text="📷 Instagram", url=instagram)])
+        buttons.append([InlineKeyboardButton(text="📷 Instagram", url=ensure_url(instagram))])
     if twitter:
-        buttons.append([InlineKeyboardButton(text="🐦 Twitter (X)", url=twitter)])
+        buttons.append([InlineKeyboardButton(text="🐦 Twitter (X)", url=ensure_url(twitter))])
     if youtube:
-        buttons.append([InlineKeyboardButton(text="▶️ YouTube", url=youtube)])
+        buttons.append([InlineKeyboardButton(text="▶️ YouTube", url=ensure_url(youtube))])
     if website:
-        buttons.append([InlineKeyboardButton(text="🌐 Website", url=website)])
+        buttons.append([InlineKeyboardButton(text="🌐 Website", url=ensure_url(website))])
     if free_channel:
-        buttons.append([InlineKeyboardButton(text="🆓 Bepul kanal", url=free_channel)])
+        buttons.append([InlineKeyboardButton(text="🆓 Bepul kanal", url=ensure_url(free_channel))])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_main")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 

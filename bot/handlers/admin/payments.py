@@ -6,9 +6,9 @@ from bot.config import settings
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
 from bot.services.payment_service import get_pending_payments
-from bot.utils.keyboards import admin_approval_kb
-from bot.utils.texts import ADMIN_PAYMENTS_EMPTY, ADMIN_PAYMENT_NOTIFICATION
 from bot.utils.helpers import safe_edit, format_date
+from bot.utils.keyboards import admin_approval_kb, InlineKeyboardMarkup, InlineKeyboardButton
+from bot.utils.texts import ADMIN_PAYMENTS_EMPTY, ADMIN_PAYMENT_NOTIFICATION
 
 admin_payments_router = Router()
 
@@ -21,7 +21,9 @@ async def admin_payments_handler(callback: CallbackQuery, user: User) -> None:
 
     payments = await get_pending_payments()
     if not payments:
-        await safe_edit(callback.message, ADMIN_PAYMENTS_EMPTY, reply_markup=None)
+        await safe_edit(callback.message, ADMIN_PAYMENTS_EMPTY, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]))
         await callback.answer()
         return
 

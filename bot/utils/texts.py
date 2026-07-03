@@ -41,6 +41,27 @@ PAYMENT_APPROVED_COURSE_TEXT = (
     "Omad tilaymiz! 🚀"
 )
 
+# Visa Payment
+VISA_PAYMENT_TEXT = (
+    "💳 <b>Visa karta orqali to'lov</b>\n\n"
+    "Pul o'tkazish uchun quyidagi karta raqamiga to'lov qiling:\n\n"
+    "<code>{card_number}</code>\n"
+    "Qabul qiluvchi: <b>{card_holder}</b>\n\n"
+    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+)
+
+VISA_UPLOAD_TEXT = (
+    "📤 <b>Skrinshot yuboring</b>\n\n"
+    "Visa karta to'lov skrinshotini yuboring.\n"
+    "Admin tekshirib, tasdiqlaydi."
+)
+
+VISA_RECEIVED_TEXT = (
+    "✅ <b>Skrinshot qabul qilindi!</b>\n\n"
+    "Admin tekshiruvidan so'ng sizga xabar beramiz.\n"
+    "Bu jarayon bir necha daqiqa olishi mumkin."
+)
+
 # Card Payment
 CARD_PAYMENT_TEXT = (
     "💳 <b>Karta orqali to'lov</b>\n\n"
