@@ -11,6 +11,11 @@ START_TEXT = (
 # Signal
 SIGNAL_TEXT = "📈 <b>Signal kanal</b>\n\nO'zingizga mos tarifni tanlang:"
 
+ALREADY_SUBSCRIBED_TEXT = (
+    "✅ <b>Sizda faol obuna bor!</b>\n\n"
+    "Signal kanaliga kirish uchun quyidagi havoladan foydalaning:"
+)
+
 # Course
 COURSE_TEXT = "📚 <b>Darslar</b>\n\nO'zingizga mos tarifni tanlang:"
 

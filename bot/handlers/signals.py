@@ -34,6 +34,7 @@ from bot.utils.keyboards import (
 )
 from bot.utils.texts import (
     SIGNAL_TEXT,
+    ALREADY_SUBSCRIBED_TEXT,
     PAYMENT_METHOD_TEXT,
     VISA_PAYMENT_TEXT,
     VISA_UPLOAD_TEXT,
@@ -63,7 +64,20 @@ signal_router = Router()
 # ─── Signal Menu: Show Tariffs ─────────────────────────────────────
 
 @signal_router.message(F.text == "📈 Signal kanal")
-async def signal_menu_handler(message: Message) -> None:
+async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
+    sub = await get_active_subscription(user.id)
+    if sub:
+        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        invite_link = await get_invite_link(bot, channel_id) if channel_id else None
+        text = ALREADY_SUBSCRIBED_TEXT
+        if invite_link:
+            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 10 soniyada tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            await message.answer(text, disable_web_page_preview=True, reply_markup=refresh_link_kb("signal"))
+        else:
+            text += "\n\n❌ Link yaratilmadi"
+            await message.answer(text, disable_web_page_preview=True)
+        return
+
     tariffs = await get_all_tariffs("signal")
     text = SIGNAL_TEXT
     if not tariffs:
