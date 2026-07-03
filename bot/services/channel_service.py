@@ -6,9 +6,9 @@ from aiogram.types import ChatInviteLink
 
 
 async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> Optional[str]:
-    """Create a one-time invite link valid for 10 seconds."""
+    """Create a one-time invite link valid for 1 hour."""
     try:
-        expire_date = datetime.now(timezone.utc) + timedelta(seconds=10)
+        expire_date = datetime.now(timezone.utc) + timedelta(hours=1)
         link: ChatInviteLink = await bot.create_chat_invite_link(
             chat_id=chat_id,
             member_limit=member_limit,

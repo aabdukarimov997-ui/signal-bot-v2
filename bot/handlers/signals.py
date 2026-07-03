@@ -71,7 +71,7 @@ async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
         invite_link = await get_invite_link(bot, channel_id) if channel_id else None
         text = ALREADY_SUBSCRIBED_TEXT
         if invite_link:
-            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 10 soniyada tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
             await message.answer(text, disable_web_page_preview=True, reply_markup=refresh_link_kb("signal"))
         else:
             text += "\n\n❌ Link yaratilmadi"
@@ -217,7 +217,7 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
     text = success_text
     if invite_link:
-        text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 10 soniyada tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+        text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
         await message.answer(text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
     else:
         text += "\n\n❌ Link yaratilmadi"
@@ -442,7 +442,7 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
     try:
         text = approved_text
         if invite_link:
-            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 10 soniyada tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
             await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
         else:
             text += "\n\n❌ Link yaratilmadi"
@@ -517,7 +517,7 @@ async def refresh_link_handler(callback: CallbackQuery, user: User, bot: Bot) ->
 
     invite_link = await get_invite_link(bot, channel_id)
     if invite_link:
-        text = f"🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 10 soniyada tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+        text = f"🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
         await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
         await callback.answer()
     else:
