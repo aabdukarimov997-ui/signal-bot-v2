@@ -19,7 +19,7 @@ async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> O
         return None
 
 
-async def get_invite_link(bot: Bot, chat_id: str) -> Optional[str]:
+async def get_invite_link(bot: Bot, chat_id: str, fallback_key: str = "invite_link_url") -> Optional[str]:
     """Get invite link — try dynamic first, fall back to DB setting."""
     # Try creating a fresh one-time link
     link = await create_invite_link(bot, chat_id)
@@ -28,11 +28,34 @@ async def get_invite_link(bot: Bot, chat_id: str) -> Optional[str]:
 
     # Fallback: static link from DB settings
     from bot.services.settings_service import get_setting
-    invite_url = await get_setting("invite_link_url")
+    invite_url = await get_setting(fallback_key)
     if invite_url:
         return invite_url
 
     return None
+
+
+async def get_course_invite_links(bot: Bot) -> list[dict]:
+    """Get invite links for all 3 course channels. Returns list of dicts with name, link."""
+    from bot.services.settings_service import get_setting
+
+    channels = []
+    channel_configs = [
+        ("course_channel_id", "course_channel_1_name", "course_invite_link_1"),
+        ("course_channel_2_id", "course_channel_2_name", "course_invite_link_2"),
+        ("course_channel_3_id", "course_channel_3_name", "course_invite_link_3"),
+    ]
+
+    for channel_id_key, name_key, fallback_key in channel_configs:
+        channel_id = await get_setting(channel_id_key)
+        if not channel_id:
+            continue
+        channel_name = await get_setting(name_key) or channel_id_key.replace("course_", "").replace("_id", "").replace("_", " ")
+        link = await get_invite_link(bot, channel_id, fallback_key=fallback_key)
+        if link:
+            channels.append({"name": channel_name, "link": link, "channel_id": channel_id})
+
+    return channels
 
 
 async def ban_channel_member(bot: Bot, chat_id: str, user_id: int) -> bool:

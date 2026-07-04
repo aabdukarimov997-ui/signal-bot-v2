@@ -14,9 +14,10 @@ from bot.services.subscription_service import (
     get_tariff_by_id,
     create_subscription,
     get_active_subscription,
+    get_active_subscription_by_type,
 )
 from bot.services.payment_service import create_payment, get_payment_by_id
-from bot.services.channel_service import get_invite_link
+from bot.services.channel_service import get_invite_link, get_course_invite_links
 from bot.services.promo_service import validate_promo, apply_promo
 from bot.services.user_service import add_referral_bonus_days
 from bot.services.settings_service import get_setting, get_admin_ids
@@ -27,10 +28,12 @@ from bot.utils.keyboards import (
     card_payment_kb,
     tron_payment_kb,
     bnb_payment_kb,
+    toncoin_payment_kb,
     check_uploaded_kb,
     cancel_upload_kb,
     admin_approval_kb,
     refresh_link_kb,
+    course_channels_kb,
 )
 from bot.utils.texts import (
     SIGNAL_TEXT,
@@ -89,9 +92,9 @@ async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
 async def back_tariffs_handler(callback: CallbackQuery) -> None:
     tariffs = await get_all_tariffs("signal")
     text = SIGNAL_TEXT
-    for t in tariffs:
-        text += f"\n• {t.label} — ${float(t.price):.0f}"
-    await safe_edit(callback.message, text, reply_markup=tariff_selection_kb(tariffs))
+    if not tariffs:
+        text += "\n\n❌ Hozircha tariflar mavjud emas."
+    await safe_edit(callback.message, text, reply_markup=tariff_selection_kb(tariffs) if tariffs else None)
     await callback.answer()
 
 
@@ -189,8 +192,32 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
     # Determine channel based on product_type
     if product_type == "course":
-        channel_id = await get_setting("course_channel_id") or ""
         success_text = STARS_SUCCESS_COURSE_TEXT
+        channels = await get_course_invite_links(bot)
+        bonus_days = user.referral_bonus_days or 0
+        if bonus_days > 0:
+            user.referral_bonus_days = 0
+        sub = await create_subscription(user.id, tariff, invite_link=channels[0]["link"] if channels else None, bonus_days=bonus_days)
+
+        await create_payment(
+            user_id=user.id,
+            product_type=product_type,
+            product_id=tariff.id,
+            amount=total_amount,
+            currency="XTR",
+            payment_method="stars",
+            status="approved",
+            telegram_charge_id=telegram_charge_id,
+            provider_charge_id=provider_charge_id,
+        )
+
+        if channels:
+            text = success_text + "\n\nDarslar kanallariga kirish uchun quyidagi havolalardan foydalaning:"
+            await message.answer(text, reply_markup=course_channels_kb(channels))
+        else:
+            text = success_text + "\n\n❌ Linklar yaratilmadi"
+            await message.answer(text)
+        return
     else:
         channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
         success_text = STARS_SUCCESS_TEXT
@@ -222,6 +249,36 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
     else:
         text += "\n\n❌ Link yaratilmadi"
         await message.answer(text, disable_web_page_preview=True)
+
+    # 6 oylik signal obunasi uchun 1 oylik Telegram Premium sovg'a
+    if product_type == "signal" and tariff.duration_months == 6:
+        gift_link = await get_setting("premium_gift_link")
+        if gift_link:
+            await message.answer(
+                "🎁 <b>Tabriklaymiz!</b>\n\n"
+                "6 oylik obuna sotib olganingiz uchun sizga <b>1 oylik Telegram Premium</b> sovg'a qilindi!\n\n"
+                f"Premium ni faollashtirish uchun havolaga o'ting:\n{gift_link}",
+                disable_web_page_preview=True
+            )
+        else:
+            await message.answer(
+                "🎁 <b>Tabriklaymiz!</b>\n\n"
+                "6 oylik obuna sotib olganingiz uchun sizga <b>1 oylik Telegram Premium</b> sovg'a qilindi!\n\n"
+                "Admin tez orada siz bilan bog'lanib, Premium ni faollashtirib beradi."
+            )
+            # Admin ga xabar yuborish
+            admin_ids = await get_admin_ids()
+            for admin_id in admin_ids:
+                try:
+                    await bot.send_message(
+                        admin_id,
+                        f"🎁 <b>Telegram Premium sovg'a!</b>\n\n"
+                        f"👤 Foydalanuvchi: {user.full_name}\n"
+                        f"🆔 ID: <code>{user.telegram_id}</code>\n\n"
+                        f"6 oylik obuna sotib oldi. Premium sovg'a linkini yuboring!"
+                    )
+                except Exception:
+                    pass
 
 
 # ─── Card Payment ───────────────────────────────────────────────────
@@ -338,7 +395,7 @@ async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext) -> N
 # ─── TRON TRC20 Payment ──────────────────────────────────────────────
 
 @signal_router.callback_query(F.data.startswith("tron_"))
-async def tron_payment_handler(callback: CallbackQuery) -> None:
+async def tron_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariff_id = callback.data.replace("tron_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -346,19 +403,31 @@ async def tron_payment_handler(callback: CallbackQuery) -> None:
         return
 
     wallet_addr = await get_setting("ton_wallet_address") or settings.TON_WALLET_ADDRESS
+    qr_code = await get_setting("tron_qr_code")
     if not wallet_addr:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
         return
 
     text = TRON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
-    await safe_edit(callback.message, text, reply_markup=tron_payment_kb(tariff.id))
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=tron_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=tron_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=tron_payment_kb(tariff.id))
     await callback.answer()
 
 
 # ─── BNB BEP20 Payment ──────────────────────────────────────────────
 
 @signal_router.callback_query(F.data.startswith("bnb_"))
-async def bnb_payment_handler(callback: CallbackQuery) -> None:
+async def bnb_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariff_id = callback.data.replace("bnb_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -366,12 +435,24 @@ async def bnb_payment_handler(callback: CallbackQuery) -> None:
         return
 
     wallet_addr = await get_setting("bnb_wallet_address")
+    qr_code = await get_setting("bnb_qr_code")
     if not wallet_addr:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
         return
 
     text = BNB_PAYMENT_TEXT.format(wallet_address=wallet_addr)
-    await safe_edit(callback.message, text, reply_markup=bnb_payment_kb(tariff.id))
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=bnb_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=bnb_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=bnb_payment_kb(tariff.id))
     await callback.answer()
 
 
@@ -390,6 +471,45 @@ async def upload_bnb_handler(callback: CallbackQuery, state: FSMContext) -> None
     await state.set_state(PaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="bnb")
     await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
+    await callback.answer()
+
+
+@signal_router.callback_query(F.data.startswith("toncoin_"))
+async def toncoin_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+    tariff_id = callback.data.replace("toncoin_", "")
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await callback.answer("❌ Tarif topilmadi", show_alert=True)
+        return
+
+    wallet_addr = await get_setting("toncoin_wallet_address")
+    qr_code = await get_setting("toncoin_qr_code")
+    if not wallet_addr:
+        await callback.answer("❌ TON wallet sozlanmagan", show_alert=True)
+        return
+
+    text = TON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=toncoin_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=toncoin_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=toncoin_payment_kb(tariff.id))
+    await callback.answer()
+
+
+@signal_router.callback_query(F.data.startswith("upload_toncoin_"))
+async def upload_toncoin_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    tariff_id = callback.data.replace("upload_toncoin_", "")
+    await state.set_state(PaymentStates.upload_receipt)
+    await state.update_data(tariff_id=tariff_id, payment_method="toncoin")
+    await safe_edit(callback.message, TON_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
     await callback.answer()
 
 
@@ -425,30 +545,49 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
 
     # Determine channel and text based on product_type
     product_type = payment.product_type or "signal"
-    if product_type == "course":
-        channel_id = await get_setting("course_channel_id") or ""
-        approved_text = PAYMENT_APPROVED_COURSE_TEXT
-    else:
-        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
-        approved_text = PAYMENT_APPROVED_TEXT
-
-    invite_link = await get_invite_link(bot, channel_id) if channel_id else None
     bonus_days = target_user.referral_bonus_days or 0
     if bonus_days > 0:
         target_user.referral_bonus_days = 0
-    sub = await create_subscription(target_user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
 
-    # Notify user
-    try:
-        text = approved_text
-        if invite_link:
-            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-            await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
+    if product_type == "course":
+        channels = await get_course_invite_links(bot)
+        sub = await create_subscription(target_user.id, tariff, invite_link=channels[0]["link"] if channels else None, bonus_days=bonus_days)
+
+        # Build invite_links text for all 3 channels
+        invite_links_text = ""
+        if channels:
+            for ch in channels:
+                invite_links_text += f"\n🔗 <b>{ch['name']}</b> — <a href='{ch['link']}'>Kanalga kirish</a>"
+        text = PAYMENT_APPROVED_COURSE_TEXT.format(invite_links=invite_links_text)
+        if channels:
+            text += "\n\n⏰ Linklar 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            try:
+                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=course_channels_kb(channels))
+            except Exception:
+                pass
         else:
-            text += "\n\n❌ Link yaratilmadi"
-            await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
-    except Exception:
-        pass
+            text += "\n\n❌ Linklar yaratilmadi"
+            try:
+                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
+            except Exception:
+                pass
+    else:
+        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        approved_text = PAYMENT_APPROVED_TEXT
+        invite_link = await get_invite_link(bot, channel_id) if channel_id else None
+        sub = await create_subscription(target_user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
+
+        # Notify user
+        try:
+            text = approved_text
+            if invite_link:
+                text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
+            else:
+                text += "\n\n❌ Link yaratilmadi"
+                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
+        except Exception:
+            pass
 
     # Update admin message
     await safe_edit(
@@ -501,24 +640,35 @@ async def reject_payment_handler(callback: CallbackQuery, user: User, bot: Bot) 
 @signal_router.callback_query(F.data.startswith("refresh_link_"))
 async def refresh_link_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     product_type = callback.data.replace("refresh_link_", "")
-    sub = await get_active_subscription(user.id)
-    if not sub:
-        await callback.answer("❌ Faol obuna yo'q", show_alert=True)
-        return
 
     if product_type == "course":
-        channel_id = await get_setting("course_channel_id") or ""
+        sub = await get_active_subscription_by_type(user.id, "course")
+        if not sub:
+            await callback.answer("❌ Faol obuna yo'q", show_alert=True)
+            return
+
+        channels = await get_course_invite_links(bot)
+        if channels:
+            text = "📚 Darslar kanallariga kirish:\n\n⏰ Linklar 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=course_channels_kb(channels))
+            await callback.answer()
+        else:
+            await callback.answer("❌ Linklar yaratilmadi. Keyinroq urinib ko'ring.", show_alert=True)
     else:
+        sub = await get_active_subscription(user.id)
+        if not sub:
+            await callback.answer("❌ Faol obuna yo'q", show_alert=True)
+            return
+
         channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        if not channel_id:
+            await callback.answer("❌ Kanal sozlanmagan", show_alert=True)
+            return
 
-    if not channel_id:
-        await callback.answer("❌ Kanal sozlanmagan", show_alert=True)
-        return
-
-    invite_link = await get_invite_link(bot, channel_id)
-    if invite_link:
-        text = f"🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-        await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
-        await callback.answer()
-    else:
-        await callback.answer("❌ Link yaratilmadi. Keyinroq urinib ko'ring.", show_alert=True)
+        invite_link = await get_invite_link(bot, channel_id)
+        if invite_link:
+            text = f"🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
+            await callback.answer()
+        else:
+            await callback.answer("❌ Link yaratilmadi. Keyinroq urinib ko'ring.", show_alert=True)

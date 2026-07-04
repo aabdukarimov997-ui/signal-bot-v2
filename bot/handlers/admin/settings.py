@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, ContentType
 from aiogram.fsm.context import FSMContext
 
 from bot.config import settings
@@ -83,11 +83,39 @@ async def admin_save_setting(message: Message, state: FSMContext) -> None:
         await state.clear()
         return
 
+    desc = SETTINGS_KEYS.get(key, key)
+
+    # Handle photo setting (QR codes, images, etc.)
+    if message.content_type == ContentType.PHOTO:
+        file_id = message.photo[-1].file_id
+        await set_setting(key, file_id)
+        await state.clear()
+        await message.answer(f"✅ <b>{desc}</b> yangilandi!\nRasm file_id saqlandi.")
+        await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
+        return
+
+    # Handle video setting (welcome_video, course_image, etc.)
+    if message.content_type == ContentType.VIDEO:
+        file_id = message.video.file_id
+        await set_setting(key, file_id)
+        await state.clear()
+        await message.answer(f"✅ <b>{desc}</b> yangilandi!\nVideo file_id saqlandi.")
+        await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
+        return
+
+    # Handle document/file setting
+    if message.content_type == ContentType.DOCUMENT:
+        file_id = message.document.file_id
+        await set_setting(key, file_id)
+        await state.clear()
+        await message.answer(f"✅ <b>{desc}</b> yangilandi!\nFayl file_id saqlandi.")
+        await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
+        return
+
     value = message.text.strip()
     await set_setting(key, value)
     await state.clear()
 
-    desc = SETTINGS_KEYS.get(key, key)
     await message.answer(f"✅ <b>{desc}</b> yangilandi!\nQiymat: <code>{value}</code>")
     await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
 

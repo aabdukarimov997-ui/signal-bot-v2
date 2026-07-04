@@ -20,6 +20,21 @@ async def get_active_subscription(user_id: str) -> Optional[Subscription]:
         return result.scalars().first()
 
 
+async def get_active_subscription_by_type(user_id: str, product_type: str = "course") -> Optional[Subscription]:
+    async with get_session() as session:
+        result = await session.execute(
+            select(Subscription)
+            .join(SignalTariff, Subscription.tariff_id == SignalTariff.id)
+            .where(
+                Subscription.user_id == user_id,
+                Subscription.status == "active",
+                SignalTariff.product_type == product_type,
+            )
+            .order_by(Subscription.end_date.desc())
+        )
+        return result.scalars().first()
+
+
 async def create_subscription(
     user_id: str,
     tariff: SignalTariff,

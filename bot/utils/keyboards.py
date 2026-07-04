@@ -11,10 +11,10 @@ def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
         [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
-        [KeyboardButton(text="📢 E'lon"), KeyboardButton(text="☎️ Yordam")],
-        [KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
+        [KeyboardButton(text="☎️ Yordam"), KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
     ]
     if is_admin:
+        keyboard.append([KeyboardButton(text="📢 E'lon")])
         keyboard.append([KeyboardButton(text="🔐 Admin panel")])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -42,6 +42,7 @@ def payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="💳 UZCARD/HUMO", callback_data=f"card_{tariff_id}")],
             [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"tron_{tariff_id}")],
             [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"bnb_{tariff_id}")],
+            [InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"toncoin_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_tariffs")],
         ]
     )
@@ -101,6 +102,17 @@ def bnb_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     )
 
 
+# ─── TON Payment ────────────────────────────────────────────────────
+
+def toncoin_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"upload_toncoin_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
+        ]
+    )
+
+
 # ─── Check Uploaded ──────────────────────────────────────────────────
 
 def check_uploaded_kb() -> InlineKeyboardMarkup:
@@ -129,6 +141,19 @@ def refresh_link_kb(product_type: str = "signal") -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🔗 Yangi link olish", callback_data=f"refresh_link_{product_type}")],
         ]
     )
+
+
+# ─── Course Channels Links ────────────────────────────────────────────
+
+def course_channels_kb(channels: list[dict]) -> InlineKeyboardMarkup:
+    """Inline keyboard with URL buttons for each course channel + refresh button."""
+    buttons = []
+    for ch in channels:
+        buttons.append([InlineKeyboardButton(text=f"📚 {ch['name']}", url=ch["link"])])
+
+    # Add refresh button at bottom
+    buttons.append([InlineKeyboardButton(text="🔄 Yangi linklar olish", callback_data="refresh_link_course")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 # ─── Admin Approval Buttons ──────────────────────────────────────────
@@ -188,6 +213,7 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
+            [InlineKeyboardButton(text="❓ Yordam", callback_data="admin_help")],
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],
         ]
     )
@@ -245,6 +271,8 @@ def course_payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"course_stars_{tariff_id}")],
             [InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"course_card_{tariff_id}")],
             [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"course_tron_{tariff_id}")],
+            [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"course_bnb_{tariff_id}")],
+            [InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"course_toncoin_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_course_tariffs")],
         ]
     )
@@ -272,6 +300,15 @@ def course_bnb_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"course_upload_bnb_{tariff_id}")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
+        ]
+    )
+
+
+def course_toncoin_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"course_upload_toncoin_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
         ]
     )

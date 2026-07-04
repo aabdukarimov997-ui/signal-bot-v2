@@ -19,6 +19,7 @@ from bot.utils.keyboards import (
     course_card_payment_kb,
     course_tron_payment_kb,
     course_bnb_payment_kb,
+    course_toncoin_payment_kb,
     check_uploaded_kb,
     admin_approval_kb,
 )
@@ -34,6 +35,9 @@ from bot.utils.texts import (
     BNB_PAYMENT_TEXT,
     BNB_UPLOAD_TEXT,
     BNB_RECEIVED_TEXT,
+    TON_PAYMENT_TEXT,
+    TON_UPLOAD_TEXT,
+    TON_RECEIVED_TEXT,
     PAYMENT_APPROVED_COURSE_TEXT,
     PAYMENT_REJECTED_TEXT,
     ADMIN_PAYMENT_NOTIFICATION,
@@ -201,7 +205,7 @@ async def course_upload_check_handler(callback: CallbackQuery, state: FSMContext
 # ─── TRON TRC20 Payment (Course) ──────────────────────────────────────
 
 @course_router.callback_query(F.data.startswith("course_tron_"))
-async def course_tron_payment_handler(callback: CallbackQuery) -> None:
+async def course_tron_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariff_id = callback.data.replace("course_tron_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -209,12 +213,24 @@ async def course_tron_payment_handler(callback: CallbackQuery) -> None:
         return
 
     wallet_addr = await get_setting("ton_wallet_address") or settings.TON_WALLET_ADDRESS
+    qr_code = await get_setting("tron_qr_code")
     if not wallet_addr:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
         return
 
     text = TRON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
-    await safe_edit(callback.message, text, reply_markup=course_tron_payment_kb(tariff.id))
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=course_tron_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=course_tron_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=course_tron_payment_kb(tariff.id))
     await callback.answer()
 
 
@@ -230,7 +246,7 @@ async def course_upload_tron_handler(callback: CallbackQuery, state: FSMContext)
 # ─── BNB BEP20 Payment (Course) ───────────────────────────────────────
 
 @course_router.callback_query(F.data.startswith("course_bnb_"))
-async def course_bnb_payment_handler(callback: CallbackQuery) -> None:
+async def course_bnb_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariff_id = callback.data.replace("course_bnb_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -238,12 +254,24 @@ async def course_bnb_payment_handler(callback: CallbackQuery) -> None:
         return
 
     wallet_addr = await get_setting("bnb_wallet_address")
+    qr_code = await get_setting("bnb_qr_code")
     if not wallet_addr:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
         return
 
     text = BNB_PAYMENT_TEXT.format(wallet_address=wallet_addr)
-    await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=course_bnb_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
     await callback.answer()
 
 
@@ -253,6 +281,47 @@ async def course_upload_bnb_handler(callback: CallbackQuery, state: FSMContext) 
     await state.set_state(CoursePaymentStates.upload_receipt)
     await state.update_data(tariff_id=tariff_id, payment_method="bnb")
     await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=None)
+    await callback.answer()
+
+
+# ─── TON Payment (Course) ────────────────────────────────────────────
+
+@course_router.callback_query(F.data.startswith("course_toncoin_"))
+async def course_toncoin_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+    tariff_id = callback.data.replace("course_toncoin_", "")
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await callback.answer("❌ Tarif topilmadi", show_alert=True)
+        return
+
+    wallet_addr = await get_setting("toncoin_wallet_address")
+    qr_code = await get_setting("toncoin_qr_code")
+    if not wallet_addr:
+        await callback.answer("❌ TON wallet sozlanmagan", show_alert=True)
+        return
+
+    text = TON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    if qr_code:
+        try:
+            await callback.message.answer_photo(
+                photo=qr_code,
+                caption=text,
+                reply_markup=course_toncoin_payment_kb(tariff.id)
+            )
+            await callback.message.delete()
+        except Exception:
+            await safe_edit(callback.message, text, reply_markup=course_toncoin_payment_kb(tariff.id))
+    else:
+        await safe_edit(callback.message, text, reply_markup=course_toncoin_payment_kb(tariff.id))
+    await callback.answer()
+
+
+@course_router.callback_query(F.data.startswith("course_upload_toncoin_"))
+async def course_upload_toncoin_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    tariff_id = callback.data.replace("course_upload_toncoin_", "")
+    await state.set_state(CoursePaymentStates.upload_receipt)
+    await state.update_data(tariff_id=tariff_id, payment_method="toncoin")
+    await safe_edit(callback.message, TON_UPLOAD_TEXT, reply_markup=None)
     await callback.answer()
 
 
@@ -282,6 +351,8 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         method_label = "🔗 TRON TRC20"
     elif payment_method == "bnb":
         method_label = "🟡 BNB BEP20"
+    elif payment_method == "toncoin":
+        method_label = "💎 TON"
     else:
         method_label = "💳 Karta/Check"
     admin_text = ADMIN_PAYMENT_NOTIFICATION.format(
@@ -318,7 +389,11 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         else (
             TRON_RECEIVED_TEXT
             if payment_method == "tron_trc20"
-            else CHECK_RECEIVED_TEXT
+            else (
+                TON_RECEIVED_TEXT
+                if payment_method == "toncoin"
+                else CHECK_RECEIVED_TEXT
+            )
         )
     )
     await message.answer(receipt_text, reply_markup=check_uploaded_kb())

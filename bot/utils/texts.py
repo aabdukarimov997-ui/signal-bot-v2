@@ -9,7 +9,15 @@ START_TEXT = (
 )
 
 # Signal
-SIGNAL_TEXT = "📈 <b>Signal kanal</b>\n\nO'zingizga mos tarifni tanlang:"
+SIGNAL_TEXT = (
+    "🚀 <b>VIP KRIPTO SIGNALLAR</b>\n\n"
+    "💰 <b>1 OY — $25</b>\n\n"
+    "🔥 <b>3 OY — $50</b> (33% chegirma)\n\n"
+    "👑 <b>6 OY — $100</b> (33% chegirma)\n\n"
+    "🎁 <b>6 oylik obuna olganlarga 1 OY Telegram Premium BEPUL!</b>\n\n"
+    "📈 Aniq signallar • Risk boshqaruvi • Tezkor xabarlar\n\n"
+    "<b>Hoziroq VIP kanalga qo'shiling!</b>"
+)
 
 ALREADY_SUBSCRIBED_TEXT = (
     "✅ <b>Sizda faol obuna bor!</b>\n\n"
@@ -41,9 +49,14 @@ STARS_SUCCESS_COURSE_TEXT = (
 
 PAYMENT_APPROVED_COURSE_TEXT = (
     "✅ <b>To'lov tasdiqlandi!</b>\n\n"
-    "Obunangiz faollashtirildi. Darslar kanaliga invite link:\n"
-    "{invite_link}\n\n"
+    "Obunangiz faollashtirildi. Darslar kanallariga invite linklar:\n\n"
+    "{invite_links}\n\n"
     "Omad tilaymiz! 🚀"
+)
+
+COURSE_ALREADY_SUBSCRIBED_TEXT = (
+    "✅ <b>Sizda darslar obunasi bor!</b>\n\n"
+    "Darslar kanallariga kirish uchun quyidagi havolalardan foydalaning:"
 )
 
 # Visa Payment
@@ -130,6 +143,27 @@ BNB_RECEIVED_TEXT = (
     "Bu jarayon bir necha daqiqa olishi mumkin."
 )
 
+# TON Payment
+TON_PAYMENT_TEXT = (
+    "💎 <b>TON (The Open Network) orqali to'lov</b>\n\n"
+    "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
+    "<code>{wallet_address}</code>\n\n"
+    "⚠️ <b>Muhim:</b> Faqat TON network orqali yuboring!\n\n"
+    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+)
+
+TON_UPLOAD_TEXT = (
+    "📤 <b>Skrinshot yuboring</b>\n\n"
+    "TON wallet ilovasidagi to'lov skrinshotini yuboring.\n"
+    "Admin tekshirib, tasdiqlaydi."
+)
+
+TON_RECEIVED_TEXT = (
+    "✅ <b>Skrinshot qabul qilindi!</b>\n\n"
+    "Admin tekshiruvidan so'ng sizga xabar beramiz.\n"
+    "Bu jarayon bir necha daqiqa olishi mumkin."
+)
+
 # Payment Approved
 PAYMENT_APPROVED_TEXT = (
     "✅ <b>To'lov tasdiqlandi!</b>\n\n"
@@ -174,9 +208,13 @@ FREE_CHANNEL_TEXT = "🆓 <b>Bepul kanal</b>\n\nQuyidagi havola orqali bepul kan
 REFERRAL_TEXT = (
     "👥 <b>Referal tizimi</b>\n\n"
     "Do'stlaringizni taklif qiling va bonuslarga ega bo'ling!\n\n"
-    "Sizning referal linkingiz:\n"
+    "🔗 <b>Sizning referal linkingiz:</b>\n"
     "<code>{link}</code>\n\n"
-    "Taklif qilinganlar: <b>{count}</b>"
+    "👤 <b>Taklif qilinganlar:</b> {count}\n\n"
+    "💎 <b>Maxsus bonus:</b>\n"
+    "Agar referallaringizdan <b>5 nafari VIP signal kanaliga obuna sotib olsa</b>, "
+    "sizga <b>1 OYLIK VIP Signal kanal obunasi BEPUL</b> taqdim etiladi! 🎁\n\n"
+    "📊 <b>Bonus uchun kerak:</b> {active_count} / 5 ta faol obuna"
 )
 
 # Social
