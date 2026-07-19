@@ -7,3 +7,14 @@ tests/
 *.py
 *.pyc
 __pycache__/
+Dockerfile
+railway.toml
+pyproject.toml
+.env
+.env.example
+fly.toml
+QO'LLAMA.md
+README.md
+SETUP_GUIDE.md
+docker-compose.yml
+.git/
