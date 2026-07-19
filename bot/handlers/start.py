@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router, Bot
+from aiogram import Router, Bot, F
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -89,6 +89,17 @@ async def back_main_handler(callback: CallbackQuery, user: User, bot: Bot) -> No
     is_admin = user.telegram_id in await get_admin_ids()
     await _send_welcome(bot, callback.message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin), welcome_video)
     await callback.answer()
+
+
+@start_router.message(F.text == "🚀 Start")
+async def start_button_handler(message: Message, user: User, bot: Bot) -> None:
+    await update_user_activity(user.telegram_id)
+    welcome_msg = await get_setting("welcome_message")
+    if not welcome_msg:
+        welcome_msg = START_TEXT
+    welcome_video = await get_setting("welcome_video")
+    is_admin = user.telegram_id in await get_admin_ids()
+    await _send_welcome(bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin), welcome_video)
 
 
 @start_router.message(Command("test_video"))

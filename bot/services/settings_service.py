@@ -54,6 +54,13 @@ SETTINGS_KEYS = {
     "premium_gift_link": "Telegram Premium sovg'a linki",
     "admin_ids": "Admin Telegram IDs (JSON list)",
     "setup_completed": "Setup completed (true/false)",
+    # Payment method toggles
+    "payment_visa_enabled": "Visa to'lov (yoqilgan/o'chirilgan)",
+    "payment_card_enabled": "UZCARD/HUMO to'lov (yoqilgan/o'chirilgan)",
+    "payment_tron_enabled": "TRON TRC20 to'lov (yoqilgan/o'chirilgan)",
+    "payment_bnb_enabled": "BNB BEP20 to'lov (yoqilgan/o'chirilgan)",
+    "payment_ton_enabled": "TON to'lov (yoqilgan/o'chirilgan)",
+    "payment_stars_enabled": "Telegram Stars to'lov (yoqilgan/o'chirilgan)",
 }
 
 # Keys required for setup wizard (in order)
@@ -149,6 +156,34 @@ async def import_settings(json_str: str) -> None:
         await set_setting(key, str(value))
 
 
+PAYMENT_METHOD_KEYS = {
+    "visa": "payment_visa_enabled",
+    "card": "payment_card_enabled",
+    "tron": "payment_tron_enabled",
+    "bnb": "payment_bnb_enabled",
+    "ton": "payment_ton_enabled",
+    "stars": "payment_stars_enabled",
+}
+
+
+async def is_payment_enabled(method: str) -> bool:
+    """Check if a payment method is enabled. Defaults to True if not configured."""
+    key = PAYMENT_METHOD_KEYS.get(method)
+    if not key:
+        return True
+    val = await get_setting(key)
+    return val != "false"
+
+
+async def get_enabled_payment_methods() -> set[str]:
+    """Return set of enabled payment method names."""
+    enabled = set()
+    for method, key in PAYMENT_METHOD_KEYS.items():
+        if await is_payment_enabled(method):
+            enabled.add(method)
+    return enabled
+
+
 async def seed_defaults_from_env() -> None:
     """Seed settings from .env if they don't exist yet (first start before wizard)."""
     from bot.config import settings as env_settings
@@ -197,6 +232,12 @@ async def seed_defaults_from_env() -> None:
         "welcome_message": "",
         "admin_ids": json.dumps(env_settings.admin_ids),
         "setup_completed": "false",
+        "payment_visa_enabled": "true",
+        "payment_card_enabled": "true",
+        "payment_tron_enabled": "true",
+        "payment_bnb_enabled": "true",
+        "payment_ton_enabled": "true",
+        "payment_stars_enabled": "true",
     }
     for key, value in defaults.items():
         existing = await get_setting(key)

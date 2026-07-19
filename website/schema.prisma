@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  role            String           @default("USER")
+  telegramId      String?
+  avatar          String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  payments        Payment[]
+  referralsMade   Referral[]       @relation("Referrer")
+  referralReceived Referral?       @relation("Referred")
+  blogPosts       BlogPost[]
+  contactMessages ContactMessage[]
+}
+
+model Course {
+  id                   String   @id @default(cuid())
+  name                 String   @default("Trading Haqiqati")
+  description          String   @default("")
+  starterPrice         Float    @default(0)
+  professionalPrice    Float    @default(0)
+  masterPrice          Float    @default(0)
+  starterFeatures      String   @default("[]")
+  professionalFeatures String   @default("[]")
+  masterFeatures       String   @default("[]")
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Signal {
+  id                  String   @id @default(cuid())
+  name                String   @default("AT_analysis")
+  description         String   @default("")
+  monthlyPrice        Float    @default(0)
+  quarterlyPrice      Float    @default(0)
+  semiannualPrice     Float    @default(0)
+  monthlyFeatures     String   @default("[]")
+  quarterlyFeatures   String   @default("[]")
+  semiannualFeatures  String   @default("[]")
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model BlogPost {
+  id         String   @id @default(cuid())
+  title      String
+  slug       String   @unique
+  content    String   @default("")
+  excerpt    String   @default("")
+  coverImage String   @default("")
+  published  Boolean  @default(false)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model FAQ {
+  id       String @id @default(cuid())
+  question String
+  answer   String
+  category String @default("general")
+  order    Int    @default(0)
+}
+
+model Banner {
+  id       String @id @default(cuid())
+  title    String @default("")
+  subtitle String @default("")
+  imageUrl String @default("")
+  link     String @default("")
+  isActive Boolean @default(true)
+  order    Int    @default(0)
+}
+
+model Coupon {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  discountPercent Float    @default(0)
+  validFrom       DateTime @default(now())
+  validTo         DateTime
+  maxUses         Int      @default(100)
+  usedCount       Int      @default(0)
+  isActive        Boolean  @default(true)
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  type              String   @default("COURSE")
+  plan              String   @default("")
+  amount            Float    @default(0)
+  status            String   @default("PENDING")
+  telegramPaymentId String?
+  createdAt         DateTime @default(now())
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  referrerId String
+  referrer   User     @relation("Referrer", fields: [referrerId], references: [id])
+  referredId String   @unique
+  referred   User     @relation("Referred", fields: [referredId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @default("")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventType String
+  eventData String   @default("{}")
+  ipAddress  String  @default("")
+  createdAt  DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}

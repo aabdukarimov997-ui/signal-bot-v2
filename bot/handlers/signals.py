@@ -20,7 +20,7 @@ from bot.services.payment_service import create_payment, get_payment_by_id
 from bot.services.channel_service import get_invite_link, get_course_invite_links
 from bot.services.promo_service import validate_promo, apply_promo
 from bot.services.user_service import add_referral_bonus_days
-from bot.services.settings_service import get_setting, get_admin_ids
+from bot.services.settings_service import get_setting, get_admin_ids, get_enabled_payment_methods
 from bot.utils.keyboards import (
     tariff_selection_kb,
     payment_method_kb,
@@ -108,13 +108,14 @@ async def tariff_selected_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    enabled_methods = await get_enabled_payment_methods()
     text = (
         f"📈 <b>{tariff.label}</b>\n\n"
         f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n"
         f"📅 Muddati: <b>{tariff.duration_months} oy</b>\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
-    await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id))
+    await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
 
@@ -125,12 +126,13 @@ async def pay_method_handler(callback: CallbackQuery) -> None:
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
+    enabled_methods = await get_enabled_payment_methods()
     text = (
         f"📈 <b>{tariff.label}</b>\n\n"
         f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
-    await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id))
+    await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
 

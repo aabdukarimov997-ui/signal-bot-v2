@@ -14,6 +14,7 @@ def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
         [KeyboardButton(text="☎️ Yordam"), KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
     ]
     if is_admin:
+        keyboard.append([KeyboardButton(text="🚀 Start")])
         keyboard.append([KeyboardButton(text="📢 E'lon")])
         keyboard.append([KeyboardButton(text="🔐 Admin panel")])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
@@ -35,17 +36,22 @@ def tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
 
 # ─── Payment Method Selection ─────────────────────────────────────────
 
-def payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="💳 Visa karta", callback_data=f"visa_{tariff_id}")],
-            [InlineKeyboardButton(text="💳 UZCARD/HUMO", callback_data=f"card_{tariff_id}")],
-            [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"tron_{tariff_id}")],
-            [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"bnb_{tariff_id}")],
-            [InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"toncoin_{tariff_id}")],
-            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_tariffs")],
-        ]
-    )
+def payment_method_kb(tariff_id: str, enabled_methods: set[str] | None = None) -> InlineKeyboardMarkup:
+    if enabled_methods is None:
+        enabled_methods = {"visa", "card", "tron", "bnb", "ton"}
+    buttons = []
+    if "visa" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="💳 Visa karta", callback_data=f"visa_{tariff_id}")])
+    if "card" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="💳 UZCARD/HUMO", callback_data=f"card_{tariff_id}")])
+    if "tron" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"tron_{tariff_id}")])
+    if "bnb" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"bnb_{tariff_id}")])
+    if "ton" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"toncoin_{tariff_id}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_tariffs")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 # ─── Visa Payment ────────────────────────────────────────────────────
@@ -212,11 +218,32 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
+            [InlineKeyboardButton(text="💰 To'lov usullari", callback_data="admin_payment_methods")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
             [InlineKeyboardButton(text="❓ Yordam", callback_data="admin_help")],
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],
         ]
     )
+
+
+def admin_payment_methods_kb(enabled_methods: set[str]) -> InlineKeyboardMarkup:
+    methods = [
+        ("visa", "💳 Visa", "visa"),
+        ("card", "💳 UZCARD/HUMO", "card"),
+        ("tron", "🔗 TRON TRC20", "tron"),
+        ("bnb", "🟡 BNB BEP20", "bnb"),
+        ("ton", "💎 TON", "ton"),
+        ("stars", "⭐ Telegram Stars", "stars"),
+    ]
+    buttons = []
+    for method_id, label, callback_key in methods:
+        status = "✅" if method_id in enabled_methods else "❌"
+        buttons.append([InlineKeyboardButton(
+            text=f"{status} {label}",
+            callback_data=f"toggle_pay_{callback_key}",
+        )])
+    buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def admin_tariffs_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
@@ -265,17 +292,22 @@ def course_tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMar
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def course_payment_method_kb(tariff_id: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"course_stars_{tariff_id}")],
-            [InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"course_card_{tariff_id}")],
-            [InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"course_tron_{tariff_id}")],
-            [InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"course_bnb_{tariff_id}")],
-            [InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"course_toncoin_{tariff_id}")],
-            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_course_tariffs")],
-        ]
-    )
+def course_payment_method_kb(tariff_id: str, enabled_methods: set[str] | None = None) -> InlineKeyboardMarkup:
+    if enabled_methods is None:
+        enabled_methods = {"stars", "card", "tron", "bnb", "ton"}
+    buttons = []
+    if "stars" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="⭐ Telegram Stars", callback_data=f"course_stars_{tariff_id}")])
+    if "card" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="💳 Karta orqali", callback_data=f"course_card_{tariff_id}")])
+    if "tron" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="🔗 TRON TRC20 (USDT)", callback_data=f"course_tron_{tariff_id}")])
+    if "bnb" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="🟡 BNB BEP20 (USDT)", callback_data=f"course_bnb_{tariff_id}")])
+    if "ton" in enabled_methods:
+        buttons.append([InlineKeyboardButton(text="💎 TON (USDT)", callback_data=f"course_toncoin_{tariff_id}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="back_course_tariffs")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def course_card_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:

@@ -29,9 +29,13 @@ def settings_kb() -> InlineKeyboardMarkup:
 
 
 def settings_edit_kb() -> InlineKeyboardMarkup:
+    # Keys that are managed via dedicated UI (not plain text input)
+    skip_keys = {"setup_completed", "payment_visa_enabled", "payment_card_enabled",
+                 "payment_tron_enabled", "payment_bnb_enabled", "payment_ton_enabled",
+                 "payment_stars_enabled"}
     buttons = []
     for key, desc in SETTINGS_KEYS.items():
-        if key == "setup_completed":
+        if key in skip_keys:
             continue
         buttons.append([InlineKeyboardButton(text=f"✏️ {desc}", callback_data=f"admin_set_{key}")])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_settings")])
