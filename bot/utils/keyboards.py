@@ -60,6 +60,7 @@ def visa_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Skrinshot yuborish", callback_data=f"upload_visa_{tariff_id}")],
+            [InlineKeyboardButton(text="🔄 Kursni yangilash", callback_data=f"refresh_visa_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
         ]
     )
@@ -81,6 +82,7 @@ def card_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Chek yuborish", callback_data=f"upload_check_{tariff_id}")],
+            [InlineKeyboardButton(text="🔄 Kursni yangilash", callback_data=f"refresh_card_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"pay_method_{tariff_id}")],
         ]
     )
@@ -331,6 +333,7 @@ def course_card_payment_kb(tariff_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="📤 Chek yuborish", callback_data=f"course_upload_check_{tariff_id}")],
+            [InlineKeyboardButton(text="🔄 Kursni yangilash", callback_data=f"refresh_course_card_{tariff_id}")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=f"course_pay_method_{tariff_id}")],
         ]
     )

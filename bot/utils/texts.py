@@ -65,6 +65,9 @@ VISA_PAYMENT_TEXT = (
     "Pul o'tkazish uchun quyidagi karta raqamiga to'lov qiling:\n\n"
     "<code>{card_number}</code>\n"
     "Qabul qiluvchi: <b>{card_holder}</b>\n\n"
+    "💰 <b>To'lov summasi:</b>\n"
+    "💵 {usd_amount}  ➡️  🇺🇿 <b>{uzs_amount}</b>\n"
+    "💱 Kurs: 1 USD = {exchange_rate} UZS\n\n"
     "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
 )
 
@@ -82,10 +85,13 @@ VISA_RECEIVED_TEXT = (
 
 # Card Payment
 CARD_PAYMENT_TEXT = (
-    "💳 <b>Karta orqali to'lov</b>\n\n"
+    "💳 <b>UZCARD / HUMO orqali to'lov</b>\n\n"
     "Pul o'tkazish uchun quyidagi karta raqamiga to'lov qiling:\n\n"
     "<code>{card_number}</code>\n"
     "Qabul qiluvchi: <b>{card_holder}</b>\n\n"
+    "💰 <b>To'lov summasi:</b>\n"
+    "💵 {usd_amount}  ➡️  🇺🇿 <b>{uzs_amount}</b>\n"
+    "💱 Kurs: 1 USD = {exchange_rate} UZS\n\n"
     "To'lovni amalga oshirgach, pastdagi tugma orqali chek rasmini yuboring."
 )
 

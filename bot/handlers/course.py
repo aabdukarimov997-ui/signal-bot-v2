@@ -49,6 +49,7 @@ from bot.utils.texts import (
 )
 from bot.utils.states import CoursePaymentStates
 from bot.utils.helpers import safe_edit, safe_send, format_date
+from bot.services.exchange_service import format_payment_with_uzs
 
 course_router = Router()
 
@@ -208,6 +209,31 @@ async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> Non
 
 # ─── Card Payment (Course) ───────────────────────────────────────────
 
+# ─── Refresh Exchange Rate (Course) ───────────────────────────────────
+
+@course_router.callback_query(F.data.startswith("refresh_course_card_"))
+async def refresh_course_card_rate_handler(callback: CallbackQuery) -> None:
+    """Kursni yangilab, UZS summani qayta ko'rsatish (darslar uchun)."""
+    tariff_id = callback.data.replace("refresh_course_card_", "")
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await callback.answer("❌ Tarif topilmadi", show_alert=True)
+        return
+
+    card_num = await get_setting("card_number") or settings.CARD_NUMBER
+    card_own = await get_setting("card_owner") or settings.CARD_HOLDER
+    text, rate = await format_payment_with_uzs(
+        usd_amount=float(tariff.price),
+        template=CARD_PAYMENT_TEXT,
+        card_number=card_num,
+        card_holder=card_own,
+        force_refresh=True,
+    )
+    await safe_edit(callback.message, text, reply_markup=course_card_payment_kb(tariff.id))
+    rate_str = f"{rate:,.0f}".replace(",", " ")
+    await callback.answer(f"✅ Kurs yangilandi: 1 USD = {rate_str} UZS", show_alert=False)
+
+
 @course_router.callback_query(F.data.startswith("course_card_"))
 async def course_card_payment_handler(callback: CallbackQuery) -> None:
     tariff_id = callback.data.replace("course_card_", "")
@@ -218,7 +244,12 @@ async def course_card_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("card_owner") or settings.CARD_HOLDER
-    text = CARD_PAYMENT_TEXT.format(card_number=card_num, card_holder=card_own)
+    text, rate = await format_payment_with_uzs(
+        usd_amount=float(tariff.price),
+        template=CARD_PAYMENT_TEXT,
+        card_number=card_num,
+        card_holder=card_own,
+    )
     await safe_edit(callback.message, text, reply_markup=course_card_payment_kb(tariff.id))
     await callback.answer()
 

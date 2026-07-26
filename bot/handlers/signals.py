@@ -59,6 +59,7 @@ from bot.utils.texts import (
 )
 from bot.utils.states import PaymentStates
 from bot.utils.helpers import safe_edit, safe_send, format_date, calculate_discounted_price
+from bot.services.exchange_service import format_payment_with_uzs
 
 signal_router = Router()
 
@@ -181,7 +182,9 @@ async def visa_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("visa_card_number") or await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("visa_card_holder") or await get_setting("card_owner") or settings.CARD_HOLDER
-    text = VISA_PAYMENT_TEXT.format(
+    text, rate = await format_payment_with_uzs(
+        usd_amount=float(tariff.price),
+        template=VISA_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
     )
@@ -318,6 +321,65 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
 # ─── Card Payment ───────────────────────────────────────────────────
 
+# ─── Helper: refresh exchange rate ────────────────────────────────────
+
+async def _refresh_rate_and_reply(
+    callback: CallbackQuery,
+    tariff_id: str,
+    template: str,
+    card_num_key: str,
+    card_holder_key: str,
+    kb_func,
+) -> None:
+    """Umumiy helper — kursni yangilab, tumanni qayta ko'rsatadi."""
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await callback.answer("❌ Tarif topilmadi", show_alert=True)
+        return
+
+    card_num = await get_setting(card_num_key) or settings.CARD_NUMBER
+    card_own = await get_setting(card_holder_key) or settings.CARD_HOLDER
+
+    text, rate = await format_payment_with_uzs(
+        usd_amount=float(tariff.price),
+        template=template,
+        card_number=card_num,
+        card_holder=card_own,
+        force_refresh=True,  # Cache'ni tozalab yangi kurs oladi
+    )
+    await safe_edit(callback.message, text, reply_markup=kb_func(tariff.id))
+    rate_str = f"{rate:,.0f}".replace(",", " ")
+    await callback.answer(f"✅ Kurs yangilandi: 1 USD = {rate_str} UZS", show_alert=False)
+
+
+# ─── Refresh Exchange Rate ────────────────────────────────────────────
+
+@signal_router.callback_query(F.data.startswith("refresh_card_"))
+async def refresh_card_rate_handler(callback: CallbackQuery) -> None:
+    tariff_id = callback.data.replace("refresh_card_", "")
+    await _refresh_rate_and_reply(
+        callback,
+        tariff_id,
+        CARD_PAYMENT_TEXT,
+        "card_number",
+        "card_owner",
+        card_payment_kb,
+    )
+
+
+@signal_router.callback_query(F.data.startswith("refresh_visa_"))
+async def refresh_visa_rate_handler(callback: CallbackQuery) -> None:
+    tariff_id = callback.data.replace("refresh_visa_", "")
+    await _refresh_rate_and_reply(
+        callback,
+        tariff_id,
+        VISA_PAYMENT_TEXT,
+        "visa_card_number",
+        "visa_card_holder",
+        visa_payment_kb,
+    )
+
+
 @signal_router.callback_query(F.data.startswith("card_"))
 async def card_payment_handler(callback: CallbackQuery) -> None:
     tariff_id = callback.data.replace("card_", "")
@@ -328,7 +390,9 @@ async def card_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("card_owner") or settings.CARD_HOLDER
-    text = CARD_PAYMENT_TEXT.format(
+    text, rate = await format_payment_with_uzs(
+        usd_amount=float(tariff.price),
+        template=CARD_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
     )
