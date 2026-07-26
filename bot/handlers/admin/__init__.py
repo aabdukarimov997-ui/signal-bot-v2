@@ -9,6 +9,7 @@ from .settings import admin_settings_router
 from .help import admin_help_router
 from .signal_content import admin_signal_content_router
 from .course_content import admin_course_content_router
+from .channel_announcement import admin_channel_announce_router
 
 # Barcha admin routelarni bitta joyda yig'amiz
 routers = [
@@ -23,4 +24,5 @@ routers = [
     admin_help_router,
     admin_signal_content_router,
     admin_course_content_router,
+    admin_channel_announce_router,
 ]

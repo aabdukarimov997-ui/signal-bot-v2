@@ -52,3 +52,12 @@ class AdminCourseContentStates(StatesGroup):
     waiting_price = State()
     waiting_image = State()
     waiting_video = State()
+
+
+class AdminChannelAnnouncementStates(StatesGroup):
+    waiting_channel = State()           # Kanal tanlash
+    waiting_content_type = State()      # Matn/Rasm+matn/Video+matn
+    waiting_text = State()              # Matn kiritish
+    waiting_photo = State()             # Rasm yuborish
+    waiting_video = State()             # Video yuborish
+    confirm = State()                   # Tasdiqlash

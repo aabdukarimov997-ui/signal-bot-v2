@@ -204,6 +204,7 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📊 Tariflar", callback_data="admin_tariffs")],
             [InlineKeyboardButton(text="🚀 VIP Signal xabari", callback_data="admin_signal_content")],
             [InlineKeyboardButton(text="📚 Darslar xabari", callback_data="admin_course_content")],
+            [InlineKeyboardButton(text="📢 Kanalga e'lon", callback_data="admin_channel_announce")],
             [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
