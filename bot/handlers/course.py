@@ -84,34 +84,34 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
     kb = course_tariff_selection_kb(tariffs)
     message = target if isinstance(target, Message) else target.message
 
-    # Priority: video > image > text-only
+    # Priority: video > image > text-only (with fallback chain)
+    sent = False
+
     if course_vid:
         try:
             await bot.send_video(chat_id=message.chat.id, video=course_vid, caption=text, reply_markup=kb)
+            sent = True
             if is_edit:
                 try:
                     await message.delete()
                 except Exception:
                     pass
         except Exception:
-            if is_edit:
-                await safe_edit(message, text, reply_markup=kb)
-            else:
-                await safe_send(message, text, reply_markup=kb)
-    elif course_img:
+            pass  # Video ishlamadi — rasmga o'tamiz
+
+    if not sent and course_img:
         try:
             await bot.send_photo(chat_id=message.chat.id, photo=course_img, caption=text, reply_markup=kb)
+            sent = True
             if is_edit:
                 try:
                     await message.delete()
                 except Exception:
                     pass
         except Exception:
-            if is_edit:
-                await safe_edit(message, text, reply_markup=kb)
-            else:
-                await safe_send(message, text, reply_markup=kb)
-    else:
+            pass  # Rasm ishlamadi — matnga o'tamiz
+
+    if not sent:
         if is_edit:
             await safe_edit(message, text, reply_markup=kb)
         else:
