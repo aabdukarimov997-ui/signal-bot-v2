@@ -75,11 +75,11 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
     course_description = await get_setting("course_description") or ""
     course_msg = await get_setting("course_message")
 
-    # Always include name + description + tariffs
-    text = _build_course_text(course_name, course_description, tariffs)
-    # If custom message exists, prepend it above the auto-generated content
+    # If custom message exists, show ONLY the custom message (no auto-generated text)
     if course_msg:
-        text = f"{course_msg}\n\n━━━━━━━━━━━━━━━━━━\n\n{text}"
+        text = course_msg
+    else:
+        text = _build_course_text(course_name, course_description, tariffs)
 
     course_img = await get_setting("course_image")
     course_vid = await get_setting("course_video")
