@@ -1,7 +1,7 @@
 import html
 
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, ContentType
+from aiogram.types import CallbackQuery, Message, ContentType, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
 
@@ -13,7 +13,7 @@ import html
 from aiogram.exceptions import TelegramBadRequest
 
 from bot.utils.helpers import safe_edit
-from bot.utils.states import AdminCourseContentStates
+from bot.utils.states import AdminCourseContentStates, AdminCourseComboStates
 
 admin_course_content_router = Router()
 
@@ -296,6 +296,173 @@ async def admin_course_media_del_handler(callback: CallbackQuery) -> None:
     await safe_edit(callback.message, "✅ <b>Rasm va video o'chirildi!</b>\n\nEndi darslar obuna xabari faqat matn ko'rinishida chiqadi.", reply_markup=admin_course_content_kb())
     await callback.answer()
 
+
+# ─── ✏️ Xabar + Rasm + Video COMBO ──────────────────────────────────
+
+@admin_course_content_router.callback_query(F.data == "admin_course_combo")
+async def admin_course_combo_start(callback: CallbackQuery, state: FSMContext) -> None:
+    if callback.from_user.id not in await get_admin_ids():
+        await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
+        return
+
+    await state.set_state(AdminCourseComboStates.waiting_text)
+    await state.update_data(image_file_id=None, video_file_id=None)
+    await safe_edit(
+        callback.message,
+        "✏️ <b>1/3: Xabar matnini yozing</b>\n\n"
+        "Darslar uchun xabar matnini yuboring (HTML formatda).\n\n"
+        "Keyin rasm va video ham qo'shishingiz mumkin.\n\n"
+        "❌ Bekor qilish: /cancel",
+        reply_markup=None,
+    )
+    await callback.answer()
+
+
+@admin_course_content_router.message(AdminCourseComboStates.waiting_text)
+async def admin_course_combo_text(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
+
+    await state.update_data(text=message.text.strip())
+    await state.set_state(AdminCourseComboStates.waiting_image)
+    await message.answer(
+        "✏️ <b>2/3: Rasm (ixtiyoriy)</b>\n\n"
+        "Agar rasm qo'shmoqchi bo'lsangiz, yuboring.\n"
+        "Rasm kerak bo'lmasa → <b>skip</b> yozing.",
+        reply_markup=None,
+    )
+
+
+@admin_course_content_router.message(AdminCourseComboStates.waiting_image, F.content_type == ContentType.PHOTO)
+async def admin_course_combo_image(message: Message, state: FSMContext) -> None:
+    await state.update_data(image_file_id=message.photo[-1].file_id)
+    await _ask_combo_video(message, state)
+
+
+@admin_course_content_router.message(AdminCourseComboStates.waiting_image)
+async def admin_course_combo_image_skip(message: Message, state: FSMContext) -> None:
+    if message.text and message.text.strip().lower() == "skip":
+        await _ask_combo_video(message, state)
+    else:
+        await message.answer("❌ Rasm yuboring yoki 'skip' yozing.")
+
+
+async def _ask_combo_video(target: Message, state: FSMContext) -> None:
+    await state.set_state(AdminCourseComboStates.waiting_video)
+    await target.answer(
+        "✏️ <b>3/3: Video (ixtiyoriy)</b>\n\n"
+        "Agar video qo'shmoqchi bo'lsangiz, yuboring.\n"
+        "Video kerak bo'lmasa → <b>skip</b> yozing.",
+        reply_markup=None,
+    )
+
+
+@admin_course_content_router.message(AdminCourseComboStates.waiting_video, F.content_type == ContentType.VIDEO)
+async def admin_course_combo_video(message: Message, state: FSMContext, bot: Bot) -> None:
+    await state.update_data(video_file_id=message.video.file_id)
+    await _show_combo_preview(message, state, bot)
+
+
+@admin_course_content_router.message(AdminCourseComboStates.waiting_video)
+async def admin_course_combo_video_skip(message: Message, state: FSMContext, bot: Bot) -> None:
+    if message.text and message.text.strip().lower() == "skip":
+        await _show_combo_preview(message, state, bot)
+    else:
+        await message.answer("❌ Video yuboring yoki 'skip' yozing.")
+
+
+async def _show_combo_preview(target: Message, state: FSMContext, bot: Bot) -> None:
+    """Preview + tasdiqlash."""
+    data = await state.get_data()
+    text = data.get("text", "")
+    image_file_id = data.get("image_file_id")
+    video_file_id = data.get("video_file_id")
+
+    # Saqlashdan oldin preview ko'rsat
+    if image_file_id:
+        try:
+            await bot.send_photo(chat_id=target.chat.id, photo=image_file_id, caption=text[:200])
+        except Exception:
+            pass
+    if video_file_id:
+        try:
+            await bot.send_video(chat_id=target.chat.id, video=video_file_id)
+        except Exception:
+            pass
+
+    status = f"✅ <b>Xabar</b>: {text[:50]}...\n"
+    status += f"{'✅' if image_file_id else '❌'} <b>Rasm</b>\n"
+    status += f"{'✅' if video_file_id else '❌'} <b>Video</b>\n"
+
+    await state.set_state(AdminCourseComboStates.confirm)
+    await target.answer(
+        f"👁 <b>Preview</b>\n\n{status}\n"
+        f"Hammasi to'g'rimi?\n\n"
+        f"✅ <b>Saqlash</b> — xabar, rasm va videoni saqlaydi\n"
+        f"🔄 <b>Qayta</b> — boshidan yozish\n"
+        f"❌ <b>Bekor</b> — bekor qilish",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Saqlash", callback_data="combo_save")],
+            [InlineKeyboardButton(text="🔄 Qayta", callback_data="combo_redo")],
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="combo_cancel")],
+        ]),
+    )
+
+
+@admin_course_content_router.callback_query(F.data == "combo_save", AdminCourseComboStates.confirm)
+async def admin_course_combo_save(callback: CallbackQuery, state: FSMContext) -> None:
+    data = await state.get_data()
+    text = data.get("text", "")
+    image_file_id = data.get("image_file_id")
+    video_file_id = data.get("video_file_id")
+
+    await set_setting("course_message", text)
+    await set_setting("course_image", image_file_id or "")
+    await set_setting("course_video", video_file_id or "")
+
+    await state.clear()
+    await safe_edit(
+        callback.message,
+        "✅ <b>Darslar xabari to'liq saqlandi!</b>\n\n"
+        f"📝 Xabar: ✅\n"
+        f"{'🖼 Rasm: ✅' if image_file_id else '🖼 Rasm: ⚪'}\n"
+        f"{'🎬 Video: ✅' if video_file_id else '🎬 Video: ⚪'}",
+        reply_markup=admin_course_content_kb(),
+    )
+    await callback.answer()
+
+
+@admin_course_content_router.callback_query(F.data == "combo_redo", AdminCourseComboStates.confirm)
+async def admin_course_combo_redo(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(AdminCourseComboStates.waiting_text)
+    await state.update_data(image_file_id=None, video_file_id=None)
+    await safe_edit(
+        callback.message,
+        "✏️ <b>1/3: Xabar matnini yozing</b>\n\n"
+        "Yangi xabar matnini yuboring (HTML formatda).",
+        reply_markup=None,
+    )
+    await callback.answer()
+
+
+@admin_course_content_router.callback_query(F.data == "combo_cancel")
+async def admin_course_combo_cancel(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
+    await safe_edit(callback.message, "❌ Bekor qilindi.", reply_markup=admin_course_content_kb())
+    await callback.answer()
+
+
+@admin_course_content_router.message(F.text == "/cancel", AdminCourseComboStates.waiting_text)
+@admin_course_content_router.message(F.text == "/cancel", AdminCourseComboStates.waiting_image)
+@admin_course_content_router.message(F.text == "/cancel", AdminCourseComboStates.waiting_video)
+@admin_course_content_router.message(F.text == "/cancel", AdminCourseComboStates.confirm)
+async def admin_course_combo_cancel_text(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer("❌ Bekor qilindi.", reply_markup=admin_course_content_kb())
+
+
+# ─── Admin course media preview ─────────────────────────────────────
 
 @admin_course_content_router.callback_query(F.data == "admin_course_preview")
 async def admin_course_preview_handler(callback: CallbackQuery, bot: Bot) -> None:
