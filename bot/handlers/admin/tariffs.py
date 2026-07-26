@@ -64,15 +64,21 @@ async def admin_add_tariff_start(callback: CallbackQuery, state: FSMContext) -> 
 
 @admin_tariffs_router.message(AdminAddTariffStates.waiting_name)
 async def admin_add_tariff_name(message: Message, state: FSMContext) -> None:
-    await state.update_data(name=message.text)
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
+    await state.update_data(name=message.text.strip() or "—")
     await state.set_state(AdminAddTariffStates.waiting_duration)
     await message.answer("📅 <b>Tarif muddatini kiriting (oylarda):</b>\nMasalan: 1, 3, 6")
 
 
 @admin_tariffs_router.message(AdminAddTariffStates.waiting_duration)
 async def admin_add_tariff_duration(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, son kiriting.")
+        return
     try:
-        months = int(message.text)
+        months = int(message.text.strip())
         if months < 1:
             raise ValueError
     except ValueError:
@@ -85,8 +91,11 @@ async def admin_add_tariff_duration(message: Message, state: FSMContext) -> None
 
 @admin_tariffs_router.message(AdminAddTariffStates.waiting_price)
 async def admin_add_tariff_price(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, narx kiriting.")
+        return
     try:
-        price = float(message.text)
+        price = float(message.text.strip())
         if price <= 0:
             raise ValueError
     except ValueError:
@@ -154,6 +163,9 @@ async def admin_edit_tariff_start(callback: CallbackQuery, state: FSMContext) ->
 
 @admin_tariffs_router.message(AdminEditTariffStates.waiting_field)
 async def admin_edit_tariff_field(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, 1, 2, 3 yoki 4 kiriting.")
+        return
     field_map = {"1": "name", "2": "price", "3": "duration", "4": "channel"}
     field = field_map.get(message.text.strip())
     if not field:
@@ -183,12 +195,16 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
         await state.clear()
         return
 
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
+
     # Parse value based on field
     if field == "name":
-        new_value = message.text
+        new_value = message.text.strip()
     elif field == "price":
         try:
-            new_value = float(message.text)
+            new_value = float(message.text.strip())
             if new_value <= 0:
                 raise ValueError
         except ValueError:
@@ -196,7 +212,7 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
             return
     elif field == "duration":
         try:
-            new_value = int(message.text)
+            new_value = int(message.text.strip())
             if new_value < 1:
                 raise ValueError
         except ValueError:

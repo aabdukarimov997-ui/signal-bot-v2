@@ -78,6 +78,9 @@ async def admin_signal_msg_handler(callback: CallbackQuery, state: FSMContext) -
 
 @admin_signal_content_router.message(AdminSignalContentStates.waiting_message)
 async def admin_signal_msg_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
     value = message.text.strip()
     await set_setting("signal_message", value)
     await state.clear()
@@ -115,6 +118,9 @@ async def admin_signal_price_handler(callback: CallbackQuery, state: FSMContext)
 
 @admin_signal_content_router.message(AdminSignalContentStates.waiting_price)
 async def admin_signal_price_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
     text = message.text.strip()
     try:
         parts = text.split()

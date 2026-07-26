@@ -74,6 +74,9 @@ async def social_free_handler(callback: CallbackQuery, state: FSMContext) -> Non
 
 
 async def _save_link(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, havolani matn sifatida yuboring.")
+        return
     data = await state.get_data()
     db_key = data.get("db_key", "")
     label = data.get("label", "")

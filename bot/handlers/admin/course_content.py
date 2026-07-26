@@ -94,6 +94,9 @@ async def admin_course_msg_handler(callback: CallbackQuery, state: FSMContext) -
 
 @admin_course_content_router.message(AdminCourseContentStates.waiting_message)
 async def admin_course_msg_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
     value = message.text.strip()
     await set_setting("course_message", value)
     await state.clear()
@@ -154,6 +157,9 @@ async def admin_course_price_handler(callback: CallbackQuery, state: FSMContext)
 
 @admin_course_content_router.message(AdminCourseContentStates.waiting_price)
 async def admin_course_price_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, narxni matn sifatida yuboring.")
+        return
     try:
         price = float(message.text.strip())
         if price <= 0:
@@ -184,6 +190,9 @@ async def admin_course_price_save(message: Message, state: FSMContext) -> None:
 
 @admin_course_content_router.message(AdminCourseContentStates.waiting_name)
 async def admin_course_name_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
     value = message.text.strip()
     await set_setting("course_tariff_name", value)
     await state.set_state(AdminCourseContentStates.waiting_description)
@@ -199,6 +208,9 @@ async def admin_course_name_save(message: Message, state: FSMContext) -> None:
 
 @admin_course_content_router.message(AdminCourseContentStates.waiting_description)
 async def admin_course_desc_save(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, matn yuboring.")
+        return
     value = message.text.strip()
     if value.lower() != "skip":
         await set_setting("course_description", value)

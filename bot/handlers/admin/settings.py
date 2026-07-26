@@ -18,6 +18,24 @@ from bot.utils.states import AdminSettingsStates
 admin_settings_router = Router()
 
 
+# Settings grouped by category for cleaner UI
+SETTINGS_CATEGORIES = {
+    "📝 Asosiy": ["project_name", "admin_username", "support_username", "welcome_message", "welcome_video"],
+    "📈 Signal": ["signal_message", "signal_image", "signal_video", "private_channel_id", "free_channel_url", "invite_link_url"],
+    "💰 Narxlar": ["price_1_month", "price_3_month", "price_6_month", "stars_1_month", "stars_3_month", "stars_6_month"],
+    "💳 To'lov": ["card_number", "card_owner", "visa_card_number", "visa_card_holder",
+                  "ton_wallet_address", "tron_qr_code", "bnb_wallet_address", "bnb_qr_code",
+                  "toncoin_wallet_address", "toncoin_qr_code"],
+    "📚 Darslar": ["course_tariff_name", "course_message", "course_description", "course_image", "course_video",
+                    "course_price_1_month", "course_stars_1_month",
+                    "course_channel_id", "course_channel_2_id", "course_channel_3_id",
+                    "course_channel_1_name", "course_channel_2_name", "course_channel_3_name",
+                    "course_invite_link_1", "course_invite_link_2", "course_invite_link_3"],
+    "🌐 Ijtimoiy": ["instagram_url", "twitter_url", "youtube_url", "website_url"],
+    "🎁 Bonus": ["premium_gift_link", "admin_ids"],
+}
+
+
 def settings_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📝 Sozlamalarni tahrirlash", callback_data="admin_settings_edit")],
@@ -29,16 +47,20 @@ def settings_kb() -> InlineKeyboardMarkup:
 
 
 def settings_edit_kb() -> InlineKeyboardMarkup:
-    # Keys that are managed via dedicated UI (not plain text input)
-    skip_keys = {"setup_completed", "payment_visa_enabled", "payment_card_enabled",
-                 "payment_tron_enabled", "payment_bnb_enabled", "payment_ton_enabled",
-                 "payment_stars_enabled"}
+    # Show category buttons first, then individual settings
     buttons = []
-    for key, desc in SETTINGS_KEYS.items():
-        if key in skip_keys:
-            continue
-        buttons.append([InlineKeyboardButton(text=f"✏️ {desc}", callback_data=f"admin_set_{key}")])
+    for category, keys in SETTINGS_CATEGORIES.items():
+        buttons.append([InlineKeyboardButton(text=f"📁 {category}", callback_data=f"admin_set_cat_{category}")])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_settings")])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def category_settings_kb(category_keys: list[str]) -> InlineKeyboardMarkup:
+    buttons = []
+    for key in category_keys:
+        desc = SETTINGS_KEYS.get(key, key)
+        buttons.append([InlineKeyboardButton(text=f"✏️ {desc}", callback_data=f"admin_set_{key}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_settings_edit")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -48,13 +70,13 @@ async def admin_settings_handler(callback: CallbackQuery) -> None:
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 
+    # Check if message is too big — show only summary
     all_settings = await get_all_settings()
     text = "⚙️ <b>Sozlamalar</b>\n\n"
-    for key, desc in SETTINGS_KEYS.items():
-        val = all_settings.get(key, "—")
-        if len(val) > 40:
-            val = val[:40] + "..."
-        text += f"<b>{desc}</b>: {val}\n"
+    for category, keys in SETTINGS_CATEGORIES.items():
+        set_count = sum(1 for k in keys if k in all_settings and all_settings[k])
+        total = len(keys)
+        text += f"📁 {category}: {set_count}/{total} sozlangan\n"
 
     await safe_edit(callback.message, text, reply_markup=settings_kb())
     await callback.answer()
@@ -62,7 +84,28 @@ async def admin_settings_handler(callback: CallbackQuery) -> None:
 
 @admin_settings_router.callback_query(F.data == "admin_settings_edit")
 async def admin_settings_edit_handler(callback: CallbackQuery) -> None:
-    await safe_edit(callback.message, "✏️ <b>Sozlamalarni tahrirlash</b>\n\nO'zgartirish uchun tugmani bosing:", reply_markup=settings_edit_kb())
+    await safe_edit(callback.message, "✏️ <b>Sozlamalar kategoriyalari</b>\n\nKategoriyani tanlang:", reply_markup=settings_edit_kb())
+    await callback.answer()
+
+
+@admin_settings_router.callback_query(F.data.startswith("admin_set_cat_"))
+async def admin_show_category_handler(callback: CallbackQuery) -> None:
+    category = callback.data.replace("admin_set_cat_", "")
+    keys = SETTINGS_CATEGORIES.get(category, [])
+    if not keys:
+        await callback.answer("❌ Kategoriya topilmadi", show_alert=True)
+        return
+
+    all_settings = await get_all_settings()
+    text = f"📁 <b>{category}</b>\n\n"
+    for key in keys:
+        desc = SETTINGS_KEYS.get(key, key)
+        val = all_settings.get(key, "—")
+        if len(val) > 40:
+            val = val[:40] + "..."
+        text += f"<b>{desc}</b>: {val}\n"
+
+    await safe_edit(callback.message, text, reply_markup=category_settings_kb(keys))
     await callback.answer()
 
 
@@ -75,7 +118,7 @@ async def admin_set_key_handler(callback: CallbackQuery, state: FSMContext) -> N
     await state.set_state(AdminSettingsStates.waiting_setting_value)
     await state.update_data(setting_key=key)
 
-    await safe_edit(callback.message, f"✏️ <b>{desc}</b>\n\nJoriy: <code>{current_val.get(key, '—')}</code>\n\nYangi qiymat kiriting:", reply_markup=None)
+    await safe_edit(callback.message, f"✏️ <b>{desc}</b>\n\nJoriy: <code>{current_val.get(key, '—')}</code>\n\nYangi qiymat kiriting (matn, rasm, video yoki fayl):", reply_markup=None)
     await callback.answer()
 
 
@@ -98,7 +141,7 @@ async def admin_save_setting(message: Message, state: FSMContext) -> None:
         await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
         return
 
-    # Handle video setting (welcome_video, course_image, etc.)
+    # Handle video setting
     if message.content_type == ContentType.VIDEO:
         file_id = message.video.file_id
         await set_setting(key, file_id)
@@ -116,12 +159,17 @@ async def admin_save_setting(message: Message, state: FSMContext) -> None:
         await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
         return
 
-    value = message.text.strip()
-    await set_setting(key, value)
-    await state.clear()
+    # Handle text
+    if message.text is not None:
+        value = message.text.strip()
+        await set_setting(key, value)
+        await state.clear()
+        await message.answer(f"✅ <b>{desc}</b> yangilandi!\nQiymat: <code>{value}</code>")
+        await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
+        return
 
-    await message.answer(f"✅ <b>{desc}</b> yangilandi!\nQiymat: <code>{value}</code>")
-    await message.answer("⚙️ Sozlamalar", reply_markup=settings_kb())
+    # Handle other message types (sticker, voice, etc.)
+    await message.answer("❌ Matn, rasm, video yoki fayl yuboring.")
 
 
 @admin_settings_router.callback_query(F.data == "admin_settings_export")
@@ -143,17 +191,21 @@ async def admin_import_start_handler(callback: CallbackQuery, state: FSMContext)
 
 @admin_settings_router.message(AdminSettingsStates.waiting_import_json)
 async def admin_import_handler(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, JSON matn sifatida yuboring.")
+        return
     try:
+        import json
         await import_settings(message.text)
         await state.clear()
-        await message.answer("✅ <b>Sozlamalar import qilindi!</b>\nBarcha qiymatlar yangilandi.")
-    except Exception:
+        await message.answer("✅ <b>Sozlamalar import qilindi!</b>\nBarcha qiymatlar yangilandi.", reply_markup=settings_kb())
+    except (json.JSONDecodeError, Exception) as e:
         await state.clear()
-        await message.answer("❌ JSON format noto'g'ri. Qayta urinib ko'ring.")
+        await message.answer(f"❌ Xatolik: {e}")
 
 
 @admin_settings_router.callback_query(F.data == "admin_settings_wizard")
-async def admin_wizard_handler(callback: CallbackQuery) -> None:
+async def admin_wizard_handler(callback: CallbackQuery, state: FSMContext) -> None:
     from bot.handlers.setup import start_wizard
-    await start_wizard(callback.message, callback.from_user.id)
+    await start_wizard(callback.message, state)
     await callback.answer()
