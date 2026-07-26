@@ -7,6 +7,24 @@ from bot.database.session import get_session
 from bot.models.payment import Payment
 
 
+async def _generate_invoice_id(session) -> str:
+    """Generate invoice ID in format DDMMYY-NNNN (e.g. 260426-0001)."""
+    now = datetime.now(timezone.utc)
+    date_prefix = now.strftime("%d%m%y")
+
+    # Count today's payments
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_start = today_start + timedelta(days=1)
+    result = await session.execute(
+        select(func.count(Payment.id)).where(
+            Payment.created_at >= today_start,
+            Payment.created_at < tomorrow_start,
+        )
+    )
+    count = (result.scalar() or 0) + 1
+    return f"{date_prefix}-{count:04d}"
+
+
 async def create_payment(
     user_id: str,
     product_type: str,
@@ -21,6 +39,7 @@ async def create_payment(
     provider_charge_id: Optional[str] = None,
 ) -> Payment:
     async with get_session() as session:
+        invoice_id = await _generate_invoice_id(session)
         payment = Payment(
             user_id=user_id,
             product_type=product_type,
@@ -35,6 +54,7 @@ async def create_payment(
             telegram_charge_id=telegram_charge_id,
             provider_charge_id=provider_charge_id,
         )
+        payment.invoice_id = invoice_id
         session.add(payment)
         await session.flush()
         return payment

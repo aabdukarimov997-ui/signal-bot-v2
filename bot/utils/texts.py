@@ -182,8 +182,9 @@ PAYMENT_REJECTED_TEXT = (
 # Admin Notification
 ADMIN_PAYMENT_NOTIFICATION = (
     "💳 <b>Yangi to'lov</b>\n\n"
+    "🧾 ID: <code>#{invoice_id}</code>\n"
     "👤 Foydalanuvchi: {full_name}\n"
-    "🆔 ID: {telegram_id}\n"
+    "🆔 Telegram: {telegram_id}\n"
     "💰 Tarif: {tariff_name}\n"
     "💵 Summa: ${amount}\n"
     "🔗 Usul: {payment_method}\n"

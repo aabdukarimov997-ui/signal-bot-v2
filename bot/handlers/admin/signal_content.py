@@ -1,3 +1,5 @@
+import html
+
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, ContentType
 from aiogram.fsm.context import FSMContext
@@ -25,7 +27,7 @@ async def admin_signal_content_handler(callback: CallbackQuery, bot: Bot) -> Non
 
     status_lines = []
     if signal_msg and signal_msg != SIGNAL_TEXT:
-        preview = signal_msg[:80] + "..." if len(signal_msg) > 80 else signal_msg
+        preview = html.escape(signal_msg[:80] + "..." if len(signal_msg) > 80 else signal_msg)
         status_lines.append(f"📝 Xabar: ✅ (custom)")
     else:
         status_lines.append(f"📝 Xabar: ⚪ (default)")

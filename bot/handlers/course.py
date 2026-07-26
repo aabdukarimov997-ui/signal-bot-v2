@@ -383,6 +383,7 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
     else:
         method_label = "💳 Karta/Check"
     admin_text = ADMIN_PAYMENT_NOTIFICATION.format(
+        invoice_id=payment.invoice_id or "???",
         full_name=user.full_name,
         telegram_id=user.telegram_id,
         tariff_name=f"📚 Darslar: {tariff.name}",

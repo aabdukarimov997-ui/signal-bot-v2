@@ -1,3 +1,5 @@
+import html
+
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, ContentType
 from aiogram.fsm.context import FSMContext
@@ -27,12 +29,12 @@ async def admin_course_content_handler(callback: CallbackQuery, bot: Bot) -> Non
     status_lines = []
 
     if course_msg:
-        preview = course_msg[:60] + "..." if len(course_msg) > 60 else course_msg
+        preview = html.escape(course_msg[:60] + "..." if len(course_msg) > 60 else course_msg)
         status_lines.append(f"📝 Custom xabar: ✅ ({preview})")
     else:
         status_lines.append(f"📝 Custom xabar: ⚪ (auto-generatsiya)")
 
-    status_lines.append(f"📝 Nomi: {course_name}")
+    status_lines.append(f"📝 Nomi: {html.escape(course_name)}")
 
     # Show current course tariff price
     tariffs_list = await get_all_tariffs("course")
@@ -43,7 +45,7 @@ async def admin_course_content_handler(callback: CallbackQuery, bot: Bot) -> Non
         status_lines.append("💰 Narx: ⚪ (tariflar yo'q)")
 
     if course_desc:
-        preview = course_desc[:60] + "..." if len(course_desc) > 60 else course_desc
+        preview = html.escape(course_desc[:60] + "..." if len(course_desc) > 60 else course_desc)
         status_lines.append(f"📝 Tavsif: ✅ ({preview})")
     else:
         status_lines.append("📝 Tavsif: ⚪ (yo'q)")

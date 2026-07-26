@@ -13,6 +13,7 @@ class Payment(BaseMixin, Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     product_type: Mapped[str] = mapped_column(String(32), nullable=False)  # signal, course
     product_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    invoice_id: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, unique=True)
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(16), default="USD")
     payment_method: Mapped[str] = mapped_column(String(32), nullable=False)  # stars, card, check, visa, tron_trc20, bnb

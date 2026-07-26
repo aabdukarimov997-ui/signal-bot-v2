@@ -378,6 +378,7 @@ async def receipt_received_handler(message: Message, user: User, state: FSMConte
     else:
         method_label = "💳 UZCARD/HUMO"
     admin_text = ADMIN_PAYMENT_NOTIFICATION.format(
+        invoice_id=payment.invoice_id or "???",
         full_name=user.full_name,
         telegram_id=user.telegram_id,
         tariff_name=tariff.label,
