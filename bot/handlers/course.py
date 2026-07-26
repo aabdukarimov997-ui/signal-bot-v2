@@ -71,13 +71,15 @@ def _build_course_text(course_name: str, course_description: str, tariffs: list[
 
 async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
     """Send the Darslar subscription message with optional photo/video from DB settings."""
+    course_name = await get_setting("course_tariff_name") or "Darslar"
+    course_description = await get_setting("course_description") or ""
     course_msg = await get_setting("course_message")
+
+    # Always include name + description + tariffs
+    text = _build_course_text(course_name, course_description, tariffs)
+    # If custom message exists, prepend it above the auto-generated content
     if course_msg:
-        text = course_msg
-    else:
-        course_name = await get_setting("course_tariff_name") or "Darslar"
-        course_description = await get_setting("course_description") or ""
-        text = _build_course_text(course_name, course_description, tariffs)
+        text = f"{course_msg}\n\n━━━━━━━━━━━━━━━━━━\n\n{text}"
 
     course_img = await get_setting("course_image")
     course_vid = await get_setting("course_video")
