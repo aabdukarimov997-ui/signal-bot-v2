@@ -234,12 +234,8 @@ def admin_course_content_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="✏️ Xabar + Rasm + Video", callback_data="admin_course_combo")],
-            [InlineKeyboardButton(text="📝 To'liq xabar o'zgartirish", callback_data="admin_course_msg")],
             [InlineKeyboardButton(text="📝 Nomi/tavsifini o'zgartirish", callback_data="admin_course_desc")],
             [InlineKeyboardButton(text="💰 Narx o'zgartirish", callback_data="admin_course_price")],
-            [InlineKeyboardButton(text="🖼 Rasm o'zgartirish", callback_data="admin_course_img")],
-            [InlineKeyboardButton(text="🎬 Video o'zgartirish", callback_data="admin_course_vid")],
-            [InlineKeyboardButton(text="🗑 Rasm/Video o'chirish", callback_data="admin_course_media_del")],
             [InlineKeyboardButton(text="👁 Ko'rish (preview)", callback_data="admin_course_preview")],
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
         ]
