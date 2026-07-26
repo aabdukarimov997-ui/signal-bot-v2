@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -6,7 +8,7 @@ from bot.config import settings
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
 from bot.services.subscription_service import get_all_tariffs, get_tariff_by_id
-from bot.utils.keyboards import admin_tariffs_kb
+from bot.utils.keyboards import admin_tariffs_kb, skip_channel_kb
 from bot.utils.texts import ADMIN_TARIFFS_TEXT
 from bot.utils.states import AdminAddTariffStates, AdminEditTariffStates
 from bot.utils.helpers import safe_edit
@@ -102,16 +104,48 @@ async def admin_add_tariff_price(message: Message, state: FSMContext) -> None:
         await message.answer("❌ Iltimos, to'g'ri narx kiriting")
         return
 
+    await state.update_data(price=price)
+    await state.set_state(AdminAddTariffStates.waiting_channel)
+
+    channel_text = (
+        "🔗 <b>Maxfiy kanal ID (ixtiyoriy):</b>\n\n"
+        "Agar ushbu tarif o'zining alohida maxfiy kanaliga ega bo'lishi kerak bo'lsa, "
+        "kanal ID sini yuboring.\n\n"
+        "Masalan: <code>-1002271613164</code>\n"
+        "(ID @username_infobot'dan oling)\n\n"
+        "⚠️ <b>Bo'sh yuborsangiz</b> — umumiy kanal (private_channel_id) ishlatiladi.\n\n"
+        "Yoki pastdagi ➡️ O'tkazib yuborish tugmasini bosing:"
+    )
+    await message.answer(channel_text, reply_markup=skip_channel_kb())
+
+
+@admin_tariffs_router.message(AdminAddTariffStates.waiting_channel)
+async def admin_add_tariff_channel(message: Message, state: FSMContext) -> None:
+    if message.text is None:
+        await message.answer("❌ Iltimos, kanal ID yoki bo'sh qoldirish uchun pastdagi tugmani bosing.")
+        return
+
+    channel_id = message.text.strip() or None
+    await _save_new_tariff(state, channel_id, message)
+
+
+@admin_tariffs_router.callback_query(F.data == "skip_tariff_channel", AdminAddTariffStates.waiting_channel)
+async def admin_add_tariff_channel_skip(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.answer()
+    await _save_new_tariff(state, None, callback.message)
+
+
+async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Message) -> None:
     data = await state.get_data()
-    name = data.get("name", f"{data['duration']} oy")
-    duration = data["duration"]
+    name = data.get("name", f"{data.get('duration', 1)} oy")
+    duration = data.get("duration", 1)
+    price = data.get("price", 0)
 
     from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
+    from sqlalchemy import select, func
 
     async with get_session() as session:
-        max_order = 0
-        from sqlalchemy import select, func
         result = await session.execute(select(func.max(SignalTariff.sort_order)))
         max_order = (result.scalar() or 0) + 1
 
@@ -120,15 +154,23 @@ async def admin_add_tariff_price(message: Message, state: FSMContext) -> None:
             duration_months=duration,
             price=price,
             sort_order=max_order,
+            channel_id=channel_id,
         )
         session.add(tariff)
 
     await state.clear()
-    await message.answer(f"✅ Tarif qo'shildi: {name} — ${price:.0f} / {duration} oy")
+
+    channel_info = f"\n🔗 Kanal: <code>{channel_id}</code>" if channel_id else ""
+    await msg.answer(
+        f"✅ <b>Tarif qo'shildi!</b>\n\n"
+        f"📛 Nomi: {name}\n"
+        f"💰 Narx: ${price:.0f}\n"
+        f"📅 Muddat: {duration} oy{channel_info}"
+    )
 
     # Show updated tariffs
     tariffs = await get_all_tariffs()
-    await message.answer(ADMIN_TARIFFS_TEXT, reply_markup=admin_tariffs_kb(tariffs))
+    await msg.answer(ADMIN_TARIFFS_TEXT, reply_markup=admin_tariffs_kb(tariffs))
 
 
 # ─── Edit Tariff ─────────────────────────────────────────────────────

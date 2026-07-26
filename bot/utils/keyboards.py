@@ -299,6 +299,14 @@ def admin_payment_methods_kb(enabled_methods: set[str]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def skip_channel_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="➡️ O'tkazib yuborish", callback_data="skip_tariff_channel")],
+        ]
+    )
+
+
 def admin_tariffs_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
     buttons = []
     for t in tariffs:

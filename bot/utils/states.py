@@ -25,6 +25,7 @@ class AdminAddTariffStates(StatesGroup):
     waiting_name = State()
     waiting_duration = State()
     waiting_price = State()
+    waiting_channel = State()
 
 
 class AdminEditTariffStates(StatesGroup):
