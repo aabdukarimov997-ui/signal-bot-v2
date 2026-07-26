@@ -46,12 +46,9 @@ class AdminSignalContentStates(StatesGroup):
 
 
 class AdminCourseContentStates(StatesGroup):
-    waiting_message = State()
     waiting_name = State()
     waiting_description = State()
     waiting_price = State()
-    waiting_image = State()
-    waiting_video = State()
 
 
 class AdminCourseComboStates(StatesGroup):

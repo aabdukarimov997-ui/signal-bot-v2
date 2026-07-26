@@ -69,51 +69,7 @@ async def admin_course_content_handler(callback: CallbackQuery, bot: Bot) -> Non
     await callback.answer()
 
 
-@admin_course_content_router.callback_query(F.data == "admin_course_msg")
-async def admin_course_msg_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    if callback.from_user.id not in await get_admin_ids():
-        await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
-        return
-
-    current_msg = await get_setting("course_message") or ""
-    if not current_msg:
-        course_name = await get_setting("course_tariff_name") or "Darslar"
-        current_msg = f"(Auto-generatsiya: 📚 {course_name} + Tariflar ro'yxati)"
-
-    await state.set_state(AdminCourseContentStates.waiting_message)
-    await safe_edit(
-        callback.message,
-        f"📝 <b>Darslar to'liq xabarini o'zgartirish</b>\n\n"
-        f"Joriy xabar:\n<code>{current_msg[:200]}{'...' if len(current_msg) > 200 else ''}</code>\n\n"
-        f"Yangi xabar matnini yuboring (HTML formatda).\n"
-        f"⚠️ Bu xabar butun obuna matnini ALMASHTIRADI — nomi, tavsifi va tariflar ro'yxati ham shu matnda bo'ladi.\n"
-        f"⚠️ Bo'sh matn yuborsangiz auto-generatsiya qaytadi.\n\n"
-        f"HTML format:\n"
-        f"• <b>bold</b> — <code>&lt;b&gt;text&lt;/b&gt;</code>\n"
-        f"• <i>italic</i> — <code>&lt;i&gt;text&lt;/i&gt;</code>",
-        reply_markup=None,
-    )
-    await callback.answer()
-
-
-@admin_course_content_router.message(AdminCourseContentStates.waiting_message)
-async def admin_course_msg_save(message: Message, state: FSMContext) -> None:
-    if message.text is None:
-        await message.answer("❌ Iltimos, matn yuboring.")
-        return
-    value = message.text.strip()
-    await set_setting("course_message", value)
-    await state.clear()
-    if value:
-        await message.answer(
-            f"✅ <b>Darslar xabari yangilandi!</b>\n\nYangi xabar:\n{value[:100]}{'...' if len(value) > 100 else ''}",
-            reply_markup=admin_course_content_kb(),
-        )
-    else:
-        await message.answer(
-            "✅ <b>Custom xabar o'chirildi!</b>\nEndi auto-generatsiya ishlaydi (nomi + tavsif + tariflar ro'yxati).",
-            reply_markup=admin_course_content_kb(),
-        )
+# (eski individual handlerlar olib tashlandi — ✏️ Xabar+Rasm+Video combo ishlatiladi)
 
 
 @admin_course_content_router.callback_query(F.data == "admin_course_desc")
@@ -227,74 +183,7 @@ async def admin_course_desc_save(message: Message, state: FSMContext) -> None:
     await state.clear()
 
 
-@admin_course_content_router.callback_query(F.data == "admin_course_img")
-async def admin_course_img_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    if callback.from_user.id not in await get_admin_ids():
-        await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
-        return
-
-    await state.set_state(AdminCourseContentStates.waiting_image)
-    await safe_edit(
-        callback.message,
-        "🖼 <b>Darslar rasmini o'zgartirish</b>\n\nRasmni yuboring — bot uni darslar obuna xabariga biriktiradi.\n\n⚠️ Rasm botga to'g'ridan-to'g'ri yuborilishi kerak.",
-        reply_markup=None,
-    )
-    await callback.answer()
-
-
-@admin_course_content_router.message(AdminCourseContentStates.waiting_image, F.content_type == ContentType.PHOTO)
-async def admin_course_img_save(message: Message, state: FSMContext) -> None:
-    file_id = message.photo[-1].file_id
-    await set_setting("course_image", file_id)
-    await state.clear()
-    await message.answer("✅ <b>Darslar rasmi yangilandi!</b>", reply_markup=admin_course_content_kb())
-
-
-@admin_course_content_router.message(AdminCourseContentStates.waiting_image)
-async def admin_course_img_invalid(message: Message, state: FSMContext) -> None:
-    # Agar qandaydir xatolik bo'lsa, state ni tozalaymiz
-    await state.clear()
-    await message.answer("❌ Iltimos, rasm yuboring.")
-
-
-@admin_course_content_router.callback_query(F.data == "admin_course_vid")
-async def admin_course_vid_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    if callback.from_user.id not in await get_admin_ids():
-        await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
-        return
-
-    await state.set_state(AdminCourseContentStates.waiting_video)
-    await safe_edit(
-        callback.message,
-        "🎬 <b>Darslar videoni o'zgartirish</b>\n\nVideo yuboring — bot uni darslar obuna xabariga biriktiradi.\n\n⚠️ Video botga to'g'ridan-to'g'ri yuborilishi kerak.",
-        reply_markup=None,
-    )
-    await callback.answer()
-
-
-@admin_course_content_router.message(AdminCourseContentStates.waiting_video, F.content_type == ContentType.VIDEO)
-async def admin_course_vid_save(message: Message, state: FSMContext) -> None:
-    file_id = message.video.file_id
-    await set_setting("course_video", file_id)
-    await state.clear()
-    await message.answer("✅ <b>Darslar video yangilandi!</b>", reply_markup=admin_course_content_kb())
-
-
-@admin_course_content_router.message(AdminCourseContentStates.waiting_video)
-async def admin_course_vid_invalid(message: Message) -> None:
-    await message.answer("❌ Iltimos, video yuboring.")
-
-
-@admin_course_content_router.callback_query(F.data == "admin_course_media_del")
-async def admin_course_media_del_handler(callback: CallbackQuery) -> None:
-    if callback.from_user.id not in await get_admin_ids():
-        await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
-        return
-
-    await set_setting("course_image", "")
-    await set_setting("course_video", "")
-    await safe_edit(callback.message, "✅ <b>Rasm va video o'chirildi!</b>\n\nEndi darslar obuna xabari faqat matn ko'rinishida chiqadi.", reply_markup=admin_course_content_kb())
-    await callback.answer()
+# (eski individual rasm/video handlerlar olib tashlandi — combo ishlatiladi)
 
 
 # ─── ✏️ Xabar + Rasm + Video COMBO ──────────────────────────────────
