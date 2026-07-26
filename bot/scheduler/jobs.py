@@ -64,7 +64,11 @@ async def expire_subscriptions_job(bot: Bot) -> None:
             try:
                 text = SUBSCRIPTION_EXPIRED_COURSE if product_type == "course" else SUBSCRIPTION_EXPIRED
                 await bot.send_message(chat_id=user.telegram_id, text=text)
-                if channel_id:
+
+                # Ban faqat boshqa aktiv sub bo'lmasa
+                from bot.services.subscription_service import get_active_subscription_by_type
+                other_active = await get_active_subscription_by_type(sub.user_id, product_type)
+                if not other_active and channel_id:
                     await ban_channel_member(bot, channel_id, user.telegram_id)
             except Exception:
                 pass

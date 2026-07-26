@@ -45,6 +45,25 @@ async def create_subscription(
         now = datetime.now(timezone.utc)
         duration_days = tariff.duration_months * 30 + bonus_days
 
+        # Check if user already has an active subscription of the same product type
+        existing = await session.execute(
+            select(Subscription)
+            .join(SignalTariff, Subscription.tariff_id == SignalTariff.id)
+            .where(
+                Subscription.user_id == user_id,
+                Subscription.status == "active",
+                SignalTariff.product_type == tariff.product_type,
+            )
+            .order_by(Subscription.end_date.desc())
+        )
+        existing_sub = existing.scalars().first()
+
+        if existing_sub:
+            # Extend existing subscription (add days to current end_date)
+            existing_sub.end_date = existing_sub.end_date + timedelta(days=duration_days)
+            return existing_sub
+
+        # Create new subscription
         sub = Subscription(
             user_id=user_id,
             tariff_id=tariff.id,
