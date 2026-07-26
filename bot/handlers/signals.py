@@ -115,7 +115,7 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
 
 @signal_router.message(F.text == "📈 Signal kanal")
 async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
-    sub = await get_active_subscription(user.id)
+    sub = await get_active_subscription_by_type(user.id, "signal")
     if sub:
         await message.answer(ALREADY_SUBSCRIBED_TEXT)
         return

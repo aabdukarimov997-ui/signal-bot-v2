@@ -95,15 +95,16 @@ async def expire_all_expired_subscriptions() -> list[Subscription]:
         return expired
 
 
-async def get_expiring_soon(days_left: int) -> list[Subscription]:
+async def get_expiring_soon(days_left: int, days_min: int = 0) -> list[Subscription]:
     async with get_session() as session:
         now = datetime.now(timezone.utc)
-        target = now + timedelta(days=days_left)
+        target_max = now + timedelta(days=days_left)
+        target_min = now + timedelta(days=days_min)
         result = await session.execute(
             select(Subscription).join(User, Subscription.user_id == User.id).where(
                 Subscription.status == "active",
-                Subscription.end_date <= target,
-                Subscription.end_date > now,
+                Subscription.end_date <= target_max,
+                Subscription.end_date > target_min,
             )
         )
         return list(result.scalars().all())

@@ -122,8 +122,10 @@ async def purge_non_subscribers_job(bot: Bot) -> None:
 
 
 async def send_expiry_reminders_job(bot: Bot) -> None:
-    for days in (7, 3, 1):
-        subs = await get_expiring_soon(days)
+    # Har bir muddat oraliqni bir-biridan ajratamiz (overlap bo'lmasligi uchun)
+    ranges = [(7, 3), (3, 1), (1, 0)]
+    for days_left, days_min in ranges:
+        subs = await get_expiring_soon(days_left, days_min)
         for sub in subs:
             from bot.database.session import get_session
             from sqlalchemy import select
@@ -133,7 +135,7 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
                 user = result.scalar_one_or_none()
 
             product_type = await _get_product_type(sub)
-            text = await _get_reminder_text(product_type, days)
+            text = await _get_reminder_text(product_type, days_left)
 
             if user:
                 try:
