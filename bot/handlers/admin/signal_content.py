@@ -169,7 +169,7 @@ async def admin_signal_img_handler(callback: CallbackQuery, state: FSMContext) -
     await callback.answer()
 
 
-@admin_signal_content_router.message(AdminSignalContentStates.waiting_image, F.photo)
+@admin_signal_content_router.message(AdminSignalContentStates.waiting_image, F.content_type == ContentType.PHOTO)
 async def admin_signal_img_save(message: Message, state: FSMContext) -> None:
     file_id = message.photo[-1].file_id
     await set_setting("signal_image", file_id)

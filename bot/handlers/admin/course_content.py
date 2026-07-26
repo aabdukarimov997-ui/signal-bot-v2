@@ -242,7 +242,7 @@ async def admin_course_img_handler(callback: CallbackQuery, state: FSMContext) -
     await callback.answer()
 
 
-@admin_course_content_router.message(AdminCourseContentStates.waiting_image, F.photo)
+@admin_course_content_router.message(AdminCourseContentStates.waiting_image, F.content_type == ContentType.PHOTO)
 async def admin_course_img_save(message: Message, state: FSMContext) -> None:
     file_id = message.photo[-1].file_id
     await set_setting("course_image", file_id)
@@ -251,7 +251,9 @@ async def admin_course_img_save(message: Message, state: FSMContext) -> None:
 
 
 @admin_course_content_router.message(AdminCourseContentStates.waiting_image)
-async def admin_course_img_invalid(message: Message) -> None:
+async def admin_course_img_invalid(message: Message, state: FSMContext) -> None:
+    # Agar qandaydir xatolik bo'lsa, state ni tozalaymiz
+    await state.clear()
     await message.answer("❌ Iltimos, rasm yuboring.")
 
 
