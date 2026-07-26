@@ -5,9 +5,12 @@ from bot.services.subscription_service import (
     expire_all_expired_subscriptions,
     get_expiring_soon,
     get_all_subscriptions,
+    get_all_tariffs,
 )
 from bot.services.channel_service import ban_channel_member, get_signal_channel_id
 from bot.services.settings_service import get_setting
+import logging
+
 from bot.utils.texts import (
     REMINDER_7_DAYS,
     REMINDER_3_DAYS,
@@ -18,6 +21,8 @@ from bot.utils.texts import (
     SUBSCRIPTION_EXPIRED,
     SUBSCRIPTION_EXPIRED_COURSE,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def _get_channel_for_sub(sub) -> str:
@@ -123,6 +128,71 @@ async def purge_non_subscribers_job(bot: Bot) -> None:
                         logging.info(f"🚫 Purged {telegram_id} from {channel_id} (no active subscription)")
             except Exception:
                 pass
+
+
+async def send_marketing_job(bot: Bot) -> None:
+    """
+    Obuna olmagan foydalanuvchilarga chiroyli marketing xabar yuboradi.
+    """
+    from bot.services.settings_service import get_setting
+    from bot.services.user_service import get_all_user_telegram_ids
+    from bot.services.subscription_service import get_active_subscription_by_type
+    from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
+
+    enabled = await get_setting("marketing_enabled")
+    if enabled != "true":
+        logger.info("📢 Marketing xabarlar o'chirilgan — o'tkazib yuborildi")
+        return
+
+    msg = await get_setting("marketing_message") or ""
+    if not msg:
+        logger.warning("📢 Marketing xabar matni bo'sh — o'tkazib yuborildi")
+        return
+
+    img = await get_setting("marketing_image")
+    telegram_ids = await get_all_user_telegram_ids()
+
+    # Get tariffs for inline buttons
+    signal_tariffs = await get_all_tariffs("signal")
+    kb_buttons = []
+    for t in signal_tariffs:
+        kb_buttons.append([InlineKeyboardButton(
+            text=f"{t.label} — ${float(t.price):.0f}",
+            callback_data=f"tariff_{t.id}",
+        )])
+    kb_buttons.append([InlineKeyboardButton(text="⬅️ Asosiy menyu", callback_data="back_main")])
+    kb = InlineKeyboardMarkup(inline_keyboard=kb_buttons)
+
+    sent = 0
+    skipped = 0
+    for tg_id in telegram_ids:
+        # Faqat obuna olmaganlarga yuboramiz
+        from bot.database.session import get_session
+        from sqlalchemy import select
+        from bot.models.user import User
+
+        async with get_session() as session:
+            result = await session.execute(select(User).where(User.telegram_id == tg_id))
+            user = result.scalar_one_or_none()
+            if not user:
+                continue
+
+            has_signal = await get_active_subscription_by_type(user.id, "signal")
+            has_course = await get_active_subscription_by_type(user.id, "course")
+            if has_signal or has_course:
+                skipped += 1
+                continue
+
+        try:
+            if img:
+                await bot.send_photo(chat_id=tg_id, photo=img, caption=msg, reply_markup=kb)
+            else:
+                await bot.send_message(chat_id=tg_id, text=msg, reply_markup=kb)
+            sent += 1
+        except Exception:
+            pass
+
+    logger.info(f"📢 Marketing xabar yuborildi: {sent} ta, o'tkazib yuborildi (obunasi bor): {skipped}")
 
 
 async def send_expiry_reminders_job(bot: Bot) -> None:

@@ -32,6 +32,7 @@ SETTINGS_CATEGORIES = {
                     "course_channel_1_name", "course_channel_2_name", "course_channel_3_name",
                     "course_invite_link_1", "course_invite_link_2", "course_invite_link_3"],
     "🌐 Ijtimoiy": ["instagram_url", "twitter_url", "youtube_url", "website_url"],
+    "📢 Marketing": ["marketing_enabled", "marketing_interval_hours", "marketing_message", "marketing_image"],
     "🎁 Bonus": ["premium_gift_link", "admin_ids"],
 }
 

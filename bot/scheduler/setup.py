@@ -32,6 +32,13 @@ def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
         from bot.scheduler.jobs import purge_non_subscribers_job
         await purge_non_subscribers_job(bot)
 
+    # Marketing job — obuna olmaganlarga xabar (har 3 soatda tekshiriladi,
+    # lekin faqat marketing_interval_hours dan keyin yana yuboradi)
+    @scheduler.scheduled_job(IntervalTrigger(hours=3))
+    async def marketing_job():
+        from bot.scheduler.jobs import send_marketing_job
+        await send_marketing_job(bot)
+
 
 def start_scheduler() -> None:
     scheduler.start()

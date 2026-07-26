@@ -59,6 +59,11 @@ SETTINGS_KEYS = {
     "premium_gift_link": "Telegram Premium sovg'a linki",
     "admin_ids": "Admin Telegram IDs (JSON list)",
     "setup_completed": "Setup completed (true/false)",
+    # Marketing
+    "marketing_enabled": "Marketing xabarlar (yoqilgan/o'chirilgan)",
+
+    "marketing_message": "Marketing xabar matni",
+    "marketing_image": "Marketing rasm (Telegram file_id)",
     # Payment method toggles
     "payment_visa_enabled": "Visa to'lov (yoqilgan/o'chirilgan)",
     "payment_card_enabled": "UZCARD/HUMO to'lov (yoqilgan/o'chirilgan)",
@@ -242,6 +247,15 @@ async def seed_defaults_from_env() -> None:
         "signal_video": "",
         "admin_ids": json.dumps(env_settings.admin_ids),
         "setup_completed": "false",
+        # Marketing
+        "marketing_enabled": "false",
+
+        "marketing_message": "🚀 <b>Professional signal kanaliga qo'shiling!</b>\n\n"
+            "Hali obuna sotib olmadingizmi? Endi eng qulay tariflardan birini tanlang "
+            "va professional signallarni olishni boshlang!\n\n"
+            "📈 Aniq signallar • Risk boshqaruvi • 24/7 yordam\n\n"
+            "<b>Quyidagi tugmalar orqali obuna bo'ling:</b>",
+        "marketing_image": "",
         "payment_visa_enabled": "true",
         "payment_card_enabled": "true",
         "payment_tron_enabled": "true",
