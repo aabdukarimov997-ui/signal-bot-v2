@@ -8,6 +8,10 @@ from aiogram import Bot
 from bot.services.settings_service import get_setting, set_setting, get_admin_ids
 from bot.services.subscription_service import get_all_tariffs
 from bot.utils.keyboards import admin_course_content_kb, admin_menu_kb
+import html
+
+from aiogram.exceptions import TelegramBadRequest
+
 from bot.utils.helpers import safe_edit
 from bot.utils.states import AdminCourseContentStates
 
@@ -330,5 +334,13 @@ async def admin_course_preview_handler(callback: CallbackQuery, bot: Bot) -> Non
         except Exception:
             pass
 
-    await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=kb)
-    await callback.answer("✅ Preview yuborildi")
+    try:
+        await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=kb)
+        await callback.answer("✅ Preview yuborildi")
+    except TelegramBadRequest as e:
+        if "can't parse entities" in str(e).lower():
+            safe_text = html.escape(text)
+            await bot.send_message(chat_id=callback.from_user.id, text=safe_text, reply_markup=kb)
+            await callback.answer("✅ Preview yuborildi (HTML escaped)")
+        else:
+            await callback.answer(f"❌ Xatolik: {e}", show_alert=True)

@@ -58,7 +58,7 @@ from bot.utils.texts import (
     ADMIN_PAYMENT_NOTIFICATION,
 )
 from bot.utils.states import PaymentStates
-from bot.utils.helpers import safe_edit, format_date, calculate_discounted_price
+from bot.utils.helpers import safe_edit, safe_send, format_date, calculate_discounted_price
 
 signal_router = Router()
 
@@ -90,7 +90,7 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             if is_edit:
                 await safe_edit(message, signal_msg, reply_markup=kb)
             else:
-                await message.answer(signal_msg, reply_markup=kb)
+                await safe_send(message, signal_msg, reply_markup=kb)
     elif signal_img:
         try:
             await bot.send_photo(chat_id=message.chat.id, photo=signal_img, caption=signal_msg, reply_markup=kb)
@@ -103,12 +103,12 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             if is_edit:
                 await safe_edit(message, signal_msg, reply_markup=kb)
             else:
-                await message.answer(signal_msg, reply_markup=kb)
+                await safe_send(message, signal_msg, reply_markup=kb)
     else:
         if is_edit:
             await safe_edit(message, signal_msg, reply_markup=kb)
         else:
-            await message.answer(signal_msg, reply_markup=kb)
+            await safe_send(message, signal_msg, reply_markup=kb)
 
 
 # ─── Signal Menu: Show Tariffs ─────────────────────────────────────

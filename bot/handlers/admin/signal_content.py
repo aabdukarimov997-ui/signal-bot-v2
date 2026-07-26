@@ -1,6 +1,7 @@
 import html
 
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message, ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
@@ -249,5 +250,13 @@ async def admin_signal_preview_handler(callback: CallbackQuery, bot: Bot) -> Non
         except Exception:
             pass
 
-    await bot.send_message(chat_id=callback.from_user.id, text=signal_msg, reply_markup=kb)
-    await callback.answer("✅ Preview yuborildi")
+    try:
+        await bot.send_message(chat_id=callback.from_user.id, text=signal_msg, reply_markup=kb)
+        await callback.answer("✅ Preview yuborildi")
+    except TelegramBadRequest as e:
+        if "can't parse entities" in str(e).lower():
+            safe_text = html.escape(signal_msg)
+            await bot.send_message(chat_id=callback.from_user.id, text=safe_text, reply_markup=kb)
+            await callback.answer("✅ Preview yuborildi (HTML escaped)")
+        else:
+            await callback.answer(f"❌ Xatolik: {e}", show_alert=True)

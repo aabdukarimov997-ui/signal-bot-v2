@@ -1,7 +1,31 @@
+import html
 from typing import Union
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup, Message
+
+
+async def safe_send(
+    target: Message,
+    text: str,
+    reply_markup: Union[InlineKeyboardMarkup, None] = None,
+    disable_web_page_preview: bool = True,
+) -> bool:
+    """Send message safely — falls back to plain text if HTML parsing fails."""
+    try:
+        await target.answer(text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
+        return True
+    except TelegramBadRequest as e:
+        msg = str(e).lower()
+        if "can't parse entities" in msg:
+            # HTML noto'g'ri — escaped qilib yuboramiz
+            safe_text = html.escape(text)
+            try:
+                await target.answer(safe_text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
+                return True
+            except Exception:
+                return False
+        raise
 
 
 async def safe_edit(

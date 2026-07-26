@@ -1,4 +1,7 @@
+import html
+
 from aiogram import Router, F, Bot
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, PreCheckoutQuery, LabeledPrice, ContentType
 
@@ -45,7 +48,7 @@ from bot.utils.texts import (
     COURSE_ALREADY_SUBSCRIBED_TEXT,
 )
 from bot.utils.states import CoursePaymentStates
-from bot.utils.helpers import safe_edit, format_date
+from bot.utils.helpers import safe_edit, safe_send, format_date
 
 course_router = Router()
 
@@ -93,7 +96,7 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             if is_edit:
                 await safe_edit(message, text, reply_markup=kb)
             else:
-                await message.answer(text, reply_markup=kb)
+                await safe_send(message, text, reply_markup=kb)
     elif course_img:
         try:
             await bot.send_photo(chat_id=message.chat.id, photo=course_img, caption=text, reply_markup=kb)
@@ -106,12 +109,12 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             if is_edit:
                 await safe_edit(message, text, reply_markup=kb)
             else:
-                await message.answer(text, reply_markup=kb)
+                await safe_send(message, text, reply_markup=kb)
     else:
         if is_edit:
             await safe_edit(message, text, reply_markup=kb)
         else:
-            await message.answer(text, reply_markup=kb)
+            await safe_send(message, text, reply_markup=kb)
 
 
 # ─── Darslar Menu: Show Tariffs ─────────────────────────────────────
