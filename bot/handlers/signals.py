@@ -17,7 +17,7 @@ from bot.services.subscription_service import (
     get_active_subscription_by_type,
 )
 from bot.services.payment_service import create_payment, get_payment_by_id
-from bot.services.channel_service import get_invite_link, get_course_invite_links
+from bot.services.channel_service import get_invite_link, get_course_invite_links, get_signal_channel_id
 from bot.services.promo_service import validate_promo, apply_promo
 from bot.services.user_service import add_referral_bonus_days
 from bot.services.settings_service import get_setting, get_admin_ids, get_enabled_payment_methods
@@ -32,7 +32,6 @@ from bot.utils.keyboards import (
     check_uploaded_kb,
     cancel_upload_kb,
     admin_approval_kb,
-    refresh_link_kb,
     course_channels_kb,
 )
 from bot.utils.texts import (
@@ -64,37 +63,71 @@ from bot.utils.helpers import safe_edit, format_date, calculate_discounted_price
 signal_router = Router()
 
 
+# ─── Helper: Send Signal Subscription Message ──────────────────────
+
+async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
+    """Send the VIP signal subscription message with optional photo/video from DB settings."""
+    signal_msg = await get_setting("signal_message") or SIGNAL_TEXT
+    signal_img = await get_setting("signal_image")
+    signal_vid = await get_setting("signal_video")
+
+    if not tariffs:
+        signal_msg += "\n\n❌ Hozircha tariflar mavjud emas."
+
+    kb = tariff_selection_kb(tariffs) if tariffs else None
+    message = target if isinstance(target, Message) else target.message
+
+    # Priority: video > image > text-only
+    if signal_vid:
+        try:
+            await bot.send_video(chat_id=message.chat.id, video=signal_vid, caption=signal_msg, reply_markup=kb)
+            if is_edit:
+                try:
+                    await message.delete()
+                except Exception:
+                    pass
+        except Exception:
+            if is_edit:
+                await safe_edit(message, signal_msg, reply_markup=kb)
+            else:
+                await message.answer(signal_msg, reply_markup=kb)
+    elif signal_img:
+        try:
+            await bot.send_photo(chat_id=message.chat.id, photo=signal_img, caption=signal_msg, reply_markup=kb)
+            if is_edit:
+                try:
+                    await message.delete()
+                except Exception:
+                    pass
+        except Exception:
+            if is_edit:
+                await safe_edit(message, signal_msg, reply_markup=kb)
+            else:
+                await message.answer(signal_msg, reply_markup=kb)
+    else:
+        if is_edit:
+            await safe_edit(message, signal_msg, reply_markup=kb)
+        else:
+            await message.answer(signal_msg, reply_markup=kb)
+
+
 # ─── Signal Menu: Show Tariffs ─────────────────────────────────────
 
 @signal_router.message(F.text == "📈 Signal kanal")
 async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
     sub = await get_active_subscription(user.id)
     if sub:
-        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
-        invite_link = await get_invite_link(bot, channel_id) if channel_id else None
-        text = ALREADY_SUBSCRIBED_TEXT
-        if invite_link:
-            text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-            await message.answer(text, disable_web_page_preview=True, reply_markup=refresh_link_kb("signal"))
-        else:
-            text += "\n\n❌ Link yaratilmadi"
-            await message.answer(text, disable_web_page_preview=True)
+        await message.answer(ALREADY_SUBSCRIBED_TEXT)
         return
 
     tariffs = await get_all_tariffs("signal")
-    text = SIGNAL_TEXT
-    if not tariffs:
-        text += "\n\n❌ Hozircha tariflar mavjud emas."
-    await message.answer(text, reply_markup=tariff_selection_kb(tariffs) if tariffs else None)
+    await send_signal_menu(message, tariffs, bot)
 
 
 @signal_router.callback_query(F.data == "back_tariffs")
-async def back_tariffs_handler(callback: CallbackQuery) -> None:
+async def back_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariffs = await get_all_tariffs("signal")
-    text = SIGNAL_TEXT
-    if not tariffs:
-        text += "\n\n❌ Hozircha tariflar mavjud emas."
-    await safe_edit(callback.message, text, reply_markup=tariff_selection_kb(tariffs) if tariffs else None)
+    await send_signal_menu(callback, tariffs, bot, is_edit=True)
     await callback.answer()
 
 
@@ -221,7 +254,7 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
             await message.answer(text)
         return
     else:
-        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        channel_id = await get_signal_channel_id(tariff=tariff)
         success_text = STARS_SUCCESS_TEXT
 
     invite_link = await get_invite_link(bot, channel_id) if channel_id else None
@@ -246,8 +279,8 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
     text = success_text
     if invite_link:
-        text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-        await message.answer(text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
+        text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⚠️ Link faqat 1 marta ishlatilishi mumkin."
+        await message.answer(text, disable_web_page_preview=True)
     else:
         text += "\n\n❌ Link yaratilmadi"
         await message.answer(text, disable_web_page_preview=True)
@@ -387,10 +420,10 @@ async def invalid_receipt_handler(message: Message) -> None:
 
 
 @signal_router.callback_query(F.data == "cancel_upload", PaymentStates.upload_receipt)
-async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext) -> None:
+async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     await state.clear()
     tariffs = await get_all_tariffs("signal")
-    await safe_edit(callback.message, SIGNAL_TEXT, reply_markup=tariff_selection_kb(tariffs))
+    await send_signal_menu(callback, tariffs, bot, is_edit=True)
     await callback.answer("❌ Bekor qilindi")
 
 
@@ -562,7 +595,7 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
                 invite_links_text += f"\n🔗 <b>{ch['name']}</b> — <a href='{ch['link']}'>Kanalga kirish</a>"
         text = PAYMENT_APPROVED_COURSE_TEXT.format(invite_links=invite_links_text)
         if channels:
-            text += "\n\n⏰ Linklar 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
+            text += "\n\n⚠️ Har bir link faqat 1 marta ishlatilishi mumkin."
             try:
                 await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=course_channels_kb(channels))
             except Exception:
@@ -574,7 +607,7 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
             except Exception:
                 pass
     else:
-        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+        channel_id = await get_signal_channel_id(tariff=tariff)
         approved_text = PAYMENT_APPROVED_TEXT
         invite_link = await get_invite_link(bot, channel_id) if channel_id else None
         sub = await create_subscription(target_user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
@@ -583,8 +616,8 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
         try:
             text = approved_text
             if invite_link:
-                text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
+                text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⚠️ Link faqat 1 marta ishlatilishi mumkin."
+                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
             else:
                 text += "\n\n❌ Link yaratilmadi"
                 await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
@@ -635,42 +668,3 @@ async def reject_payment_handler(callback: CallbackQuery, user: User, bot: Bot) 
         reply_markup=None,
     )
     await callback.answer("❌ Rad etildi")
-
-
-# ─── Refresh Invite Link ──────────────────────────────────────────────
-
-@signal_router.callback_query(F.data.startswith("refresh_link_"))
-async def refresh_link_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
-    product_type = callback.data.replace("refresh_link_", "")
-
-    if product_type == "course":
-        sub = await get_active_subscription_by_type(user.id, "course")
-        if not sub:
-            await callback.answer("❌ Faol obuna yo'q", show_alert=True)
-            return
-
-        channels = await get_course_invite_links(bot)
-        if channels:
-            text = "📚 Darslar kanallariga kirish:\n\n⏰ Linklar 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-            await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=course_channels_kb(channels))
-            await callback.answer()
-        else:
-            await callback.answer("❌ Linklar yaratilmadi. Keyinroq urinib ko'ring.", show_alert=True)
-    else:
-        sub = await get_active_subscription(user.id)
-        if not sub:
-            await callback.answer("❌ Faol obuna yo'q", show_alert=True)
-            return
-
-        channel_id = await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
-        if not channel_id:
-            await callback.answer("❌ Kanal sozlanmagan", show_alert=True)
-            return
-
-        invite_link = await get_invite_link(bot, channel_id)
-        if invite_link:
-            text = f"🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⏰ Link 1 soatda tugadi. Muddati tugasa «Yangi link olish» tugmasini bosing."
-            await safe_edit(callback.message, text, disable_web_page_preview=True, reply_markup=refresh_link_kb(product_type))
-            await callback.answer()
-        else:
-            await callback.answer("❌ Link yaratilmadi. Keyinroq urinib ko'ring.", show_alert=True)

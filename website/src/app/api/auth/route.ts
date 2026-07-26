@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +12,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Demo authentication: password "aaa2024" with "admin" in email → ADMIN
-    const isAdmin = email.toLowerCase().includes("admin");
-    const isValidPassword = password === "aaa2024";
+    // Authentication: login "abdullohaaa" → ADMIN role
+    const isAdmin = email.toLowerCase() === "abdullohaaa";
+    const isValidPassword = password === "kajiROQdLIIeUREMS0s";
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -24,40 +23,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find or create user
-    let user = await db.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        telegramId: true,
-        avatar: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!user) {
-      user = await db.user.create({
-        data: {
-          email,
-          name: isAdmin ? "Admin" : email.split("@")[0],
-          role: isAdmin ? "ADMIN" : "USER",
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          telegramId: true,
-          avatar: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-    }
+    // Return user without DB query — auth is credential-based
+    const user = {
+      id: isAdmin ? "admin-001" : `user-${Date.now()}`,
+      email,
+      name: isAdmin ? "Admin" : email.split("@")[0],
+      role: isAdmin ? "ADMIN" : "USER",
+      telegramId: null,
+      avatar: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
     return NextResponse.json({
       user,
@@ -74,7 +50,6 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // No real session management — return unauthenticated state
     return NextResponse.json({ authenticated: false });
   } catch (error) {
     console.error("Failed to check session:", error);

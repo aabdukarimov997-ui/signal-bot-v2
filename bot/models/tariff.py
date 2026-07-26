@@ -15,6 +15,7 @@ class SignalTariff(BaseMixin, Base):
     product_type: Mapped[str] = mapped_column(String(32), default="signal", nullable=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    channel_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, default=None)
 
     @property
     def label(self) -> str:

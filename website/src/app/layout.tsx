@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AAA — Premium Crypto Trading Academy",
     description: "Professional kripto savdo akademiyasi va signal platformasi. CRYPTO | SPOT | STOCKS",
-    url: "https://aaa-trading.academy",
+    url: "https://website-production-69eb.up.railway.app",
     siteName: "AAA Trading Academy",
     type: "website",
     locale: "uz_UZ",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  metadataBase: new URL("https://aaa-trading.academy"),
+  metadataBase: new URL("https://website-production-69eb.up.railway.app"),
 };
 
 export default function RootLayout({

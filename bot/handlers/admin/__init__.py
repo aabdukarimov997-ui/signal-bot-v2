@@ -7,6 +7,8 @@ from .social import admin_social_router
 from .payment_methods import admin_payment_methods_router
 from .settings import admin_settings_router
 from .help import admin_help_router
+from .signal_content import admin_signal_content_router
+from .course_content import admin_course_content_router
 
 # Barcha admin routelarni bitta joyda yig'amiz
 routers = [
@@ -19,4 +21,6 @@ routers = [
     admin_payment_methods_router,
     admin_settings_router,
     admin_help_router,
+    admin_signal_content_router,
+    admin_course_content_router,
 ]

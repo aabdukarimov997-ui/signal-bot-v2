@@ -140,11 +140,13 @@ async def admin_edit_tariff_start(callback: CallbackQuery, state: FSMContext) ->
 
     text = (
         f"✏️ <b>Tarifni tahrirlash: {tariff.label}</b>\n\n"
-        f"Hozirgi: {tariff.label} — ${float(tariff.price):.0f} / {tariff.duration_months} oy\n\n"
+        f"Hozirgi: {tariff.label} — ${float(tariff.price):.0f} / {tariff.duration_months} oy\n"
+        f"Kanal: {tariff.channel_id or 'umumiy (private_channel_id)'}\n\n"
         f"Qaysi maydonni o'zgartirmoqchisiz?\n"
         f"1️⃣ — Nomi\n"
         f"2️⃣ — Narx\n"
-        f"3️⃣ — Muddat (oy)"
+        f"3️⃣ — Muddat (oy)\n"
+        f"4️⃣ — Maxfiy kanal ID"
     )
     await safe_edit(callback.message, text, reply_markup=None)
     await callback.answer()
@@ -152,10 +154,10 @@ async def admin_edit_tariff_start(callback: CallbackQuery, state: FSMContext) ->
 
 @admin_tariffs_router.message(AdminEditTariffStates.waiting_field)
 async def admin_edit_tariff_field(message: Message, state: FSMContext) -> None:
-    field_map = {"1": "name", "2": "price", "3": "duration"}
+    field_map = {"1": "name", "2": "price", "3": "duration", "4": "channel"}
     field = field_map.get(message.text.strip())
     if not field:
-        await message.answer("❌ Iltimos, 1, 2 yoki 3 kiriting")
+        await message.answer("❌ Iltimos, 1, 2, 3 yoki 4 kiriting")
         return
 
     await state.update_data(field=field)
@@ -164,6 +166,7 @@ async def admin_edit_tariff_field(message: Message, state: FSMContext) -> None:
         "name": "📝 <b>Yangi tarif nomini kiriting:</b>\nMasalan: 1 oy",
         "price": "💰 <b>Yangi narxni kiriting ($):</b>\nMasalan: 30",
         "duration": "📅 <b>Yangi muddatni kiriting (oylarda):</b>\nMasalan: 1, 3, 6",
+        "channel": "🔗 <b>Maxfiy kanal ID kiriting:</b>\nMasalan: -1002271613164\n(Kanal ID @username_infobot'dan oling)\n\n⚠️ Bo'sh yuborsangiz — umumiy kanal (private_channel_id) ishlatiladi",
     }
     await state.set_state(AdminEditTariffStates.waiting_value)
     await message.answer(prompts[field])
@@ -199,6 +202,8 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
         except ValueError:
             await message.answer("❌ Iltimos, to'g'ri son kiriting (1, 3, 6 va h.k.)")
             return
+    elif field == "channel":
+        new_value = message.text.strip() or None  # Empty → None (use global channel)
     else:
         await message.answer("❌ Noto'g'ri maydon")
         await state.clear()
@@ -223,8 +228,10 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
             tariff.price = new_value
         elif field == "duration":
             tariff.duration_months = new_value
+        elif field == "channel":
+            tariff.channel_id = new_value
 
-    field_names = {"name": "nomi", "price": "narx", "duration": "muddat"}
+    field_names = {"name": "nomi", "price": "narx", "duration": "muddat", "channel": "kanal"}
     await message.answer(f"✅ Tarif {field_names[field]}i yangilandi!")
 
     # Show updated tariffs — eski narx qoldiqlari qolmaydi

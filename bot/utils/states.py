@@ -36,3 +36,19 @@ class AdminEditTariffStates(StatesGroup):
 class AdminSettingsStates(StatesGroup):
     waiting_setting_value = State()
     waiting_import_json = State()
+
+
+class AdminSignalContentStates(StatesGroup):
+    waiting_message = State()
+    waiting_price = State()
+    waiting_image = State()
+    waiting_video = State()
+
+
+class AdminCourseContentStates(StatesGroup):
+    waiting_message = State()
+    waiting_name = State()
+    waiting_description = State()
+    waiting_price = State()
+    waiting_image = State()
+    waiting_video = State()

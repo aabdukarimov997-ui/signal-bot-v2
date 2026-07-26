@@ -27,6 +27,11 @@ def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
         from bot.scheduler.jobs import verify_channel_membership_job
         await verify_channel_membership_job(bot)
 
+    @scheduler.scheduled_job(CronTrigger(hour=3, minute=0))
+    async def purge_job():
+        from bot.scheduler.jobs import purge_non_subscribers_job
+        await purge_non_subscribers_job(bot)
+
 
 def start_scheduler() -> None:
     scheduler.start()

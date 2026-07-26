@@ -6,7 +6,7 @@ from bot.services.subscription_service import (
     get_expiring_soon,
     get_all_subscriptions,
 )
-from bot.services.channel_service import ban_channel_member, get_invite_link
+from bot.services.channel_service import ban_channel_member, get_signal_channel_id
 from bot.services.settings_service import get_setting
 from bot.utils.texts import (
     REMINDER_7_DAYS,
@@ -20,10 +20,15 @@ from bot.utils.texts import (
 )
 
 
-async def _get_channel_for_product(product_type: str) -> str:
+async def _get_channel_for_sub(sub) -> str:
+    """Get channel ID for a subscription, considering tariff-specific channel_id."""
+    product_type = await _get_product_type(sub)
+
     if product_type == "course":
         return await get_setting("course_channel_id") or ""
-    return await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+
+    # For signal: try tariff-specific channel, fall back to global
+    return await get_signal_channel_id(tariff_id=sub.tariff_id)
 
 
 async def _get_reminder_text(product_type: str, days: int) -> str:
@@ -53,7 +58,7 @@ async def expire_subscriptions_job(bot: Bot) -> None:
             user = result.scalar_one_or_none()
 
         product_type = await _get_product_type(sub)
-        channel_id = await _get_channel_for_product(product_type)
+        channel_id = await _get_channel_for_sub(sub)
 
         if user:
             try:
@@ -66,29 +71,54 @@ async def expire_subscriptions_job(bot: Bot) -> None:
 
 
 async def verify_channel_membership_job(bot: Bot) -> None:
-    """Check active subscribers are in channel; re-send invite link if kicked/left."""
+    """Check active subscribers are in channel; kick those who left/kicked (no re-invite)."""
     subs = await get_all_subscriptions(status="active")
     for sub in subs:
         product_type = await _get_product_type(sub)
-        channel_id = await _get_channel_for_product(product_type)
+        channel_id = await _get_channel_for_sub(sub)
         if not channel_id:
             continue
         try:
             member = await bot.get_chat_member(channel_id, sub.telegram_id)
             status = member.status
             if status in ("left", "kicked"):
-                invite_link = await get_invite_link(bot, channel_id)
-                if invite_link:
-                    text = "🔔 <b>Obunangiz faol!</b>\n\n"
-                    text += "Kanalga qayta kirish uchun quyidagi havolani bosing:\n"
-                    text += f"🔗 <a href='{invite_link}'>Kanalga kirish</a>"
+                await ban_channel_member(bot, channel_id, sub.telegram_id)
+                try:
                     await bot.send_message(
                         chat_id=sub.telegram_id,
-                        text=text,
-                        disable_web_page_preview=True,
+                        text="🚫 <b>Kanalga kirish huquqi yo'q</b>\n\n"
+                             "Siz kanaldan chiqdingiz yoki chiqarib yuborildingiz.\n"
+                             "Qayta kirish uchun admin bilan bog'laning.",
                     )
+                except Exception:
+                    pass
         except Exception:
             pass
+
+
+async def purge_non_subscribers_job(bot: Bot) -> None:
+    """Remove channel members who don't have an active subscription.
+    Iterates over all known user telegram_ids and checks their membership status
+    in each managed channel. Kicks those without valid subscriptions.
+    """
+    from bot.handlers.channel_guard import _get_all_managed_channels, _is_subscriber_allowed
+    from bot.services.user_service import get_all_user_telegram_ids
+
+    channels = await _get_all_managed_channels()
+    all_telegram_ids = await get_all_user_telegram_ids()
+
+    for channel_id in channels:
+        for telegram_id in all_telegram_ids:
+            try:
+                member = await bot.get_chat_member(channel_id, telegram_id)
+                if member.status in ("member", "administrator"):
+                    allowed = await _is_subscriber_allowed(telegram_id, channel_id)
+                    if not allowed:
+                        from bot.services.channel_service import ban_channel_member
+                        await ban_channel_member(bot, channel_id, telegram_id)
+                        logging.info(f"🚫 Purged {telegram_id} from {channel_id} (no active subscription)")
+            except Exception:
+                pass
 
 
 async def send_expiry_reminders_job(bot: Bot) -> None:

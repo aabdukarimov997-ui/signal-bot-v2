@@ -133,6 +133,14 @@ async def get_active_subscription_count() -> int:
         return result.scalar() or 0
 
 
+async def get_all_subscriptions(status: str = "active") -> list[Subscription]:
+    async with get_session() as session:
+        result = await session.execute(
+            select(Subscription).where(Subscription.status == status)
+        )
+        return list(result.scalars().all())
+
+
 async def ban_user_subscriptions(user_id: str) -> None:
     async with get_session() as session:
         result = await session.execute(

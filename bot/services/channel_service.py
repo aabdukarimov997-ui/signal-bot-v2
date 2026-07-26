@@ -5,14 +5,41 @@ from aiogram import Bot
 from aiogram.types import ChatInviteLink
 
 
+async def get_signal_channel_id(tariff=None, subscription=None, tariff_id=None) -> Optional[str]:
+    """Get the channel ID for a signal subscription.
+    Priority: tariff.channel_id → DB setting 'private_channel_id' → config PRIVATE_CHANNEL_ID.
+    """
+    from bot.services.settings_service import get_setting
+    from bot.config import settings
+
+    # If tariff has a specific channel, use it
+    if tariff and getattr(tariff, 'channel_id', None):
+        return tariff.channel_id
+
+    # If tariff_id provided, fetch tariff from DB
+    if tariff_id:
+        from bot.services.subscription_service import get_tariff_by_id
+        t = await get_tariff_by_id(tariff_id)
+        if t and t.channel_id:
+            return t.channel_id
+
+    # If subscription has tariff_id, fetch tariff from DB
+    if subscription and subscription.tariff_id:
+        from bot.services.subscription_service import get_tariff_by_id
+        t = await get_tariff_by_id(subscription.tariff_id)
+        if t and t.channel_id:
+            return t.channel_id
+
+    # Fallback to global setting
+    return await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
+
+
 async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> Optional[str]:
-    """Create a one-time invite link valid for 1 hour."""
+    """Create a one-time invite link (no expiry, usable only once)."""
     try:
-        expire_date = datetime.now(timezone.utc) + timedelta(hours=1)
         link: ChatInviteLink = await bot.create_chat_invite_link(
             chat_id=chat_id,
             member_limit=member_limit,
-            expire_date=expire_date,
         )
         return link.invite_link
     except Exception:

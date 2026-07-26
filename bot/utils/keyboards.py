@@ -139,26 +139,13 @@ def cancel_upload_kb() -> InlineKeyboardMarkup:
     )
 
 
-# ─── Refresh Invite Link ─────────────────────────────────────────────
-
-def refresh_link_kb(product_type: str = "signal") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🔗 Yangi link olish", callback_data=f"refresh_link_{product_type}")],
-        ]
-    )
-
-
 # ─── Course Channels Links ────────────────────────────────────────────
 
 def course_channels_kb(channels: list[dict]) -> InlineKeyboardMarkup:
-    """Inline keyboard with URL buttons for each course channel + refresh button."""
+    """Inline keyboard with URL buttons for each course channel."""
     buttons = []
     for ch in channels:
         buttons.append([InlineKeyboardButton(text=f"📚 {ch['name']}", url=ch["link"])])
-
-    # Add refresh button at bottom
-    buttons.append([InlineKeyboardButton(text="🔄 Yangi linklar olish", callback_data="refresh_link_course")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -215,6 +202,8 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="💳 To'lovlar", callback_data="admin_payments")],
             [InlineKeyboardButton(text="📊 Tariflar", callback_data="admin_tariffs")],
+            [InlineKeyboardButton(text="🚀 VIP Signal xabari", callback_data="admin_signal_content")],
+            [InlineKeyboardButton(text="📚 Darslar xabari", callback_data="admin_course_content")],
             [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
             [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
@@ -222,6 +211,33 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
             [InlineKeyboardButton(text="❓ Yordam", callback_data="admin_help")],
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],
+        ]
+    )
+
+def admin_signal_content_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Xabar matnini o'zgartirish", callback_data="admin_signal_msg")],
+            [InlineKeyboardButton(text="💰 Narx o'zgartirish", callback_data="admin_signal_price")],
+            [InlineKeyboardButton(text="🖼 Rasm o'zgartirish", callback_data="admin_signal_img")],
+            [InlineKeyboardButton(text="🎬 Video o'zgartirish", callback_data="admin_signal_vid")],
+            [InlineKeyboardButton(text="🗑 Rasm/Video o'chirish", callback_data="admin_signal_media_del")],
+            [InlineKeyboardButton(text="👁 Ko'rish (preview)", callback_data="admin_signal_preview")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
+
+def admin_course_content_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 To'liq xabar o'zgartirish", callback_data="admin_course_msg")],
+            [InlineKeyboardButton(text="📝 Nomi/tavsifini o'zgartirish", callback_data="admin_course_desc")],
+            [InlineKeyboardButton(text="💰 Narx o'zgartirish", callback_data="admin_course_price")],
+            [InlineKeyboardButton(text="🖼 Rasm o'zgartirish", callback_data="admin_course_img")],
+            [InlineKeyboardButton(text="🎬 Video o'zgartirish", callback_data="admin_course_vid")],
+            [InlineKeyboardButton(text="🗑 Rasm/Video o'chirish", callback_data="admin_course_media_del")],
+            [InlineKeyboardButton(text="👁 Ko'rish (preview)", callback_data="admin_course_preview")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
         ]
     )
 

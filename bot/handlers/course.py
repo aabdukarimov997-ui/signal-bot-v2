@@ -9,6 +9,7 @@ from bot.services.subscription_service import (
     get_all_tariffs,
     get_tariff_by_id,
     create_subscription,
+    get_active_subscription_by_type,
 )
 from bot.services.payment_service import create_payment, get_payment_by_id
 from bot.services.channel_service import create_invite_link
@@ -41,12 +42,15 @@ from bot.utils.texts import (
     PAYMENT_APPROVED_COURSE_TEXT,
     PAYMENT_REJECTED_TEXT,
     ADMIN_PAYMENT_NOTIFICATION,
+    COURSE_ALREADY_SUBSCRIBED_TEXT,
 )
 from bot.utils.states import CoursePaymentStates
 from bot.utils.helpers import safe_edit, format_date
 
 course_router = Router()
 
+
+# ─── Helper: Build Course Menu Text ────────────────────────────────
 
 def _build_course_text(course_name: str, course_description: str, tariffs: list[SignalTariff]) -> str:
     """Build course menu text with name, description, and tariff prices."""
@@ -59,56 +63,77 @@ def _build_course_text(course_name: str, course_description: str, tariffs: list[
     return text
 
 
+# ─── Helper: Send Course Menu Message ──────────────────────────────
+
+async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
+    """Send the Darslar subscription message with optional photo/video from DB settings."""
+    course_msg = await get_setting("course_message")
+    if course_msg:
+        text = course_msg
+    else:
+        course_name = await get_setting("course_tariff_name") or "Darslar"
+        course_description = await get_setting("course_description") or ""
+        text = _build_course_text(course_name, course_description, tariffs)
+
+    course_img = await get_setting("course_image")
+    course_vid = await get_setting("course_video")
+    kb = course_tariff_selection_kb(tariffs)
+    message = target if isinstance(target, Message) else target.message
+
+    # Priority: video > image > text-only
+    if course_vid:
+        try:
+            await bot.send_video(chat_id=message.chat.id, video=course_vid, caption=text, reply_markup=kb)
+            if is_edit:
+                try:
+                    await message.delete()
+                except Exception:
+                    pass
+        except Exception:
+            if is_edit:
+                await safe_edit(message, text, reply_markup=kb)
+            else:
+                await message.answer(text, reply_markup=kb)
+    elif course_img:
+        try:
+            await bot.send_photo(chat_id=message.chat.id, photo=course_img, caption=text, reply_markup=kb)
+            if is_edit:
+                try:
+                    await message.delete()
+                except Exception:
+                    pass
+        except Exception:
+            if is_edit:
+                await safe_edit(message, text, reply_markup=kb)
+            else:
+                await message.answer(text, reply_markup=kb)
+    else:
+        if is_edit:
+            await safe_edit(message, text, reply_markup=kb)
+        else:
+            await message.answer(text, reply_markup=kb)
+
+
 # ─── Darslar Menu: Show Tariffs ─────────────────────────────────────
 
 @course_router.message(F.text == "📚 Darslar")
-async def course_menu_handler(message: Message, bot: Bot) -> None:
+async def course_menu_handler(message: Message, user: User, bot: Bot) -> None:
+    sub = await get_active_subscription_by_type(user.id, "course")
+    if sub:
+        await message.answer(COURSE_ALREADY_SUBSCRIBED_TEXT)
+        return
+
     tariffs = await get_all_tariffs("course")
     if not tariffs:
         await message.answer("❌ Hozircha darslar tariflar mavjud emas.")
         return
-
-    course_name = await get_setting("course_tariff_name") or "Darslar"
-    course_description = await get_setting("course_description") or ""
-    course_image = await get_setting("course_image") or ""
-    text = _build_course_text(course_name, course_description, tariffs)
-    kb = course_tariff_selection_kb(tariffs)
-
-    if course_image:
-        try:
-            await bot.send_photo(
-                chat_id=message.chat.id,
-                photo=course_image,
-                caption=text,
-                reply_markup=kb,
-            )
-        except Exception:
-            await message.answer(text, reply_markup=kb)
-    else:
-        await message.answer(text, reply_markup=kb)
+    await send_course_menu(message, tariffs, bot)
 
 
 @course_router.callback_query(F.data == "back_course_tariffs")
 async def back_course_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
     tariffs = await get_all_tariffs("course")
-    course_name = await get_setting("course_tariff_name") or "Darslar"
-    course_description = await get_setting("course_description") or ""
-    course_image = await get_setting("course_image") or ""
-    text = _build_course_text(course_name, course_description, tariffs)
-    kb = course_tariff_selection_kb(tariffs)
-
-    if course_image:
-        try:
-            await bot.send_photo(
-                chat_id=callback.message.chat.id,
-                photo=course_image,
-                caption=text,
-                reply_markup=kb,
-            )
-        except Exception:
-            await callback.message.answer(text, reply_markup=kb)
-    else:
-        await safe_edit(callback.message, text, reply_markup=kb)
+    await send_course_menu(callback, tariffs, bot, is_edit=True)
     await callback.answer()
 
 

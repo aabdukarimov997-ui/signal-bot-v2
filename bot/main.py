@@ -16,6 +16,7 @@ from bot.handlers.referral import referral_router
 from bot.handlers.social import social_router
 from bot.handlers.help import help_router
 from bot.handlers.setup import setup_router
+from bot.handlers.channel_guard import channel_guard_router
 from bot.handlers.admin import routers as admin_routers
 from bot.middlewares.auth import AuthMiddleware
 from bot.scheduler.setup import setup_scheduler, start_scheduler
@@ -30,6 +31,7 @@ bot = Bot(
 
 
 def register_routers() -> None:
+    dp.include_router(channel_guard_router)
     dp.include_router(setup_router)
     dp.include_router(start_router)
     dp.include_router(signal_router)
@@ -59,6 +61,16 @@ async def main() -> None:
     from bot.models.base import Base
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Add channel_id column if missing (ALTER TABLE for existing DB)
+        from sqlalchemy import text
+        result = await conn.execute(text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name='signal_tariffs' AND column_name='channel_id'"
+        ))
+        if not result.scalar():
+            await conn.execute(text(
+                "ALTER TABLE signal_tariffs ADD COLUMN channel_id VARCHAR(64) NULL DEFAULT NULL"
+            ))
 
     # Seed settings from .env defaults if no settings exist
     from bot.services.settings_service import seed_defaults_from_env, is_setup_completed
@@ -105,7 +117,7 @@ async def main() -> None:
 
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Bot started!")
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, allowed_updates=["message", "callback_query", "pre_checkout_query", "chat_member"])
 
 
 if __name__ == "__main__":

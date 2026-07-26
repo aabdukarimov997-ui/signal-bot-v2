@@ -21,7 +21,7 @@ SIGNAL_TEXT = (
 
 ALREADY_SUBSCRIBED_TEXT = (
     "✅ <b>Sizda faol obuna bor!</b>\n\n"
-    "Signal kanaliga kirish uchun quyidagi havoladan foydalaning:"
+    "Signal kanali sizda mavjud. Kanalga kirishingiz mumkin."
 )
 
 # Course
@@ -56,7 +56,7 @@ PAYMENT_APPROVED_COURSE_TEXT = (
 
 COURSE_ALREADY_SUBSCRIBED_TEXT = (
     "✅ <b>Sizda darslar obunasi bor!</b>\n\n"
-    "Darslar kanallariga kirish uchun quyidagi havolalardan foydalaning:"
+    "Darslar kanallari sizda mavjud. Kanallarga kirishingiz mumkin."
 )
 
 # Visa Payment

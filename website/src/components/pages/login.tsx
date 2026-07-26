@@ -205,12 +205,9 @@ export default function LoginPage() {
             Telegram orqali kirish
           </a>
 
-          {/* Demo hint */}
+          {/* Hint */}
           <p className="mt-6 text-center text-xs text-muted-foreground/60">
-            Demo:{' '}
-            <span className="text-muted-foreground/80 font-mono text-[11px]">
-              admin@aaa-trading.academy / aaa2024
-            </span>
+            Login va parol bilan kirish
           </p>
         </GlassCard>
       </motion.div>

@@ -9,7 +9,7 @@ export const SITE = {
   FOUNDER: 'ABDULLOH',
   TAGLINE: 'CRYPTO | SPOT | STOCKS',
   DESCRIPTION: 'Premium Crypto Trading Academy va Signal Platformasi',
-  URL: 'https://aaa-trading.academy',
+  URL: 'https://website-production-69eb.up.railway.app',
 } as const;
 
 export const NAV_ITEMS = [

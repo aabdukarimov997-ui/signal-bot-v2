@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.models.user import User
@@ -47,14 +47,11 @@ async def account_handler(message: Message, user: User) -> None:
 
 
 @account_router.callback_query(F.data == "extend_subscription")
-async def extend_subscription_handler(callback: CallbackQuery, user: User) -> None:
+async def extend_subscription_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     """Redirect to signal tariffs for extension."""
-    from bot.utils.helpers import safe_edit
+    from bot.handlers.signals import send_signal_menu
     from bot.services.subscription_service import get_all_tariffs
-    from bot.utils.keyboards import tariff_selection_kb
-    from bot.utils.texts import SIGNAL_TEXT
 
     tariffs = await get_all_tariffs("signal")
-    text = SIGNAL_TEXT
-    await safe_edit(callback.message, text, reply_markup=tariff_selection_kb(tariffs) if tariffs else None)
+    await send_signal_menu(callback, tariffs, bot, is_edit=True)
     await callback.answer()
