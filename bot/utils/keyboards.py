@@ -202,13 +202,14 @@ def social_kb(
 def admin_menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="💳 To'lovlar", callback_data="admin_payments")],
+            [InlineKeyboardButton(text="💳 To'lovlar", callback_data="admin_payments"),
+             InlineKeyboardButton(text="💬 Xabarlar", callback_data="admin_contacts")],
             [InlineKeyboardButton(text="📊 Tariflar", callback_data="admin_tariffs")],
             [InlineKeyboardButton(text="🚀 VIP Signal xabari", callback_data="admin_signal_content")],
             [InlineKeyboardButton(text="📚 Darslar xabari", callback_data="admin_course_content")],
             [InlineKeyboardButton(text="📢 Kanalga e'lon", callback_data="admin_channel_announce")],
-            [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
-            [InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
+            [InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users"),
+             InlineKeyboardButton(text="📈 Statistika", callback_data="admin_stats")],
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
             [InlineKeyboardButton(text="💰 To'lov usullari", callback_data="admin_payment_methods")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
@@ -216,6 +217,36 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],
         ]
     )
+
+# ─── Help / Contact ─────────────────────────────────────────────────
+
+def help_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="💬 Xabar yuborish", callback_data="contact_send")],
+        ]
+    )
+
+
+# ─── Admin Contact Message ──────────────────────────────────────────
+
+def admin_contact_messages_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📩 Faqat o'qilmaganlar", callback_data="admin_contacts")],
+            [InlineKeyboardButton(text="📜 Barcha xabarlar", callback_data="admin_contacts_all")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
+
+
+def admin_back_kb(callback_data: str = "admin_back") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data=callback_data)],
+        ]
+    )
+
 
 def admin_signal_content_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(

@@ -232,9 +232,24 @@ HELP_TEXT = (
     "☎️ <b>Yordam</b>\n\n"
     "Savollaringiz bo'lsa, admin bilan bog'laning:\n"
     "📩 {admin_link}\n\n"
+    "Yoki pastdagi tugma orqali bot orqali xabar yuboring. "
+    "Admin javob beradi!\n\n"
     "<b>Qoidalar:</b>\n"
     "• Kanal linklarini tarqatish mumkin emas\n"
     "• Faqat admin contact"
+)
+
+CONTACT_START_TEXT = (
+    "💬 <b>Xabar yuborish</b>\n\n"
+    "Quyidagi xabaringizni yozing yoki rasm yuboring.\n"
+    "Admin tez orada javob beradi!\n\n"
+    "<i>Bekor qilish uchun ❌ tugmasini bosing.</i>"
+)
+
+CONTACT_RECEIVED_TEXT = (
+    "✅ <b>Xabaringiz qabul qilindi!</b>\n\n"
+    "Admin tez orada siz bilan bog'lanadi.\n"
+    "Iltimos, kutib turing.⏳"
 )
 
 # Admin

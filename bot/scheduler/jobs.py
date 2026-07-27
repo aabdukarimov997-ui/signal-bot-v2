@@ -197,13 +197,25 @@ async def send_marketing_job(bot: Bot) -> None:
 
 async def send_expiry_reminders_job(bot: Bot) -> None:
     # Har bir muddat oraliqni bir-biridan ajratamiz (overlap bo'lmasligi uchun)
-    ranges = [(7, 3), (3, 1), (1, 0)]
-    for days_left, days_min in ranges:
+    # reminder flag kalitlari: (days_left, db_column_name)
+    ranges = [
+        (7, 3, "reminder_7_sent"),
+        (3, 1, "reminder_3_sent"),
+        (1, 0, "reminder_1_sent"),
+    ]
+    from bot.database.session import get_session
+    from sqlalchemy import select, text as sa_text
+    from bot.models.user import User
+    from bot.models.subscription import Subscription
+
+    for days_left, days_min, flag_col in ranges:
         subs = await get_expiring_soon(days_left, days_min)
         for sub in subs:
-            from bot.database.session import get_session
-            from sqlalchemy import select
-            from bot.models.user import User
+            # Check if reminder already sent for this range
+            flag_value = getattr(sub, flag_col, False)
+            if flag_value:
+                continue
+
             async with get_session() as session:
                 result = await session.execute(select(User).where(User.id == sub.user_id))
                 user = result.scalar_one_or_none()
@@ -214,5 +226,13 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
             if user:
                 try:
                     await bot.send_message(chat_id=user.telegram_id, text=text)
+                    # Mark reminder as sent — session alohida
+                    async with get_session() as session:
+                        result = await session.execute(
+                            select(Subscription).where(Subscription.id == sub.id)
+                        )
+                        db_sub = result.scalar_one_or_none()
+                        if db_sub:
+                            setattr(db_sub, flag_col, True)
                 except Exception:
                     pass

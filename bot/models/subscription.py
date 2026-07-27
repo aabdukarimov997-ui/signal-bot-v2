@@ -18,4 +18,9 @@ class Subscription(BaseMixin, Base):
     invite_link: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     auto_renew: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Reminder tracking flags — 7, 3, 1 kun qolgan eslatmalar bir marta yuboriladi
+    reminder_7_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    reminder_3_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    reminder_1_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     user = relationship("User", back_populates="subscriptions")

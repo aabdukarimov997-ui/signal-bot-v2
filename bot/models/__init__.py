@@ -6,6 +6,7 @@ from bot.models.payment import Payment
 from bot.models.referral_stat import ReferralStat
 from bot.models.promo_code import PromoCode
 from bot.models.project_settings import ProjectSettings
+from bot.models.contact_message import ContactMessage
 
 __all__ = [
     "Base",
@@ -16,4 +17,5 @@ __all__ = [
     "ReferralStat",
     "PromoCode",
     "ProjectSettings",
+    "ContactMessage",
 ]

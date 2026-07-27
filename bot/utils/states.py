@@ -65,3 +65,7 @@ class AdminChannelAnnouncementStates(StatesGroup):
     waiting_photo = State()             # Rasm yuborish
     waiting_video = State()             # Video yuborish
     confirm = State()                   # Tasdiqlash
+
+
+class ContactState(StatesGroup):
+    waiting_message = State()
