@@ -208,12 +208,18 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
     from bot.models.user import User
     from bot.models.subscription import Subscription
 
+    total_sent = 0
+    total_skipped_flag = 0
+    total_errors = 0
+
     for days_left, days_min, flag_col in ranges:
         subs = await get_expiring_soon(days_left, days_min)
+        logger.info(f"📅 Eslatma [{days_left} kun]: {len(subs)} ta obuna topildi")
         for sub in subs:
             # Check if reminder already sent for this range
             flag_value = getattr(sub, flag_col, False)
             if flag_value:
+                total_skipped_flag += 1
                 continue
 
             async with get_session() as session:
@@ -234,5 +240,15 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
                         db_sub = result.scalar_one_or_none()
                         if db_sub:
                             setattr(db_sub, flag_col, True)
-                except Exception:
-                    pass
+                    total_sent += 1
+                except Exception as e:
+                    total_errors += 1
+                    logger.warning(f"⚠️ Eslatma yuborishda xatolik: sub_id={sub.id}, err={e}")
+            else:
+                logger.warning(f"⚠️ Foydalanuvchi topilmadi: sub_id={sub.id}, user_id={sub.user_id}")
+
+    logger.info(
+        f"📊 Eslatmalar yakuni: yuborildi={total_sent}, "
+        f"allaqachon yuborilgan={total_skipped_flag}, "
+        f"xatolik={total_errors}"
+    )
