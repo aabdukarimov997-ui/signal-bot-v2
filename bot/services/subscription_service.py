@@ -60,11 +60,9 @@ async def create_subscription(
 
         if existing_sub:
             # Extend existing subscription (add days to current end_date)
+            # Eslatma flaglari qayta tiklanmaydi — obunani uzaytirganlarga
+            # qayta eslatma yuborilmasligi uchun
             existing_sub.end_date = existing_sub.end_date + timedelta(days=duration_days)
-            # Reset reminder flags — yangi muddat uchun qayta eslatmalar yuborilsin
-            existing_sub.reminder_7_sent = False
-            existing_sub.reminder_3_sent = False
-            existing_sub.reminder_1_sent = False
             return existing_sub
 
         # Create new subscription
