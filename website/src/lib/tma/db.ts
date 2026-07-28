@@ -4,7 +4,8 @@ let pool: Pool | null = null;
 
 export function getBotDb(): Pool {
   if (!pool) {
-    const url = process.env.TMA_DATABASE_URL || process.env.BOT_DATABASE_URL;
+    // Railway auto-injects DATABASE_URL when PostgreSQL is in the same project
+const url = process.env.TMA_DATABASE_URL || process.env.BOT_DATABASE_URL || process.env.DATABASE_URL;
     if (!url) {
       // Fallback: build from individual env vars
       const host = process.env.DB_HOST || 'localhost';
