@@ -1,8 +1,29 @@
 from typing import Optional, Union
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    WebAppInfo,
+)
 
 from bot.models.tariff import SignalTariff
+from bot.utils.constants import TMA_APP_URL
+
+
+# ─── TMA WebApp Button ─────────────────────────────────────────────────
+
+def tma_inline_kb() -> InlineKeyboardMarkup:
+    """Open the Mini App from this inline button."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="🚀 Mini App ni ochish",
+                web_app=WebAppInfo(url=TMA_APP_URL),
+            )],
+        ]
+    )
 
 
 # ─── Main Menu (Reply Keyboard) ───────────────────────────────────────
@@ -17,6 +38,10 @@ def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
         keyboard.append([KeyboardButton(text="🚀 Start")])
         keyboard.append([KeyboardButton(text="📢 E'lon")])
         keyboard.append([KeyboardButton(text="🔐 Admin panel")])
+    # Add Mini App button with WebApp
+    keyboard.append([
+        KeyboardButton(text="🚀 Mini App", web_app=WebAppInfo(url=TMA_APP_URL))
+    ])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
