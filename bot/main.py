@@ -50,11 +50,28 @@ def register_middlewares() -> None:
     dp.callback_query.middleware(AuthMiddleware())
 
 
+async def on_startup() -> None:
+    """Startup hook: ensure webhook is deleted before polling."""
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("✅ Webhook deleted (startup hook)")
+
+
 async def main() -> None:
     register_routers()
     register_middlewares()
     setup_scheduler(bot)
     start_scheduler()
+
+    # ─── Delete webhook FIRST, before any DB work ─────────────────
+    # This prevents race conditions where another service re-sets
+    # the webhook while we're busy with database setup.
+    logging.info("🗑 Deleting any existing webhook...")
+    await bot.delete_webhook(drop_pending_updates=True)
+    webhook_info = await bot.get_webhook_info()
+    if webhook_info.url:
+        logging.warning(f"⚠️ Webhook STILL active: {webhook_info.url} — retrying...")
+        await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("✅ Webhook confirmed deleted")
 
     # Create tables if not exist
     from bot.database.engine import engine
@@ -127,8 +144,10 @@ async def main() -> None:
     if not setup_done:
         logging.info("⚠️ Setup wizard needed — first admin will configure the bot")
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    logging.info("Bot started!")
+    # Register the startup hook as a final safety net
+    dp.startup.register(on_startup)
+
+    logging.info("🚀 Bot started!")
     await dp.start_polling(bot, allowed_updates=["message", "callback_query", "pre_checkout_query", "chat_member"])
 
 
