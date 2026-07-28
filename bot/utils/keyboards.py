@@ -38,10 +38,11 @@ def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
         keyboard.append([KeyboardButton(text="🚀 Start")])
         keyboard.append([KeyboardButton(text="📢 E'lon")])
         keyboard.append([KeyboardButton(text="🔐 Admin panel")])
-    # Add Mini App button with WebApp
-    keyboard.append([
-        KeyboardButton(text="🚀 Mini App", web_app=WebAppInfo(url=TMA_APP_URL))
-    ])
+    # Add Mini App button with WebApp (only if URL is configured)
+    if TMA_APP_URL:
+        keyboard.append([
+            KeyboardButton(text="🚀 Mini App", web_app=WebAppInfo(url=TMA_APP_URL))
+        ])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
