@@ -204,7 +204,7 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
         (1, 0, "reminder_1_sent"),
     ]
     from bot.database.session import get_session
-    from sqlalchemy import select, text as sa_text
+    from sqlalchemy import select, update as sa_update
     from bot.models.user import User
     from bot.models.subscription import Subscription
 
@@ -217,6 +217,7 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
         logger.info(f"📅 Eslatma [{days_left} kun]: {len(subs)} ta obuna topildi")
         for sub in subs:
             # Check if reminder already sent for this range
+            # NOTE: sub detached from session, so we read the attribute directly
             flag_value = getattr(sub, flag_col, False)
             if flag_value:
                 total_skipped_flag += 1
@@ -232,14 +233,14 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
             if user:
                 try:
                     await bot.send_message(chat_id=user.telegram_id, text=text)
-                    # Mark reminder as sent — session alohida
+                    # Mark reminder as sent — direct UPDATE query (bypasses ORM issues)
                     async with get_session() as session:
-                        result = await session.execute(
-                            select(Subscription).where(Subscription.id == sub.id)
+                        stmt = (
+                            sa_update(Subscription)
+                            .where(Subscription.id == sub.id)
+                            .values(**{flag_col: True})
                         )
-                        db_sub = result.scalar_one_or_none()
-                        if db_sub:
-                            setattr(db_sub, flag_col, True)
+                        await session.execute(stmt)
                     total_sent += 1
                 except Exception as e:
                     total_errors += 1
