@@ -43,7 +43,10 @@ async def create_subscription(
 ) -> Subscription:
     async with get_session() as session:
         now = datetime.now(timezone.utc)
-        duration_days = tariff.duration_months * 30 + bonus_days
+        if tariff.duration_days is not None:
+            duration_days = tariff.duration_days + bonus_days
+        else:
+            duration_days = tariff.duration_months * 30 + bonus_days
 
         # Check if user already has an active subscription of the same product type
         existing = await session.execute(

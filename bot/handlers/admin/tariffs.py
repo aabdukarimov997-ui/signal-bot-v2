@@ -71,22 +71,42 @@ async def admin_add_tariff_name(message: Message, state: FSMContext) -> None:
         return
     await state.update_data(name=message.text.strip() or "—")
     await state.set_state(AdminAddTariffStates.waiting_duration)
-    await message.answer("📅 <b>Tarif muddatini kiriting (oylarda):</b>\nMasalan: 1, 3, 6")
+    await message.answer("📅 <b>Tarif muddatini kiriting:</b>\n\n"
+        "Formatlar:\n"
+        "• <code>1 oy</code> — oylik tarif\n"
+        "• <code>7 kun</code> — kunlik tarif\n"
+        "• <code>14 kun</code> — ikki haftalik\n"
+        "• <code>3 oy</code> — uch oylik\n"
+        "\nMasalan: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>")
 
 
 @admin_tariffs_router.message(AdminAddTariffStates.waiting_duration)
 async def admin_add_tariff_duration(message: Message, state: FSMContext) -> None:
     if message.text is None:
-        await message.answer("❌ Iltimos, son kiriting.")
+        await message.answer("❌ Iltimos, to'g'ri formatda yozing (masalan: 1 oy, 7 kun).")
         return
-    try:
-        months = int(message.text.strip())
-        if months < 1:
-            raise ValueError
-    except ValueError:
-        await message.answer("❌ Iltimos, to'g'ri son kiriting (1, 3, 6 va h.k.)")
+
+    text = message.text.strip().lower()
+
+    # Parse: "7 kun" or "1 oy" or "14 kun" or "3 oy"
+    import re
+    match = re.match(r"^(\d+)\s*(oy|kun)$", text)
+    if not match:
+        await message.answer("❌ Iltimos, to'g'ri formatda yozing: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>")
         return
-    await state.update_data(duration=months)
+
+    value = int(match.group(1))
+    unit = match.group(2)
+
+    if value < 1:
+        await message.answer("❌ Muddat 1 dan kichik bo'lishi mumkin emas.")
+        return
+
+    if unit == "oy":
+        await state.update_data(duration_months=value, duration_days=None)
+    else:  # kun
+        await state.update_data(duration_months=0, duration_days=value)
+
     await state.set_state(AdminAddTariffStates.waiting_price)
     await message.answer("💰 <b>Tarif narxini kiriting ($):</b>\nMasalan: 25")
 
@@ -137,8 +157,9 @@ async def admin_add_tariff_channel_skip(callback: CallbackQuery, state: FSMConte
 
 async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Message) -> None:
     data = await state.get_data()
-    name = data.get("name", f"{data.get('duration', 1)} oy")
-    duration = data.get("duration", 1)
+    name = data.get("name", f"{data.get('duration_months', 1)} oy")
+    duration_months = data.get("duration_months", 1)
+    duration_days = data.get("duration_days")
     price = data.get("price", 0)
 
     from bot.database.session import get_session
@@ -151,7 +172,8 @@ async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Me
 
         tariff = SignalTariff(
             name=name,
-            duration_months=duration,
+            duration_months=duration_months,
+            duration_days=duration_days,
             price=price,
             sort_order=max_order,
             channel_id=channel_id,
@@ -160,12 +182,13 @@ async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Me
 
     await state.clear()
 
+    duration_str = f"{duration_days} kun" if duration_days else f"{duration_months} oy"
     channel_info = f"\n🔗 Kanal: <code>{channel_id}</code>" if channel_id else ""
     await msg.answer(
         f"✅ <b>Tarif qo'shildi!</b>\n\n"
         f"📛 Nomi: {name}\n"
         f"💰 Narx: ${price:.0f}\n"
-        f"📅 Muddat: {duration} oy{channel_info}"
+        f"📅 Muddat: {duration_str}{channel_info}"
     )
 
     # Show updated tariffs
@@ -191,12 +214,12 @@ async def admin_edit_tariff_start(callback: CallbackQuery, state: FSMContext) ->
 
     text = (
         f"✏️ <b>Tarifni tahrirlash: {tariff.label}</b>\n\n"
-        f"Hozirgi: {tariff.label} — ${float(tariff.price):.0f} / {tariff.duration_months} oy\n"
+        f"Hozirgi: {tariff.label} — ${float(tariff.price):.0f} / {tariff.duration_display}\n"
         f"Kanal: {tariff.channel_id or 'umumiy (private_channel_id)'}\n\n"
         f"Qaysi maydonni o'zgartirmoqchisiz?\n"
         f"1️⃣ — Nomi\n"
         f"2️⃣ — Narx\n"
-        f"3️⃣ — Muddat (oy)\n"
+        f"3️⃣ — Muddat\n"
         f"4️⃣ — Maxfiy kanal ID"
     )
     await safe_edit(callback.message, text, reply_markup=None)
@@ -219,7 +242,7 @@ async def admin_edit_tariff_field(message: Message, state: FSMContext) -> None:
     prompts = {
         "name": "📝 <b>Yangi tarif nomini kiriting:</b>\nMasalan: 1 oy",
         "price": "💰 <b>Yangi narxni kiriting ($):</b>\nMasalan: 30",
-        "duration": "📅 <b>Yangi muddatni kiriting (oylarda):</b>\nMasalan: 1, 3, 6",
+        "duration": "📅 <b>Yangi muddatni kiriting:</b>\n\nFormatlar:\n• <code>1 oy</code> — oylik\n• <code>7 kun</code> — kunlik\n\nMasalan: <code>1 oy</code>, <code>7 kun</code>",
         "channel": "🔗 <b>Maxfiy kanal ID kiriting:</b>\nMasalan: -1002271613164\n(Kanal ID @username_infobot'dan oling)\n\n⚠️ Bo'sh yuborsangiz — umumiy kanal (private_channel_id) ishlatiladi",
     }
     await state.set_state(AdminEditTariffStates.waiting_value)
@@ -253,13 +276,18 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
             await message.answer("❌ Iltimos, to'g'ri narx kiriting")
             return
     elif field == "duration":
-        try:
-            new_value = int(message.text.strip())
-            if new_value < 1:
-                raise ValueError
-        except ValueError:
-            await message.answer("❌ Iltimos, to'g'ri son kiriting (1, 3, 6 va h.k.)")
+        import re
+        match = re.match(r"^(\d+)\s*(oy|kun)$", message.text.strip().lower())
+        if not match:
+            await message.answer("❌ Iltimos, to'g'ri formatda yozing: <code>1 oy</code>, <code>7 kun</code>")
             return
+        value = int(match.group(1))
+        unit = match.group(2)
+        if value < 1:
+            await message.answer("❌ Muddat 1 dan kichik bo'lishi mumkin emas.")
+            return
+        new_value = value
+        is_days = (unit == "kun")
     elif field == "channel":
         new_value = message.text.strip() or None  # Empty → None (use global channel)
     else:
@@ -285,7 +313,12 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
         elif field == "price":
             tariff.price = new_value
         elif field == "duration":
-            tariff.duration_months = new_value
+            if is_days:
+                tariff.duration_days = new_value
+                tariff.duration_months = 0
+            else:
+                tariff.duration_months = new_value
+                tariff.duration_days = None
         elif field == "channel":
             tariff.channel_id = new_value
 

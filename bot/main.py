@@ -80,6 +80,7 @@ async def main() -> None:
         await conn.run_sync(Base.metadata.create_all)
         # Add channel_id column if missing (ALTER TABLE for existing DB)
         from sqlalchemy import text
+        # Add channel_id column if missing
         result = await conn.execute(text(
             "SELECT column_name FROM information_schema.columns "
             "WHERE table_name='signal_tariffs' AND column_name='channel_id'"
@@ -87,6 +88,15 @@ async def main() -> None:
         if not result.scalar():
             await conn.execute(text(
                 "ALTER TABLE signal_tariffs ADD COLUMN channel_id VARCHAR(64) NULL DEFAULT NULL"
+            ))
+        # Add duration_days column if missing
+        result = await conn.execute(text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name='signal_tariffs' AND column_name='duration_days'"
+        ))
+        if not result.scalar():
+            await conn.execute(text(
+                "ALTER TABLE signal_tariffs ADD COLUMN duration_days INTEGER NULL DEFAULT NULL"
             ))
 
 

@@ -146,7 +146,7 @@ async def tariff_selected_handler(callback: CallbackQuery) -> None:
     text = (
         f"📈 <b>{tariff.label}</b>\n\n"
         f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n"
-        f"📅 Muddati: <b>{tariff.duration_months} oy</b>\n\n"
+        f"📅 Muddati: <b>{tariff.duration_display}</b>\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
     await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
