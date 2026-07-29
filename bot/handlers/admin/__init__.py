@@ -12,6 +12,7 @@ from .course_content import admin_course_content_router
 from .channel_announcement import admin_channel_announce_router
 from .messages import admin_messages_router
 from .diagnostic import admin_diagnostic_router
+from .marketing import admin_marketing_router
 
 # Barcha admin routelarni bitta joyda yig'amiz
 routers = [
@@ -29,4 +30,5 @@ routers = [
     admin_channel_announce_router,
     admin_messages_router,
     admin_diagnostic_router,
+    admin_marketing_router,
 ]
