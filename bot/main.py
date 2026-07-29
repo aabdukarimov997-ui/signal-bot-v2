@@ -147,6 +147,25 @@ async def main() -> None:
     dp.startup.register(on_startup)
 
     logging.info("🚀 Bot started!")
+
+    # ─── Webhook Watchdog ────────────────────────────────────────────
+    # If an external service keeps re-setting the webhook (e.g. webhook.site),
+    # this background task periodically checks and deletes it, so polling
+    # can keep running without TelegramConflictError.
+    async def webhook_watchdog():
+        while True:
+            try:
+                await asyncio.sleep(60)  # Check every 60 seconds
+                info = await bot.get_webhook_info()
+                if info.url:
+                    logging.warning(f"⚠️ External webhook detected: {info.url} — deleting...")
+                    await bot.delete_webhook(drop_pending_updates=True)
+                    logging.info("✅ Webhook deleted by watchdog")
+            except Exception as e:
+                logging.warning(f"⚠️ Webhook watchdog error: {e}")
+
+    asyncio.create_task(webhook_watchdog())
+
     await dp.start_polling(bot, allowed_updates=["message", "callback_query", "pre_checkout_query", "chat_member"])
 
 
