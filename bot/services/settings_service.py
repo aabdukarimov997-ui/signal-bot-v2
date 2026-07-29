@@ -248,7 +248,7 @@ async def seed_defaults_from_env() -> None:
         "admin_ids": json.dumps(env_settings.admin_ids),
         "setup_completed": "false",
         # Marketing
-        "marketing_enabled": "false",
+        "marketing_enabled": "true",
 
         "marketing_message": "🚀 <b>Professional signal kanaliga qo'shiling!</b>\n\n"
             "Hali obuna sotib olmadingizmi? Endi eng qulay tariflardan birini tanlang "
