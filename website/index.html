@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TraderPro - Trading Platform</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-home me-2"></i> Asosiy
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-line me-2"></i> Grafiklar
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-search me-2"></i> Qidiruv
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-list me-2"></i> Tomosha ro'yxati
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-briefcase me-2"></i> Portfel
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <button type="button" class="btn btn-sm btn-outline-secondary d-md-none" id="sidebar-toggle">
+                        <span class="fas fa-bars"></span>
+                    </button>
+                    <h1 class="h2">TraderPro Trading Platform</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Buyurtma berish</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Sotish</button>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                            <span class="fas fa-cog"></span> Sozlamalar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">BTC/USD Grafiki</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="tradingview_chart" style="height: 400px; width: 100%;">
+                                    <!-- TradingView Widget will go here -->
+                                    <div class="text-center p-4">
+                                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">TradingView grafik ici</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Panel -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Yangi buyurtma</h5>
+                            </div>
+                            <div class="card-body">
+                                <form>
+                                    <div class="mb-3">
+                                        <label for="symbol" class="form-label">Juftlik</label>
+                                        <input type="text" class="form-control" id="symbol" value="BTC/USD" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="type" class="form-label">Buyurtma turi</label>
+                                        <select class="form-select" id="type">
+                                            <option value="market">Rahmat boylik (Market)</option>
+                                            <option value="limit">Chegara (Limit)</option>
+                                            <option value="stop">To'xtatish (Stop)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="side" class="form-label>Yo'nalish</label>
+                                        <select class="form-select" id="side">
+                                            <option value="buy">Sotib olish (Buy)</option>
+                                            <option value="buy">Sotish (Sell)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="amount" class="form-label>Miqdor</label>
+                                        <input type="number" class="form-control" id="amount" placeholder="Miqdorni kiriting">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label>Narx (Limit uchun)</label>
+                                        <input type="number" class="form-control" id="price" placeholder="Narxni kiriting">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Buyurtma berish</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Joriy pohozalar</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Juftlik</th>
+                                                <th>Yo'nalish</th>
+                                                <th>Miqdor</th>
+                                                <th>Narx</th>
+                                                <th>Qo'llanish vaqti</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>BTC/USD</td>
+                                                <td><span class="badge bg-success">Sotib olish</span></td>
+                                                <td>0.05 BTC</td>
+                                                <td>$45,200.50</td>
+                                                <td>2 daqiqa oldin</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>ETH/USD</td>
+                                                <td><span class="badge bg-danger">Sotish</span></td>
+                                                <td>2.5 ETH</td>
+                                                <td>$2,800.75</td>
+                                                <td>5 daqiqa oldin</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Overview -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Bozor niziqi</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Juftlik</th>
+                                                <th>Narx</th>
+                                                <th>O'zgarish (24s)</th>
+                                                <th>Hajm (24s)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>BTC/USD</td>
+                                                <td>$45,200.50</td>
+                                                <td><span class="text-success">+2.5%</span></td>
+                                                <td>$32.5B</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ETH/USD</td>
+                                                <td>$2,800.75</td>
+                                                <td><span class="text-danger">-1.2%</span></td>
+                                                <td>$18.2B</td>
+                                            </tr>
+                                            <tr>
+                                                <td>BNB/USD</td>
+                                                <td>$315.20</td>
+                                                <td><span class="text-success">+0.8%</span></td>
+                                                <td>$4.8B</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ADA/USD</td>
+                                                <td>$0.48</td>
+                                                <td><span class="text-danger">-0.5%</span></td>
+                                                <td>$1.6B</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
