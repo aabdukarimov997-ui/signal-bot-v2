@@ -2,6 +2,7 @@ from aiogram import Bot
 
 from bot.services.subscription_service import (
     expire_all_expired_subscriptions,
+    get_expiring_soon,
     get_all_subscriptions,
     get_all_tariffs,
 )
@@ -12,6 +13,12 @@ import logging
 from bot.utils.texts import (
     SUBSCRIPTION_EXPIRED,
     SUBSCRIPTION_EXPIRED_COURSE,
+    REMINDER_7_DAYS,
+    REMINDER_3_DAYS,
+    REMINDER_1_DAY,
+    REMINDER_7_DAYS_COURSE,
+    REMINDER_3_DAYS_COURSE,
+    REMINDER_1_DAY_COURSE,
 )
 
 logger = logging.getLogger(__name__)
@@ -180,4 +187,74 @@ async def send_marketing_job(bot: Bot) -> None:
 
     logger.info(f"📢 Marketing xabar yuborildi: {sent} ta, o'tkazib yuborildi (obunasi bor): {skipped}")
 
+
+async def send_expiry_reminders_job(bot: Bot) -> None:
+    """
+    Obuna tugashiga 7/3/1 kun qolganda eslatma yuboradi.
+    
+    Database'dagi reminder_*_sent flaglari orqali dublikat oldi olinadi:
+    - Har bir interval (7/3/1 kun) uchun FAQAT 1 marta yuboriladi
+    - Bot restart qilinsa ham flag DB da qoladi → takror yuborilmaydi
+    - Obuna uzaytirilganda flaglar reset qilinadi → yangi muddatdan hisoblanadi
+    """
+    from bot.database.session import get_session
+    from sqlalchemy import select
+    from bot.models.user import User
+    from bot.models.subscription import Subscription
+    from bot.models.tariff import SignalTariff
+
+    ranges = [
+        (7, 3, "reminder_7_sent", REMINDER_7_DAYS, REMINDER_7_DAYS_COURSE),
+        (3, 1, "reminder_3_sent", REMINDER_3_DAYS, REMINDER_3_DAYS_COURSE),
+        (1, 0, "reminder_1_sent", REMINDER_1_DAY, REMINDER_1_DAY_COURSE),
+    ]
+
+    total_sent = 0
+    total_skipped = 0
+
+    for days_left, days_min, flag_col, signal_text, course_text in ranges:
+        subs = await get_expiring_soon(days_left, days_min)
+
+        for sub in subs:
+            async with get_session() as session:
+                # Fresh DB read — flag qiymatini tekshiramiz
+                result = await session.execute(
+                    select(Subscription).where(Subscription.id == sub.id)
+                )
+                db_sub = result.scalar_one_or_none()
+                if not db_sub:
+                    continue
+
+                # Agar allaqachon yuborilgan bo'lsa → o'tkazib yuboramiz
+                if getattr(db_sub, flag_col, False):
+                    total_skipped += 1
+                    continue
+
+                # Foydalanuvchini olamiz
+                user_result = await session.execute(
+                    select(User).where(User.id == db_sub.user_id)
+                )
+                user = user_result.scalar_one_or_none()
+                if not user:
+                    continue
+
+                # Product type ni aniqlaymiz
+                tariff_result = await session.execute(
+                    select(SignalTariff).where(SignalTariff.id == db_sub.tariff_id)
+                )
+                tariff = tariff_result.scalar_one_or_none()
+                product_type = tariff.product_type if tariff else "signal"
+
+                text = course_text if product_type == "course" else signal_text
+
+                try:
+                    await bot.send_message(chat_id=user.telegram_id, text=text)
+                    # Flag ni True qilib belgilaymiz — keyingi safar o'tkazib yuboriladi
+                    setattr(db_sub, flag_col, True)
+                    total_sent += 1
+                    logger.info(f"✅ Reminder sent ({flag_col}): user={user.telegram_id}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Reminder failed: user={user.telegram_id}, err={e}")
+
+    logger.info(f"📊 Reminders: sent={total_sent}, skipped(already sent)={total_skipped}")
 

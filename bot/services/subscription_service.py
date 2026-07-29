@@ -60,9 +60,12 @@ async def create_subscription(
 
         if existing_sub:
             # Extend existing subscription (add days to current end_date)
-            # Eslatma flaglari qayta tiklanmaydi — obunani uzaytirganlarga
-            # qayta eslatma yuborilmasligi uchun
+            # Eslatma flaglarini RESET qilamiz — yangi muddat bo'yicha
+            # eslatmalar qayta hisoblansin (7/3/1 kun qolganda 1 martadan)
             existing_sub.end_date = existing_sub.end_date + timedelta(days=duration_days)
+            existing_sub.reminder_7_sent = False
+            existing_sub.reminder_3_sent = False
+            existing_sub.reminder_1_sent = False
             return existing_sub
 
         # Create new subscription
@@ -90,6 +93,10 @@ async def extend_subscription(user_id: str, extra_days: int) -> Optional[Subscri
         sub = result.scalars().first()
         if sub:
             sub.end_date = sub.end_date + timedelta(days=extra_days)
+            # Eslatma flaglarini reset qilamiz — yangi muddat bo'yicha hisoblansin
+            sub.reminder_7_sent = False
+            sub.reminder_3_sent = False
+            sub.reminder_1_sent = False
         return sub
 
 
