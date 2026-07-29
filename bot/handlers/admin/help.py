@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery
 
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
@@ -50,14 +50,6 @@ ADMIN_HELP_TEXT = """
 • /test_video — videoni tekshiring
 • Railway loglarini ko'ring: railway logs
 """
-
-@admin_help_router.message(F.text == "❓ Yordam")
-async def admin_help_handler(message: Message, user: User) -> None:
-    if user.telegram_id not in await get_admin_ids():
-        return
-    await message.answer(ADMIN_HELP_TEXT, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")]
-    ]))
 
 @admin_help_router.callback_query(F.data == "admin_help")
 async def admin_help_callback(callback: CallbackQuery, user: User) -> None:

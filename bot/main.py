@@ -89,17 +89,6 @@ async def main() -> None:
                 "ALTER TABLE signal_tariffs ADD COLUMN channel_id VARCHAR(64) NULL DEFAULT NULL"
             ))
 
-        # Add contact_messages table (Yordam xabarlari) - create_all handles new table
-        # Add reminder tracking columns if missing (old DB migration)
-        for col in ["reminder_7_sent", "reminder_3_sent", "reminder_1_sent"]:
-            result = await conn.execute(text(
-                f"SELECT column_name FROM information_schema.columns "
-                f"WHERE table_name='subscriptions' AND column_name='{col}'"
-            ))
-            if not result.scalar():
-                await conn.execute(text(
-                    f"ALTER TABLE subscriptions ADD COLUMN {col} BOOLEAN NOT NULL DEFAULT FALSE"
-                ))
 
     # Seed settings from .env defaults if no settings exist
     from bot.services.settings_service import seed_defaults_from_env, is_setup_completed

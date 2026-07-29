@@ -8,8 +8,6 @@ from bot.services.settings_service import (
     is_setup_completed,
     set_setting,
     get_setting,
-    WIZARD_KEYS,
-    SETTINGS_KEYS,
 )
 
 setup_router = Router()
@@ -79,8 +77,6 @@ async def start_wizard(message: Message, state: FSMContext) -> None:
     await message.answer(WIZARD_QUESTIONS["project_name"])
 
 
-WIZARD_STATE_MAP = {key: key for key in WIZARD_KEYS}
-# Map state strings to actual State objects
 STATE_ORDER = [
     SetupWizardStates.project_name,
     SetupWizardStates.admin_username,

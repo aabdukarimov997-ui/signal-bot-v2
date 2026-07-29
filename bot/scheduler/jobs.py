@@ -1,9 +1,7 @@
 from aiogram import Bot
 
-from bot.config import settings
 from bot.services.subscription_service import (
     expire_all_expired_subscriptions,
-    get_expiring_soon,
     get_all_subscriptions,
     get_all_tariffs,
 )
@@ -12,12 +10,6 @@ from bot.services.settings_service import get_setting
 import logging
 
 from bot.utils.texts import (
-    REMINDER_7_DAYS,
-    REMINDER_3_DAYS,
-    REMINDER_1_DAY,
-    REMINDER_7_DAYS_COURSE,
-    REMINDER_3_DAYS_COURSE,
-    REMINDER_1_DAY_COURSE,
     SUBSCRIPTION_EXPIRED,
     SUBSCRIPTION_EXPIRED_COURSE,
 )
@@ -34,12 +26,6 @@ async def _get_channel_for_sub(sub) -> str:
 
     # For signal: try tariff-specific channel, fall back to global
     return await get_signal_channel_id(tariff_id=sub.tariff_id)
-
-
-async def _get_reminder_text(product_type: str, days: int) -> str:
-    if product_type == "course":
-        return {7: REMINDER_7_DAYS_COURSE, 3: REMINDER_3_DAYS_COURSE, 1: REMINDER_1_DAY_COURSE}[days]
-    return {7: REMINDER_7_DAYS, 3: REMINDER_3_DAYS, 1: REMINDER_1_DAY}[days]
 
 
 async def _get_product_type(sub) -> str:
@@ -195,61 +181,3 @@ async def send_marketing_job(bot: Bot) -> None:
     logger.info(f"📢 Marketing xabar yuborildi: {sent} ta, o'tkazib yuborildi (obunasi bor): {skipped}")
 
 
-async def send_expiry_reminders_job(bot: Bot) -> None:
-    # Har bir muddat oraliqni bir-biridan ajratamiz (overlap bo'lmasligi uchun)
-    # reminder flag kalitlari: (days_left, db_column_name)
-    ranges = [
-        (7, 3, "reminder_7_sent"),
-        (3, 1, "reminder_3_sent"),
-        (1, 0, "reminder_1_sent"),
-    ]
-    from bot.database.session import get_session
-    from sqlalchemy import select, update as sa_update
-    from bot.models.user import User
-    from bot.models.subscription import Subscription
-
-    total_sent = 0
-    total_skipped_flag = 0
-    total_errors = 0
-
-    for days_left, days_min, flag_col in ranges:
-        subs = await get_expiring_soon(days_left, days_min)
-        logger.info(f"📅 Eslatma [{days_left} kun]: {len(subs)} ta obuna topildi")
-        for sub in subs:
-            # Check if reminder already sent for this range
-            # NOTE: sub detached from session, so we read the attribute directly
-            flag_value = getattr(sub, flag_col, False)
-            if flag_value:
-                total_skipped_flag += 1
-                continue
-
-            async with get_session() as session:
-                result = await session.execute(select(User).where(User.id == sub.user_id))
-                user = result.scalar_one_or_none()
-
-            product_type = await _get_product_type(sub)
-            text = await _get_reminder_text(product_type, days_left)
-
-            if user:
-                try:
-                    await bot.send_message(chat_id=user.telegram_id, text=text)
-                    # Mark reminder as sent — direct UPDATE query (bypasses ORM issues)
-                    async with get_session() as session:
-                        stmt = (
-                            sa_update(Subscription)
-                            .where(Subscription.id == sub.id)
-                            .values(**{flag_col: True})
-                        )
-                        await session.execute(stmt)
-                    total_sent += 1
-                except Exception as e:
-                    total_errors += 1
-                    logger.warning(f"⚠️ Eslatma yuborishda xatolik: sub_id={sub.id}, err={e}")
-            else:
-                logger.warning(f"⚠️ Foydalanuvchi topilmadi: sub_id={sub.id}, user_id={sub.user_id}")
-
-    logger.info(
-        f"📊 Eslatmalar yakuni: yuborildi={total_sent}, "
-        f"allaqachon yuborilgan={total_skipped_flag}, "
-        f"xatolik={total_errors}"
-    )
