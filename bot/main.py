@@ -59,7 +59,7 @@ async def on_startup() -> None:
 async def main() -> None:
     register_routers()
     register_middlewares()
-    setup_scheduler(bot)
+    await setup_scheduler(bot)
     start_scheduler()
 
     # ─── Delete webhook FIRST, before any DB work ─────────────────

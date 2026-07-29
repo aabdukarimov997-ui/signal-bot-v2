@@ -249,7 +249,7 @@ async def seed_defaults_from_env() -> None:
         "setup_completed": "false",
         # Marketing
         "marketing_enabled": "true",
-
+        "marketing_interval_hours": "3",
         "marketing_message": "🚀 <b>Professional signal kanaliga qo'shiling!</b>\n\n"
             "Hali obuna sotib olmadingizmi? Endi eng qulay tariflardan birini tanlang "
             "va professional signallarni olishni boshlang!\n\n"

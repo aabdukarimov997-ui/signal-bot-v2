@@ -9,7 +9,7 @@ from bot.config import settings
 scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
 
 
-def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
+async def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
     """Register all scheduled jobs."""
 
     @scheduler.scheduled_job(CronTrigger(hour=0, minute=0))
@@ -32,9 +32,13 @@ def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
         from bot.scheduler.jobs import purge_non_subscribers_job
         await purge_non_subscribers_job(bot)
 
-    # Marketing job — obuna olmaganlarga xabar (har 3 soatda tekshiriladi,
-    # lekin faqat marketing_interval_hours dan keyin yana yuboradi)
-    @scheduler.scheduled_job(IntervalTrigger(hours=3))
+    # Marketing job — obuna olmaganlarga xabar
+    # Interval marketing_interval_hooks DB sozlamasidan olinadi
+    from bot.services.settings_service import get_setting
+    marketing_hours_str = await get_setting("marketing_interval_hours")
+    marketing_hours = int(marketing_hours_str) if marketing_hours_str and marketing_hours_str.isdigit() else 3
+
+    @scheduler.scheduled_job(IntervalTrigger(hours=marketing_hours))
     async def marketing_job():
         from bot.scheduler.jobs import send_marketing_job
         await send_marketing_job(bot)
