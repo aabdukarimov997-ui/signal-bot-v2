@@ -6,7 +6,6 @@ tests/
 *.py
 *.pyc
 __pycache__/
-Dockerfile
 railway.toml
 pyproject.toml
 .env
