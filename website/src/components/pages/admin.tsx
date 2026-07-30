@@ -83,6 +83,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { GeometricPattern } from '@/components/shared/oriental-pattern';
+import { AdminBotUsers } from '@/components/pages/admin-bot-users';
+import { AdminBotPayments } from '@/components/pages/admin-bot-payments';
 
 /* ─── Icon Lookup ──────────────────────────────────────────── */
 const iconMap: Record<string, LucideIcon> = {
@@ -1407,7 +1409,7 @@ function AdminMedia() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SECTION 7 — ANALYTICS
+   SECTION 7 — ANALYTICS (Website + Bot)
    ═══════════════════════════════════════════════════════════════ */
 function AdminAnalytics() {
   const [data, setData] = useState<{
@@ -1416,18 +1418,29 @@ function AdminAnalytics() {
     revenue: number;
     pageViewsByType: Record<string, number>;
   } | null>(null);
+  const [botData, setBotData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [botLoading, setBotLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/analytics');
-        const json = await res.json();
-        setData(json);
+        const [siteRes, botRes] = await Promise.all([
+          fetch('/api/analytics'),
+          fetch('/api/bot/stats'),
+        ]);
+        const siteData = await siteRes.json();
+        let botStats = null;
+        try {
+          botStats = await botRes.json();
+        } catch {}
+        setData(siteData);
+        setBotData(botStats);
       } catch {
         toast.error('Analitikani yuklashda xatolik');
       } finally {
         setLoading(false);
+        setBotLoading(false);
       }
     })();
   }, []);
@@ -1484,6 +1497,112 @@ function AdminAnalytics() {
           );
         })}
       </div>
+
+      {/* Bot Statistics */}
+      {botData && !botLoading && (
+        <>
+          <div className="mt-8 mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Send className="h-5 w-5 text-gold" />
+              Telegram Bot Statistikasi
+            </h3>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                <Users className="h-6 w-6 text-gold" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Bot foydalanuvchilari</p>
+                <p className="text-foreground text-xl font-bold">{botData.totalUsers}</p>
+              </div>
+            </AdminGlassCard>
+
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                <Crown className="h-6 w-6 text-gold" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Faol obunalar</p>
+                <p className="text-foreground text-xl font-bold">{botData.activeSubscriptions}</p>
+              </div>
+            </AdminGlassCard>
+
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                <DollarSign className="h-6 w-6 text-gold" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Oyilik tushum</p>
+                <p className="text-foreground text-xl font-bold">{formatCurrency(botData.monthlyRevenue)}</p>
+              </div>
+            </AdminGlassCard>
+
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-gold/10 flex items-center justify-center shrink-0">
+                <CreditCard className="h-6 w-6 text-gold" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Kutilayotgan to\'lovlar</p>
+                <p className="text-foreground text-xl font-bold">{botData.pendingPayments}</p>
+              </div>
+            </AdminGlassCard>
+          </div>
+
+          {/* Today's stats */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Users className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Bugun yangi foydalanuvchi</p>
+                <p className="text-foreground text-xl font-bold">{botData.todayNewUsers}</p>
+              </div>
+            </AdminGlassCard>
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Crown className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Bugun yangi obuna</p>
+                <p className="text-foreground text-xl font-bold">{botData.todayNewSubscriptions}</p>
+              </div>
+            </AdminGlassCard>
+            <AdminGlassCard className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <DollarSign className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Jami tushum</p>
+                <p className="text-foreground text-xl font-bold">{formatCurrency(botData.totalRevenue)}</p>
+              </div>
+            </AdminGlassCard>
+          </div>
+
+          {/* Subscriptions by type */}
+          {botData.subscriptionsByType?.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+                Obuna turlari bo&apos;yicha
+              </h3>
+              <AdminGlassCard>
+                <div className="space-y-2">
+                  {botData.subscriptionsByType.map((item: any) => (
+                    <div key={item.product_type} className="flex items-center justify-between py-1">
+                      <span className="text-sm text-muted-foreground capitalize">{item.product_type}</span>
+                      <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
+                        {item.count} ta faol
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </AdminGlassCard>
+            </div>
+          )}
+        </>
+      )}
 
       {data && data.pageViewsByType && Object.keys(data.pageViewsByType).length > 0 && (
         <div className="mt-6">
@@ -2464,6 +2583,8 @@ function AdminContent() {
   const currentPage = useNavigationStore((s) => s.currentPage);
 
   switch (currentPage) {
+    case 'admin-bot-users':
+      return <AdminBotUsers />;
     case 'admin-users':
       return <AdminUsers />;
     case 'admin-courses':
@@ -2480,6 +2601,8 @@ function AdminContent() {
       return <AdminMedia />;
     case 'admin-analytics':
       return <AdminAnalytics />;
+    case 'admin-bot-payments':
+      return <AdminBotPayments />;
     case 'admin-payments':
       return <AdminPayments />;
     case 'admin-referrals':
