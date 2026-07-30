@@ -36,6 +36,7 @@ export const ADMIN_NAV_ITEMS = [
   { id: 'admin-referrals', label: 'Referral', icon: 'Share2' },
   { id: 'admin-banners', label: 'Bannerlar', icon: 'Layout' },
   { id: 'admin-pricing', label: 'Narxlar', icon: 'DollarSign' },
+  { id: 'admin-faq', label: 'FAQ', icon: 'HelpCircle' },
   { id: 'admin-coupons', label: 'Kuponlar', icon: 'Ticket' },
   { id: 'admin-telegram', label: 'Telegram', icon: 'Send' },
 ] as const;
