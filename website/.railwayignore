@@ -1,6 +1,5 @@
 bot/
 alembic.ini
-entrypoint.sh
 seed.py
 deploy_pa.py
 tests/

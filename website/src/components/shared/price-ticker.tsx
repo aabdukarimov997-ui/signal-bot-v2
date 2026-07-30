@@ -130,8 +130,9 @@ export function PriceTickerCompact({ className }: { className?: string }) {
   useEffect(() => {
     (async () => {
       try {
+        const ids = SYMBOLS.map(s => `"${s.id}"`).join(',');
         const res = await fetch(
-          `https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","TONUSDT"]`
+          `https://api.binance.com/api/v3/ticker/price?symbols=[${ids}]`
         );
         if (!res.ok) throw new Error('Failed');
         const data = await res.json();
