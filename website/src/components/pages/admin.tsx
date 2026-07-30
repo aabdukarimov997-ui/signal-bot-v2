@@ -228,7 +228,7 @@ function MobileSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden fixed top-4 left-4 z-50 text-silver hover:bg-silver/10"
+          className="lg:hidden fixed top-4 left-4 z-50 text-gold hover:bg-gold/10"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -338,7 +338,7 @@ function AdminUsers() {
                       variant={u.role === 'ADMIN' ? 'default' : 'secondary'}
                       className={
                         u.role === 'ADMIN'
-                          ? 'bg-silver/20 text-silver border-silver/30'
+                          ? 'bg-gold/20 text-gold border-gold/30'
                           : 'bg-white/[0.05] text-muted-foreground border-glass-border'
                       }
                     >
@@ -360,7 +360,7 @@ function AdminUsers() {
                         </Button>
                         <Button
                           size="sm"
-                          className="bg-silver/20 text-silver hover:bg-silver/30"
+                          className="bg-gold/20 text-gold hover:bg-gold/30"
                           onClick={() => toggleRole(u)}
                         >
                           Ha
@@ -370,7 +370,7 @@ function AdminUsers() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-muted-foreground hover:text-silver"
+                        className="text-muted-foreground hover:text-gold"
                         onClick={() => setConfirmId(u.id)}
                       >
                         {u.role === 'USER' ? 'Admin qilish' : 'User qilish'}
@@ -522,7 +522,7 @@ function AdminCourses() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -549,7 +549,7 @@ function TierForm({
 }) {
   return (
     <div className="space-y-2 rounded-lg border border-glass-border p-4">
-      <h3 className="text-sm font-semibold text-silver">{label}</h3>
+      <h3 className="text-sm font-semibold text-gold">{label}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <Label className="text-muted-foreground text-xs">Narx (so'm)</Label>
@@ -709,7 +709,7 @@ function AdminSignals() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -835,7 +835,7 @@ function AdminBlog() {
         <h2 className="text-xl font-bold text-foreground">Blog</h2>
         <Button
           onClick={openNew}
-          className="bg-silver/20 text-silver hover:bg-silver/30"
+          className="bg-gold/20 text-gold hover:bg-gold/30"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yangi maqola
@@ -889,7 +889,7 @@ function AdminBlog() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        className="h-8 w-8 text-muted-foreground hover:text-gold"
                         onClick={() => openEdit(post)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -978,7 +978,7 @@ function AdminBlog() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editing ? 'Yangilash' : 'Yaratish'}
@@ -1374,7 +1374,7 @@ function AdminSEO() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -1394,8 +1394,8 @@ function AdminMedia() {
     <>
       <h2 className="text-xl font-bold text-foreground mb-4">Media</h2>
       <AdminGlassCard className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="h-16 w-16 rounded-full bg-silver/10 flex items-center justify-center mb-4">
-          <Upload className="h-8 w-8 text-silver/50" />
+        <div className="h-16 w-16 rounded-full bg-gold/10 flex items-center justify-center mb-4">
+          <Upload className="h-8 w-8 text-gold/50" />
         </div>
         <p className="text-muted-foreground text-lg font-medium">
           Media boshqaruvi tez orada qo&apos;shiladi
@@ -1784,7 +1784,7 @@ function AdminReferrals() {
                     {r.referred?.name || r.referred?.email || '—'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-silver/10 text-silver border-silver/20">
+                    <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
                       {r.code}
                     </Badge>
                   </TableCell>
@@ -1906,7 +1906,7 @@ function AdminBanners() {
         <h2 className="text-xl font-bold text-foreground">Bannerlar</h2>
         <Button
           onClick={openNew}
-          className="bg-silver/20 text-silver hover:bg-silver/30"
+          className="bg-gold/20 text-gold hover:bg-gold/30"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yangi banner
@@ -1960,7 +1960,7 @@ function AdminBanners() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        className="h-8 w-8 text-muted-foreground hover:text-gold"
                         onClick={() => openEdit(b)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -2052,7 +2052,7 @@ function AdminBanners() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editing ? 'Yangilash' : 'Yaratish'}
@@ -2123,8 +2123,8 @@ function AdminPricing() {
 
       <AdminGlassCard className="mb-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-silver/10 flex items-center justify-center shrink-0">
-            <Info className="h-5 w-5 text-silver" />
+          <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
+            <Info className="h-5 w-5 text-gold" />
           </div>
           <p className="text-muted-foreground text-sm">
             Barcha narxlar Admin Panel orqali boshqariladi. Tahrirlash uchun tegishli sahifaga o&apos;ting.
@@ -2148,7 +2148,7 @@ function AdminPricing() {
         <div className="sm:col-span-3 flex justify-end">
           <Button
             variant="ghost"
-            className="text-silver hover:text-silver hover:bg-silver/10"
+            className="text-gold hover:text-gold hover:bg-gold/10"
             onClick={() => navigate('admin-courses')}
           >
             Kurslarni tahrirlash
@@ -2173,7 +2173,7 @@ function AdminPricing() {
         <div className="sm:col-span-3 flex justify-end">
           <Button
             variant="ghost"
-            className="text-silver hover:text-silver hover:bg-silver/10"
+            className="text-gold hover:text-gold hover:bg-gold/10"
             onClick={() => navigate('admin-signals')}
           >
             Signallarni tahrirlash
@@ -2301,7 +2301,7 @@ function AdminCoupons() {
         <h2 className="text-xl font-bold text-foreground">Kuponlar</h2>
         <Button
           onClick={openNew}
-          className="bg-silver/20 text-silver hover:bg-silver/30"
+          className="bg-gold/20 text-gold hover:bg-gold/30"
         >
           <Plus className="mr-2 h-4 w-4" />
           Yangi kupon
@@ -2330,7 +2330,7 @@ function AdminCoupons() {
               )}
               {coupons.map((c) => (
                 <TableRow key={c.id} className="border-glass-border hover:bg-white/[0.02]">
-                  <TableCell className="font-mono font-medium text-silver">{c.code}</TableCell>
+                  <TableCell className="font-mono font-medium text-gold">{c.code}</TableCell>
                   <TableCell className="text-foreground">{c.discountPercent}%</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDate(c.validTo)}
@@ -2355,7 +2355,7 @@ function AdminCoupons() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        className="h-8 w-8 text-muted-foreground hover:text-gold"
                         onClick={() => openEdit(c)}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -2459,7 +2459,7 @@ function AdminCoupons() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-silver/20 text-silver hover:bg-silver/30"
+              className="bg-gold/20 text-gold hover:bg-gold/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editing ? 'Yangilash' : 'Yaratish'}
@@ -2526,8 +2526,8 @@ function AdminTelegram() {
             <AdminGlassCard key={link.label}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-silver/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-silver" />
+                  <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
+                    <Icon className="h-5 w-5 text-gold" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{link.label}</p>
@@ -2538,7 +2538,7 @@ function AdminTelegram() {
                   href={link.value.startsWith('@') ? `https://t.me/${link.value.slice(1)}` : link.value}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-silver hover:text-silver/80 transition-colors"
+                  className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 transition-colors"
                 >
                   Ochiq
                   <ExternalLink className="h-3 w-3" />
@@ -2553,8 +2553,8 @@ function AdminTelegram() {
       <div className="mt-8">
         <h3 className="text-lg font-semibold text-foreground mb-3">Statistika</h3>
         <AdminGlassCard className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="h-12 w-12 rounded-full bg-silver/10 flex items-center justify-center mb-3">
-            <BarChart3 className="h-6 w-6 text-silver/50" />
+          <div className="h-12 w-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
+            <BarChart3 className="h-6 w-6 text-gold/50" />
           </div>
           <p className="text-muted-foreground text-sm">
             Telegram statistikasi tez orada qo&apos;shiladi
@@ -2571,7 +2571,7 @@ function AdminTelegram() {
 function LoadingState() {
   return (
     <div className="flex items-center justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-silver" />
+      <Loader2 className="h-8 w-8 animate-spin text-gold" />
     </div>
   );
 }
@@ -2638,7 +2638,7 @@ function AccessDenied() {
         </p>
         <Button
           onClick={() => navigate('login')}
-          className="bg-silver/20 text-silver hover:bg-silver/30"
+          className="bg-gold/20 text-gold hover:bg-gold/30"
         >
           Tizimga kirish
         </Button>
