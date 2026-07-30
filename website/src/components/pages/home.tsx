@@ -387,7 +387,7 @@ export default function HomePage() {
                       >
                         <Button
                           size="lg"
-                          className="rounded-xl px-8 text-sm font-semibold bg-emerald text-emerald-foreground hover:bg-emerald/90"
+                          className="rounded-xl px-8 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
                         >
                           Batafsil
                           <ArrowRight className="size-4 ml-1.5" />

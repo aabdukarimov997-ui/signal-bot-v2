@@ -46,7 +46,7 @@ export function GlassCard({
           : undefined
       }
       className={cn(
-        glowGold ? 'glass-card-gold' : 'glass-card p-6',
+        glowGold ? 'glass-card-gold p-6' : 'glass-card p-6',
         glow && 'border-glow',
         glowEmerald && 'border-glow-emerald',
         glowGold && 'border-glow-gold',

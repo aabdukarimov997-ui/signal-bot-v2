@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 /* ───── Background Pattern: Islamic Geometric Star ───── */
@@ -237,7 +238,7 @@ export function CornerOrnament({ className, position = 'top-left' }: { className
 }
 
 /* ───── Gold Border Frame ───── */
-export function GoldFrame({ children, className }: { children: React.ReactNode; className?: string }) {
+export function GoldFrame({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn('relative', className)}>
       {/* Corner decorations */}
