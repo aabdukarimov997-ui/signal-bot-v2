@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { FloatingTelegram } from "@/components/layout/floating-telegram";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,7 +84,9 @@ export default function RootLayout({
       >
         <Navbar />
         <main className="min-h-screen pt-16">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
         <Footer />
         <FloatingTelegram />

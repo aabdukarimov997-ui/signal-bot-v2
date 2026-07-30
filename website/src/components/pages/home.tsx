@@ -23,6 +23,7 @@ import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PriceTicker } from '@/components/shared/price-ticker';
 
 /* ──────────────── stagger children container ──────────────── */
 const stagger = {
@@ -84,6 +85,7 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannersReady, setBannersReady] = useState(false);
+  const [priceTickerVisible, setPriceTickerVisible] = useState(true);
 
   /* fetch banners */
   useEffect(() => {
@@ -219,6 +221,17 @@ export default function HomePage() {
 
 
     </section>
+  );
+
+  /* ────────── PRICE TICKER ────────── */
+  const priceTicker = priceTickerVisible && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+    >
+      <PriceTicker />
+    </motion.div>
   );
 
   /* ────────── FEATURES ────────── */
@@ -464,6 +477,7 @@ export default function HomePage() {
   return (
     <main className="flex flex-col">
       {hero}
+      {priceTicker}
       {features}
       {stats}
       {bannerSection}

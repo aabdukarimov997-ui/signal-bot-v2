@@ -1,25 +1,31 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --no-audit --no-fund
 
 FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
 
-EXPOSE 3000
-ENV PORT=3000
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-CMD ["node", "server.js"]
+EXPOSE 8080
+ENV PORT=8080
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+CMD ["./entrypoint.sh"]
