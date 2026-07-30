@@ -24,6 +24,7 @@ import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PriceTicker } from '@/components/shared/price-ticker';
+import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament, GoldFrame } from '@/components/shared/oriental-pattern';
 
 /* ──────────────── stagger children container ──────────────── */
 const stagger = {
@@ -124,13 +125,20 @@ export default function HomePage() {
   /* ────────── HERO ────────── */
   const hero = (
     <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center overflow-hidden px-4 py-16 sm:py-24">
-      {/* emerald + silver radial glow overlay */}
+      {/* Sharqona geometric background patterns */}
+      <GeometricPattern opacity={0.04} className="-z-[4]" />
+      <ArabesquePattern opacity={0.025} className="-z-[3]" />
+      {/* Corner ornaments */}
+      <CornerOrnament position="top-left" className="z-10" />
+      <CornerOrnament position="bottom-right" className="z-10" />
+
+      {/* Gold + emerald radial glow overlay */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-[5]"
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(45,212,160,0.08) 0%, rgba(45,212,160,0.02) 30%, rgba(192,192,192,0.03) 50%, transparent 70%)',
+            'radial-gradient(ellipse 60% 50% at 50% 20%, rgba(212,167,44,0.08) 0%, rgba(45,212,160,0.04) 25%, rgba(212,167,44,0.02) 45%, rgba(192,192,192,0.03) 60%, transparent 75%)',
         }}
       />
 
@@ -145,22 +153,30 @@ export default function HomePage() {
           <Logo size="hero" showBackground />
         </motion.div>
 
-        {/* tagline */}
+        {/* Decorative top star */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <svg width="32" height="16" viewBox="0 0 32 16" className="text-gold/40 mx-auto">
+            <path d="M0 8 C4 4, 8 4, 12 8 C16 12, 20 12, 24 8 C28 4, 32 4, 32 8" stroke="currentColor" strokeWidth="0.5" fill="none" />
+            <polygon points="16,2 17,6 21,6 18,8 19,12 16,9 13,12 14,8 11,6 15,6" fill="currentColor" opacity="0.6" />
+          </svg>
+        </motion.div>
+
+        {/* tagline - gold theme */}
         <motion.span
           variants={fadeUp}
-          className="mb-4 inline-block rounded-full border border-emerald/20 px-4 py-1.5 text-xs tracking-widest text-emerald/80 uppercase glass-emerald"
+          className="mb-4 inline-block rounded-full border border-gold/20 px-4 py-1.5 text-xs tracking-widest text-gold/80 uppercase glass-gold"
         >
           {SITE.TAGLINE}
         </motion.span>
 
-        {/* heading */}
+        {/* heading - oriental text gradient */}
         <motion.h1
           variants={fadeUp}
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight"
         >
-          <span className="text-gradient">Professional Crypto</span>
+          <span className="text-gradient-oriental">Professional Crypto</span>
           <br />
-          <span className="text-gradient">Trading Academy</span>
+          <span className="text-gradient-oriental">Trading Academy</span>
         </motion.h1>
 
         {/* description */}
@@ -182,7 +198,7 @@ export default function HomePage() {
           <Button
             size="lg"
             onClick={() => navigate('course')}
-            className="rounded-xl px-6 text-sm font-semibold bg-emerald text-emerald-foreground hover:bg-emerald/90"
+            className="rounded-xl px-6 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
           >
             Trading Haqiqati
             <ArrowRight className="size-4 ml-1" />
@@ -232,10 +248,14 @@ export default function HomePage() {
     </motion.div>
   );
 
-  /* ────────── FEATURES ────────── */
+  {/* ────────── ORIENTAL DIVIDER ────────── */}
+  const divider = <OrientalDivider />;
+
+  {/* ────────── FEATURES ────────── */}
   const features = (
-    <section className="relative px-4 py-20 sm:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section className="relative px-4 py-20 sm:py-28 overflow-hidden">
+      <GeometricPattern opacity={0.015} className="-z-[1]" />
+      <div className="mx-auto max-w-6xl relative">
         <SectionHeading
           title="Nima Uchun AAA?"
           subtitle="Professional ta'lim, ishonchli signallar, premium hamjamiyat"
@@ -245,9 +265,9 @@ export default function HomePage() {
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
-              <GlassCard key={f.title} hover index={i} className="p-6 flex flex-col gap-4">
-                <div className="flex size-12 items-center justify-center rounded-xl bg-emerald/10 border border-emerald/15">
-                  <Icon className="size-6 text-emerald" />
+              <GlassCard key={f.title} hover glowGold index={i} className="p-6 flex flex-col gap-4">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-gold/10 border border-gold/15">
+                  <Icon className="size-6 text-gold" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
@@ -264,7 +284,7 @@ export default function HomePage() {
     <section className="relative px-4 py-16">
       <div className="mx-auto max-w-4xl">
         <AnimatedSection>
-          <div className="glass-card p-8 sm:p-10 border-glow-emerald">
+          <div className="glass-card-gold p-8 sm:p-10">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-4 text-center">
               {STATS.map((s) => (
                 <div key={s.label} className="flex flex-col items-center gap-2">
@@ -307,7 +327,7 @@ export default function HomePage() {
                       'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(45,212,160,0.06) 0%, transparent 70%)',
                   }}
                 />
-                <h3 className="text-2xl sm:text-3xl font-bold text-gradient">
+                <h3 className="text-2xl sm:text-3xl font-bold text-gradient-oriental">
                   Trading Haqiqati kursini boshlang
                 </h3>
                 <p className="max-w-lg text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -317,7 +337,7 @@ export default function HomePage() {
                 <a href={TELEGRAM.BOT} target="_blank" rel="noopener noreferrer">
                   <Button
                     size="lg"
-                    className="rounded-xl px-8 text-sm font-semibold bg-emerald text-emerald-foreground hover:bg-emerald/90"
+                    className="rounded-xl px-8 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
                   >
                     Telegram Bot orqali boshlang
                     <ArrowRight className="size-4 ml-1.5" />
@@ -434,16 +454,17 @@ export default function HomePage() {
     <section className="relative px-4 py-20 sm:py-28">
       <div className="mx-auto max-w-3xl">
         <AnimatedSection>
-          <GlassCard glow className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
+          <GlassCard glowGold className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
+            <GeometricPattern opacity={0.03} />
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 -z-10"
               style={{
                 background:
-                  'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(45,212,160,0.04) 0%, transparent 60%)',
+                  'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(212,167,44,0.04) 0%, transparent 60%)',
               }}
             />
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-oriental">
               Telegram Kanalga Qo&apos;shiling
             </h2>
             <p className="max-w-xl text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -458,7 +479,7 @@ export default function HomePage() {
                 href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald hover:underline underline-offset-2"
+                className="text-gold hover:underline underline-offset-2
               >
                 {TELEGRAM.HELP}
               </a>
@@ -477,7 +498,9 @@ export default function HomePage() {
       {hero}
       {priceTicker}
       {features}
+      {divider}
       {stats}
+      {divider}
       {bannerSection}
       {telegramCta}
     </main>

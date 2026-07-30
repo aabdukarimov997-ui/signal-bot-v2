@@ -3,6 +3,7 @@
 import { Logo } from '@/components/shared/logo';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Separator } from '@/components/ui/separator';
+import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { useNavigationStore } from '@/store';
 import { SITE, NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 import type { PageId } from '@/lib/constants';
@@ -28,13 +29,26 @@ export function Footer() {
   const navigate = useNavigationStore((s) => s.navigate);
 
   return (
-    <footer className="relative mt-auto border-t border-glass-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
+      {/* Background patterns */}
+      <GeometricPattern opacity={0.02} />
+      <ArabesquePattern opacity={0.015} />
+      {/* Corner ornaments */}
+      <CornerOrnament position="top-left" />
+      <CornerOrnament position="top-right" />
+
+      {/* Decorative gold top border */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         {/* Top Section */}
         <div className="py-12 sm:py-16">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="max-w-sm space-y-4">
-              <Logo size="sm" />
+              <div className="flex items-center gap-3">
+                <Logo size="sm" />
+                <span className="text-lg font-bold text-gradient-oriental">{SITE.NAME}</span>
+              </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {SITE.DESCRIPTION}
               </p>
@@ -45,7 +59,8 @@ export function Footer() {
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4">
               {/* Quick Links */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-gold/60" />
                   Quick Links
                 </h3>
                 <ul className="space-y-2.5">
@@ -54,8 +69,9 @@ export function Footer() {
                       <button
                         type="button"
                         onClick={() => navigate(link.id)}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
+                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
                       </button>
                     </li>
@@ -65,7 +81,8 @@ export function Footer() {
 
               {/* Resources */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-gold/60" />
                   Resources
                 </h3>
                 <ul className="space-y-2.5">
@@ -74,8 +91,9 @@ export function Footer() {
                       <button
                         type="button"
                         onClick={() => navigate(link.id)}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
+                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
                       </button>
                     </li>
@@ -85,7 +103,8 @@ export function Footer() {
 
               {/* Legal */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-gold/60" />
                   Legal
                 </h3>
                 <ul className="space-y-2.5">
@@ -94,8 +113,9 @@ export function Footer() {
                       <button
                         type="button"
                         onClick={() => navigate(link.id)}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
+                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
                       </button>
                     </li>
@@ -105,7 +125,8 @@ export function Footer() {
 
               {/* Connect */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-gold/60" />
                   Connect
                 </h3>
                 <ul className="space-y-2.5">
@@ -114,8 +135,9 @@ export function Footer() {
                       href={TELEGRAM.MARKETING_CHANNEL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
+                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                       Telegram Channel
                     </a>
                   </li>
@@ -124,8 +146,9 @@ export function Footer() {
                       href={TELEGRAM.BOT}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
+                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                       Telegram Bot
                     </a>
                   </li>
@@ -134,8 +157,9 @@ export function Footer() {
                       href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
+                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                       Support
                     </a>
                   </li>
@@ -145,16 +169,19 @@ export function Footer() {
           </div>
         </div>
 
-        <Separator className="bg-glass-border" />
+        <OrientalDivider variant="simple" />
 
         {/* Bottom Section */}
         <div className="flex flex-col items-center gap-3 py-6 sm:flex-row sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            © 2024 {SITE.NAME} by {SITE.FOUNDER}. All rights reserved.
+            © 2025 {SITE.NAME} by {SITE.FOUNDER}. All rights reserved.
           </p>
-          <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground/60">
-            {SITE.TAGLINE}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs font-medium tracking-[0.2em] text-gold/60">
+              {SITE.TAGLINE}
+            </p>
+            <span className="size-1.5 rotate-45 bg-gold/30" />
+          </div>
         </div>
       </div>
     </footer>

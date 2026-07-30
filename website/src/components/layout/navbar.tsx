@@ -30,6 +30,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { useNavigationStore, useAuthStore, useUIStore } from '@/store';
 import { NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 
@@ -73,10 +74,18 @@ export function Navbar({ className }: LoadingScreenProps) {
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled ? 'glass-strong shadow-lg shadow-black/20' : 'glass',
+        scrolled
+          ? 'glass-strong shadow-lg shadow-black/20'
+          : 'glass border-b border-gold/5',
         className
       )}
     >
+      {/* Decorative gold top border line */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+      {/* Subtle geometric pattern background */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none">
+        <GeometricPattern opacity={0.015} />
+      </div>
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Logo size="sm" />
@@ -93,10 +102,10 @@ export function Navbar({ className }: LoadingScreenProps) {
                 type="button"
                 onClick={() => navigate(item.id)}
                 className={cn(
-                  'relative px-3 py-2 text-sm font-medium transition-colors rounded-md',
+                  'relative px-3 py-2 text-sm font-medium transition-colors rounded-md group',
                   isActive
-                    ? 'text-emerald'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-gold'
+                    : 'text-muted-foreground hover:text-gold-light'
                 )}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
@@ -106,10 +115,12 @@ export function Navbar({ className }: LoadingScreenProps) {
                 {isActive && (
                   <motion.div
                     layoutId="navbar-active"
-                    className="absolute inset-0 rounded-md bg-emerald/10 border border-emerald/20"
+                    className="absolute inset-0 rounded-md bg-gold/8 border border-gold/20"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
+                {/* Gold underline on hover */}
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-gradient-to-r from-gold/0 via-gold/60 to-gold/0 group-hover:w-3/4 transition-all duration-300 rounded-full" />
               </button>
             );
           })}
