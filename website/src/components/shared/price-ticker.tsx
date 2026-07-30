@@ -31,8 +31,7 @@ export function PriceTicker({ className }: { className?: string }) {
     try {
       const symbols = SYMBOLS.map(s => `"${s.id}"`).join(',');
       const res = await fetch(
-        `https://api.binance.com/api/v3/ticker/24hr?symbols=[${symbols}]`,
-        { next: { revalidate: 30 } }
+        `https://api.binance.com/api/v3/ticker/24hr?symbols=[${symbols}]`
       );
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();

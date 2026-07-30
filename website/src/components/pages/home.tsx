@@ -85,7 +85,6 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannersReady, setBannersReady] = useState(false);
-  const [priceTickerVisible, setPriceTickerVisible] = useState(true);
 
   /* fetch banners */
   useEffect(() => {
@@ -224,11 +223,10 @@ export default function HomePage() {
   );
 
   /* ────────── PRICE TICKER ────────── */
-  const priceTicker = priceTickerVisible && (
+  const priceTicker = (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
     >
       <PriceTicker />
     </motion.div>
