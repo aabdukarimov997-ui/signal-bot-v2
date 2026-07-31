@@ -72,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uz" className="dark" suppressHydrationWarning>
+    <html lang="uz" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
