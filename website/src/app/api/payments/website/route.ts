@@ -53,7 +53,6 @@ export async function POST(request: Request) {
     const photo = formData.get('photo') as File | null;
     const productType = String(formData.get('productType') || 'signal');
     const productId = String(formData.get('productId') || '');
-    const amount = parseFloat(String(formData.get('amount') || '0'));
     const paymentMethod = String(formData.get('paymentMethod') || 'card');
     const telegramId = String(formData.get('telegramId') || '').trim();
     const fullName = String(formData.get('fullName') || '').trim();
@@ -67,9 +66,6 @@ export async function POST(request: Request) {
     if (!productId) {
       return NextResponse.json({ error: 'Tarif tanlanmagan' }, { status: 400 });
     }
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Summa noto‘g‘ri' }, { status: 400 });
-    }
     if (!BOT_TOKEN) {
       return NextResponse.json({ error: 'BOT_TOKEN sozlanmagan (server)' }, { status: 500 });
     }
@@ -81,6 +77,20 @@ export async function POST(request: Request) {
     const adminIds = await getAdminIds();
     if (adminIds.length === 0) {
       return NextResponse.json({ error: 'Adminlar topilmadi (admin_ids sozlanmagan)' }, { status: 500 });
+    }
+
+    // ── 0.1 Tarifni DB'dan olamiz — summa klientdan emas, DB'dan ishonchli olinadi ──
+    const tariffRes = await query(
+      `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
+      [productId]
+    );
+    const tariff = tariffRes.rows[0];
+    if (!tariff || !tariff.is_active) {
+      return NextResponse.json({ error: 'Tarif topilmadi yoki faol emas' }, { status: 400 });
+    }
+    const amount = parseFloat(tariff.price);
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: 'Tarif narxi noto‘g‘ri' }, { status: 400 });
     }
 
     // ── 1. Bot user'ni topamiz yoki yaratamiz ──
@@ -112,14 +122,7 @@ export async function POST(request: Request) {
     );
     const payment = payRes.rows[0];
 
-    // ── 3. Tarif nomi ──
-    const tariffRes = await query(
-      `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
-      [productId]
-    );
-    const tariff = tariffRes.rows[0];
-
-    // ── 4. Skrinshotni barcha adminlarga yuboramiz (approve/reject tugmalari bilan) ──
+    // ── 3. Skrinshotni barcha adminlarga yuboramiz (approve/reject tugmalari bilan) ──
     const methodLabel = METHOD_LABELS[paymentMethod] || '💳 To‘lov';
     const caption = [
       '💳 <b>Yangi to‘lov (Sayt orqali)</b>',
@@ -146,6 +149,7 @@ export async function POST(request: Request) {
 
     let fileId: string | null = null;
     let adminMessageId: number | null = null;
+    let sentToAny = false;
 
     for (const adminId of adminIds) {
       try {
@@ -163,6 +167,7 @@ export async function POST(request: Request) {
         const tgJson = await tgRes.json();
 
         if (tgJson?.ok && tgJson.result) {
+          sentToAny = true;
           if (!fileId && tgJson.result.photo?.length) {
             fileId = tgJson.result.photo[tgJson.result.photo.length - 1].file_id;
           }
@@ -175,7 +180,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── 5. photo_file_id ni saqlaymiz ──
+    // ── 5. Hech bir admin rasm olmasa — paymentni o'chiramiz, xato qaytaramiz ──
+    if (!sentToAny) {
+      await query(
+        `DELETE FROM ${TABLES.payments} WHERE id = $1`,
+        [payment.id]
+      );
+      return NextResponse.json(
+        { error: 'To‘lov xabari adminlarga yuborilmadi. Iltimos qayta urinib ko‘ring.' },
+        { status: 502 }
+      );
+    }
+
+    // ── 6. photo_file_id ni saqlaymiz ──
     if (fileId) {
       await query(
         `UPDATE ${TABLES.payments} SET photo_file_id = $1, admin_message_id = $2 WHERE id = $3`,
