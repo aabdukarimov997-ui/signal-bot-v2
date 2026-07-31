@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       subscription = {
         id: sub.id,
         tariffName: sub.tariff_name || 'Signal',
-        productType: sub.product_type || 'signal',
+        productType: 'signal',
         status: sub.status,
         startDate: sub.start_date,
         endDate: sub.end_date,
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     const signalHistory = histRes.rows.map((h: any) => ({
       id: h.id,
       tariffName: h.tariff_name || 'Signal',
-      productType: h.product_type || 'signal',
+      productType: 'signal',
       status: h.status,
       startDate: h.start_date,
       endDate: h.end_date,
