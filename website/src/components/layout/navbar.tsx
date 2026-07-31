@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useNavigationStore, useAuthStore, useUIStore } from '@/store';
 import { NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 
@@ -162,6 +163,9 @@ export function Navbar({ className }: LoadingScreenProps) {
               Login
             </Button>
           )}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* Telegram Button */}
           <a

@@ -73,14 +73,34 @@ export default function RootLayout({
   return (
     <html lang="uz" className="dark" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#040303" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('aaa-theme');
+                  if (!theme) {
+                    theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                  }
+                  if (theme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+        <meta name="theme-color" content="#040303" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta property="og:image" content="/aaa-logo.png" />
         <meta property="og:locale" content="uz_UZ" />
         <link rel="icon" type="image/png" href="/aaa-logo.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#040303] text-[#fdfcfc] min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen transition-colors duration-300`}
       >
         <Navbar />
         <main className="min-h-screen pt-16">
