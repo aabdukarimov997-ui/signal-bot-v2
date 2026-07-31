@@ -84,7 +84,7 @@ export default function VipPage() {
         <motion.div
           animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute top-32 right-[10%] size-16 rounded-full bg-silver/[0.03] border border-silver/10 hidden lg:block pointer-events-none"
+          className="absolute top-32 right-[10%] size-16 rounded-full bg-gold/[0.03] border border-gold/10 hidden lg:block pointer-events-none"
         />
         <motion.div
           animate={{ y: [0, 12, 0], rotate: [0, -3, 0] }}
@@ -94,21 +94,21 @@ export default function VipPage() {
             ease: 'easeInOut',
             delay: 1,
           }}
-          className="absolute top-48 left-[8%] size-10 rounded-lg bg-silver/[0.03] border border-silver/10 hidden lg:block pointer-events-none"
+          className="absolute top-48 left-[8%] size-10 rounded-lg bg-gold/[0.03] border border-gold/10 hidden lg:block pointer-events-none"
         />
 
         <div className="max-w-4xl mx-auto text-center relative">
           <AnimatedSection>
             <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 rounded-full mb-6">
-              <Crown className="size-4 text-silver" />
-              <span className="text-sm text-silver font-medium">
+              <Crown className="size-4 text-gold" />
+              <span className="text-sm text-gold font-medium">
                 Eksklyuziv
               </span>
             </div>
           </AnimatedSection>
 
           <AnimatedSection delay={0.1}>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gradient-silver mb-4">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-gradient-gold mb-4">
               VIP
             </h1>
           </AnimatedSection>
@@ -142,8 +142,8 @@ export default function VipPage() {
             {BENEFITS.map((benefit, i) => (
               <GlassCard key={benefit.title} index={i} hover>
                 <div className="flex items-start gap-4">
-                  <div className="size-11 rounded-xl bg-silver/10 border border-silver/15 flex items-center justify-center shrink-0">
-                    <benefit.icon className="size-5 text-silver" />
+                  <div className="size-11 rounded-xl bg-gold/10 border border-gold/15 flex items-center justify-center shrink-0">
+                    <benefit.icon className="size-5 text-gold" />
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-foreground mb-1">
@@ -173,8 +173,8 @@ export default function VipPage() {
             <GlassCard hover className="relative flex flex-col">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="size-5 text-silver" />
-                  <Activity className="size-5 text-silver" />
+                  <GraduationCap className="size-5 text-gold" />
+                  <Activity className="size-5 text-gold" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-1">
                   VIP Course + Signals
@@ -200,8 +200,8 @@ export default function VipPage() {
                     transition={{ delay: i * 0.05 }}
                     className="flex items-center gap-2.5"
                   >
-                    <div className="size-4 rounded-full bg-silver/10 flex items-center justify-center shrink-0">
-                      <div className="size-1.5 rounded-full bg-silver" />
+                    <div className="size-4 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
+                      <div className="size-1.5 rounded-full bg-gold" />
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {feature}
@@ -216,7 +216,7 @@ export default function VipPage() {
 
               <Button
                 asChild
-                className="w-full bg-silver text-silver-foreground hover:bg-silver/90"
+                className="w-full bg-gold text-gold-foreground hover:bg-gold/90"
                 size="lg"
               >
                 <a
@@ -232,13 +232,13 @@ export default function VipPage() {
 
             {/* VIP Lifetime */}
             <GlassCard hover glow className="relative flex flex-col">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-silver text-silver-foreground border-silver/30 text-xs font-semibold px-3 py-1">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-gold-foreground border-gold/30 text-xs font-semibold px-3 py-1">
                 Lifetime
               </Badge>
               <div className="mb-6 mt-2">
                 <div className="flex items-center gap-2 mb-3">
-                  <Infinity className="size-5 text-silver" />
-                  <Crown className="size-5 text-silver" />
+                  <Infinity className="size-5 text-gold" />
+                  <Crown className="size-5 text-gold" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-1">
                   VIP Lifetime
@@ -264,8 +264,8 @@ export default function VipPage() {
                     transition={{ delay: i * 0.05 }}
                     className="flex items-center gap-2.5"
                   >
-                    <div className="size-4 rounded-full bg-silver/10 flex items-center justify-center shrink-0">
-                      <div className="size-1.5 rounded-full bg-silver" />
+                    <div className="size-4 rounded-full bg-gold/10 flex items-center justify-center shrink-0">
+                      <div className="size-1.5 rounded-full bg-gold" />
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {feature}
@@ -280,7 +280,7 @@ export default function VipPage() {
 
               <Button
                 asChild
-                className="w-full glass-card hover:bg-silver/10 text-silver"
+                className="w-full glass-card hover:bg-gold/10 text-gold"
                 size="lg"
               >
                 <a
@@ -308,13 +308,13 @@ export default function VipPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {TESTIMONIALS.map((testimonial, i) => (
               <GlassCard key={testimonial.author} index={i} hover>
-                <Quote className="size-6 text-silver/30 mb-4" />
+                <Quote className="size-6 text-gold/30 mb-4" />
                 <p className="text-sm sm:text-base text-foreground/80 leading-relaxed mb-6">
                   &ldquo;{testimonial.text}&rdquo;
                 </p>
-                <div className="flex items-center gap-3 pt-4 border-t border-silver/10">
-                  <div className="size-9 rounded-full bg-silver/10 border border-silver/15 flex items-center justify-center">
-                    <span className="text-xs font-bold text-silver">
+                <div className="flex items-center gap-3 pt-4 border-t border-gold/10">
+                  <div className="size-9 rounded-full bg-gold/10 border border-gold/15 flex items-center justify-center">
+                    <span className="text-xs font-bold text-gold">
                       {testimonial.author.charAt(
                         testimonial.author.indexOf(' ') + 1
                       )}
@@ -332,7 +332,7 @@ export default function VipPage() {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        className="size-3 text-silver fill-silver"
+                        className="size-3 text-gold fill-gold"
                       />
                     ))}
                   </div>
@@ -348,8 +348,8 @@ export default function VipPage() {
         <div className="max-w-2xl mx-auto text-center">
           <AnimatedSection>
             <div className="glass-card p-8 sm:p-12 bg-glow">
-              <Crown className="size-10 text-silver mx-auto mb-4" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-gradient-silver mb-3">
+              <Crown className="size-10 text-gold mx-auto mb-4" />
+              <h2 className="text-2xl sm:text-3xl font-bold text-gradient-gold mb-3">
                 VIP ga qo&apos;shiling
               </h2>
               <p className="text-muted-foreground mb-8 max-w-md mx-auto">

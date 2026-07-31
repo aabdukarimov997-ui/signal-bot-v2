@@ -186,8 +186,8 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                     className="block"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-silver/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-silver/15 transition-colors duration-300">
-                      <Icon className="w-6 h-6 text-silver" />
+                    <div className="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-gold/15 transition-colors duration-300">
+                      <Icon className="w-6 h-6 text-gold" />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">
                       {method.title}
@@ -195,7 +195,7 @@ export default function ContactPage() {
                     <p className="text-sm text-muted-foreground">
                       {method.description}
                     </p>
-                    <span className="inline-flex items-center gap-1 mt-3 text-xs text-silver/60 group-hover:text-silver transition-colors">
+                    <span className="inline-flex items-center gap-1 mt-3 text-xs text-gold/60 group-hover:text-gold transition-colors">
                       Ochish
                       <ExternalLink className="w-3 h-3" />
                     </span>
@@ -363,9 +363,9 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
                 >
-                  <MessageSquare className="w-4 h-4 text-silver" />
+                  <MessageSquare className="w-4 h-4 text-gold" />
                   Telegram Kanal
-                  <ExternalLink className="w-3 h-3 text-silver/50" />
+                  <ExternalLink className="w-3 h-3 text-gold/50" />
                 </a>
                 <a
                   href={TELEGRAM.BOT}
@@ -373,9 +373,9 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
                 >
-                  <Send className="w-4 h-4 text-silver" />
+                  <Send className="w-4 h-4 text-gold" />
                   Telegram Bot
-                  <ExternalLink className="w-3 h-3 text-silver/50" />
+                  <ExternalLink className="w-3 h-3 text-gold/50" />
                 </a>
                 <a
                   href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
@@ -383,9 +383,9 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
                 >
-                  <HelpCircle className="w-4 h-4 text-silver" />
+                  <HelpCircle className="w-4 h-4 text-gold" />
                   Yordam
-                  <ExternalLink className="w-3 h-3 text-silver/50" />
+                  <ExternalLink className="w-3 h-3 text-gold/50" />
                 </a>
               </div>
             </GlassCard>

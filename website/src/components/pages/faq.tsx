@@ -104,7 +104,7 @@ export default function FAQPage() {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6">
-              <HelpCircle className="w-4 h-4 text-silver" />
+              <HelpCircle className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">
                 Yordam markazi
               </span>
@@ -137,8 +137,8 @@ export default function FAQPage() {
                       transition-all duration-300 border
                       ${
                         isActive
-                          ? 'glass-strong border-silver/20 text-foreground shadow-[0_0_20px_rgba(192,192,192,0.08)]'
-                          : 'glass border-glass-border text-muted-foreground hover:text-foreground hover:border-silver/15'
+                          ? 'glass-strong border-gold/20 text-foreground shadow-[0_0_20px_rgba(192,192,192,0.08)]'
+                          : 'glass border-glass-border text-muted-foreground hover:text-foreground hover:border-gold/15'
                       }
                     `}
                   >
@@ -150,8 +150,8 @@ export default function FAQPage() {
                           text-xs px-1.5 py-0.5 rounded-md
                           ${
                             isActive
-                              ? 'bg-silver/10 text-silver'
-                              : 'bg-silver/5 text-muted-foreground'
+                              ? 'bg-gold/10 text-gold'
+                              : 'bg-gold/5 text-muted-foreground'
                           }
                         `}
                       >
@@ -177,9 +177,9 @@ export default function FAQPage() {
                   key={i}
                   className="glass-card rounded-xl p-5 animate-pulse"
                 >
-                  <div className="h-5 bg-silver/5 rounded-md w-3/4 mb-4" />
-                  <div className="h-3 bg-silver/5 rounded-md w-full mb-2" />
-                  <div className="h-3 bg-silver/5 rounded-md w-5/6" />
+                  <div className="h-5 bg-gold/5 rounded-md w-3/4 mb-4" />
+                  <div className="h-3 bg-gold/5 rounded-md w-full mb-2" />
+                  <div className="h-3 bg-gold/5 rounded-md w-5/6" />
                 </div>
               ))}
             </div>
@@ -202,7 +202,7 @@ export default function FAQPage() {
                   <Button
                     variant="outline"
                     onClick={fetchFaqs}
-                    className="gap-2 border-silver/20 text-silver hover:text-foreground"
+                    className="gap-2 border-gold/20 text-gold hover:text-foreground"
                   >
                     <Loader2 className="w-4 h-4" />
                     Qayta urinish
@@ -217,8 +217,8 @@ export default function FAQPage() {
             <AnimatedSection>
               <GlassCard className="max-w-lg mx-auto text-center py-12">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-silver/5 border border-glass-border flex items-center justify-center">
-                    <HelpCircle className="w-7 h-7 text-silver/40" />
+                  <div className="w-14 h-14 rounded-2xl bg-gold/5 border border-glass-border flex items-center justify-center">
+                    <HelpCircle className="w-7 h-7 text-gold/40" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">
@@ -259,7 +259,7 @@ export default function FAQPage() {
                         value={faq.id}
                         className="glass-card rounded-xl px-5 sm:px-6 border-0 data-[state=open]:border-glow data-[state=open]:shadow-[0_0_30px_rgba(192,192,192,0.05)] transition-shadow duration-300"
                       >
-                        <AccordionTrigger className="text-left text-base sm:text-lg font-medium text-foreground hover:text-silver hover:no-underline py-5 [&[data-state=open]>svg]:text-silver">
+                        <AccordionTrigger className="text-left text-base sm:text-lg font-medium text-foreground hover:text-gold hover:no-underline py-5 [&[data-state=open]>svg]:text-gold">
                           {faq.question}
                         </AccordionTrigger>
                         <AccordionContent className="text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -281,8 +281,8 @@ export default function FAQPage() {
           <AnimatedSection delay={0.1}>
             <GlassCard glow>
               <div className="flex flex-col items-center text-center gap-6 p-8 sm:p-10">
-                <div className="w-14 h-14 rounded-2xl bg-silver/5 border border-glass-border flex items-center justify-center">
-                  <MessageCircle className="w-7 h-7 text-silver" />
+                <div className="w-14 h-14 rounded-2xl bg-gold/5 border border-glass-border flex items-center justify-center">
+                  <MessageCircle className="w-7 h-7 text-gold" />
                 </div>
                 <div className="max-w-md">
                   <h3 className="text-xl font-semibold text-foreground mb-2">
@@ -302,7 +302,7 @@ export default function FAQPage() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="gap-2 border-silver/20 text-silver hover:text-foreground hover:border-silver/30 min-w-[180px]"
+                      className="gap-2 border-gold/20 text-gold hover:text-foreground hover:border-gold/30 min-w-[180px]"
                     >
                       <MessageCircle className="w-4 h-4" />
                       {TELEGRAM.HELP}

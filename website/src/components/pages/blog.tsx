@@ -85,15 +85,15 @@ function FeaturedPostCard({ post }: { post: BlogPost }) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-silver/10 via-silver/5 to-transparent flex items-center justify-center">
-            <Newspaper className="w-16 h-16 text-silver/20" />
+          <div className="w-full h-full bg-gradient-to-br from-gold/10 via-gold/5 to-transparent flex items-center justify-center">
+            <Newspaper className="w-16 h-16 text-gold/20" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute top-4 left-4">
           <Badge
             variant="outline"
-            className="glass text-xs border-silver/20 text-silver"
+            className="glass text-xs border-gold/20 text-gold"
           >
             {category}
           </Badge>
@@ -142,15 +142,15 @@ function BlogPostCard({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-silver/10 via-silver/5 to-transparent flex items-center justify-center">
-            <ImageIcon className="w-12 h-12 text-silver/15" />
+          <div className="w-full h-full bg-gradient-to-br from-gold/10 via-gold/5 to-transparent flex items-center justify-center">
+            <ImageIcon className="w-12 h-12 text-gold/15" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         <div className="absolute top-3 left-3">
           <Badge
             variant="outline"
-            className="glass text-[10px] border-silver/20 text-silver"
+            className="glass text-[10px] border-gold/20 text-gold"
           >
             {category}
           </Badge>
@@ -170,7 +170,7 @@ function BlogPostCard({
           </p>
         )}
         <div className="mt-auto pt-2">
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-silver hover:text-foreground transition-colors cursor-pointer group">
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-foreground transition-colors cursor-pointer group">
             O&apos;qish
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </span>
@@ -249,7 +249,7 @@ export default function BlogPage() {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6">
-              <Newspaper className="w-4 h-4 text-silver" />
+              <Newspaper className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">
                 Maqolalar va tahlillar
               </span>
@@ -295,7 +295,7 @@ export default function BlogPage() {
                   <Button
                     variant="outline"
                     onClick={fetchPosts}
-                    className="gap-2 border-silver/20 text-silver hover:text-foreground"
+                    className="gap-2 border-gold/20 text-gold hover:text-foreground"
                   >
                     <Loader2 className="w-4 h-4" />
                     Qayta urinish
@@ -310,8 +310,8 @@ export default function BlogPage() {
             <AnimatedSection>
               <GlassCard className="max-w-lg mx-auto text-center py-12">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-silver/5 border border-glass-border flex items-center justify-center">
-                    <Newspaper className="w-7 h-7 text-silver/40" />
+                  <div className="w-14 h-14 rounded-2xl bg-gold/5 border border-glass-border flex items-center justify-center">
+                    <Newspaper className="w-7 h-7 text-gold/40" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">

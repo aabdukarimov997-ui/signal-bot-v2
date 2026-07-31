@@ -199,9 +199,9 @@ export default function LoginPage() {
             href={TELEGRAM.BOT}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg border border-silver/20 bg-glass text-foreground font-medium text-sm hover:bg-glass-strong transition-colors duration-200"
+            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg border border-gold/20 bg-glass text-foreground font-medium text-sm hover:bg-glass-strong transition-colors duration-200"
           >
-            <Send className="w-4 h-4 text-silver" />
+            <Send className="w-4 h-4 text-gold" />
             Telegram orqali kirish
           </a>
 

@@ -94,12 +94,12 @@ function PricingCard({
       index={index}
       className={cn(
         'relative flex flex-col p-6 sm:p-8',
-        highlightBorder && 'border-silver/40'
+        highlightBorder && 'border-gold/40'
       )}
     >
       {/* badge */}
       {badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-silver text-silver-foreground px-4 py-1 text-xs font-semibold tracking-wide">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold text-gold-foreground px-4 py-1 text-xs font-semibold tracking-wide">
           {badge}
         </span>
       )}
@@ -126,7 +126,7 @@ function PricingCard({
       <ul className="flex-1 space-y-3 mb-8">
         {features.map((f, i) => (
           <li key={i} className="flex items-start gap-2.5 text-sm">
-            <Check className="size-4 text-silver shrink-0 mt-0.5" />
+            <Check className="size-4 text-gold shrink-0 mt-0.5" />
             <span className="text-muted-foreground leading-snug">{f}</span>
           </li>
         ))}
@@ -144,8 +144,8 @@ function PricingCard({
           className={cn(
             'w-full rounded-xl text-sm font-semibold',
             glow
-              ? 'bg-silver text-silver-foreground hover:bg-silver/90'
-              : 'border border-glass-border text-silver hover:text-white hover:bg-white/5'
+              ? 'bg-gold text-gold-foreground hover:bg-gold/90'
+              : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
           )}
           variant={glow ? 'default' : 'outline'}
         >
@@ -333,7 +333,7 @@ export default function CoursePage() {
           <GlassCard className="p-6 sm:p-8 h-full">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                <BookOpen className="size-5 text-silver" />
+                <BookOpen className="size-5 text-gold" />
               </div>
               <h3 className="text-xl font-bold text-foreground">
                 Nimalarni O&apos;rganasiz?
@@ -343,7 +343,7 @@ export default function CoursePage() {
             <ul className="space-y-3">
               {MODULES.map((mod, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-xs text-silver font-medium mt-0.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-xs text-gold font-medium mt-0.5">
                     {i + 1}
                   </span>
                   <span className="text-muted-foreground leading-snug">{mod}</span>
@@ -360,7 +360,7 @@ export default function CoursePage() {
             <GlassCard className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                  <Users className="size-5 text-silver" />
+                  <Users className="size-5 text-gold" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">
                   Bu Kurs Kimlar Uchun?
@@ -370,7 +370,7 @@ export default function CoursePage() {
               <ul className="space-y-3">
                 {TARGET_AUDIENCE.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm">
-                    <Check className="size-4 text-silver shrink-0 mt-0.5" />
+                    <Check className="size-4 text-gold shrink-0 mt-0.5" />
                     <span className="text-muted-foreground leading-snug">{item}</span>
                   </li>
                 ))}
@@ -383,7 +383,7 @@ export default function CoursePage() {
             <GlassCard className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                  <MonitorSmartphone className="size-5 text-silver" />
+                  <MonitorSmartphone className="size-5 text-gold" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Talablar</h3>
               </div>
@@ -391,7 +391,7 @@ export default function CoursePage() {
               <ul className="space-y-3">
                 {REQUIREMENTS.map((req, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm">
-                    <Check className="size-4 text-silver shrink-0 mt-0.5" />
+                    <Check className="size-4 text-gold shrink-0 mt-0.5" />
                     <span className="text-muted-foreground leading-snug">{req}</span>
                   </li>
                 ))}
@@ -418,7 +418,7 @@ export default function CoursePage() {
               }}
             />
             <div className="flex size-14 items-center justify-center rounded-2xl bg-white/[0.04] border border-glass-border">
-              <Send className="size-7 text-silver" />
+              <Send className="size-7 text-gold" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gradient">
               Kursni sotib olish uchun Telegram Botga murojaat qiling

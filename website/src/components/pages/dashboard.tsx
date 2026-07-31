@@ -188,7 +188,7 @@ export default function DashboardPage() {
                       {user.name}
                     </h2>
                     {user.role === 'ADMIN' && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-silver/15 text-silver text-[11px] font-medium uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/15 text-gold text-[11px] font-medium uppercase tracking-wider">
                         <Shield className="w-3 h-3" />
                         Admin
                       </span>
@@ -196,11 +196,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-silver/50" />
+                      <Mail className="w-3.5 h-3.5 text-gold/50" />
                       {user.email}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-silver/50" />
+                      <Clock className="w-3.5 h-3.5 text-gold/50" />
                       2024-yil
                     </span>
                   </div>
@@ -220,11 +220,11 @@ export default function DashboardPage() {
               return (
                 <GlassCard key={stat.key} index={i} className="p-5">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-silver/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-silver" />
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-gold" />
                     </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-gradient-silver">
+                  <p className="text-2xl sm:text-3xl font-bold text-gradient-gold">
                     {stat.value}
                   </p>
                   <p className="mt-1 text-sm font-medium text-foreground/70">
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                         onClick={() => navigate(action.page)}
                         className={
                           action.adminOnly
-                            ? 'h-10 px-4 text-sm bg-silver/15 border-silver/20 text-silver hover:bg-silver/25 hover:text-silver'
+                            ? 'h-10 px-4 text-sm bg-gold/15 border-gold/20 text-gold hover:bg-gold/25 hover:text-gold'
                             : 'h-10 px-4 text-sm'
                         }
                       >
@@ -288,7 +288,7 @@ export default function DashboardPage() {
                 So&apos;nggi Faoliyat
               </h3>
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <div className="w-16 h-16 rounded-full bg-silver/5 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-gold/5 flex items-center justify-center mb-4">
                   <Activity className="w-7 h-7 text-muted-foreground/40" />
                 </div>
                 <p className="text-muted-foreground text-sm">
@@ -317,15 +317,15 @@ export default function DashboardPage() {
                     Do&apos;stlaringizni taklif qiling va bonus oling
                   </p>
                   <div className="mt-3 flex items-center gap-3">
-                    <code className="inline-block px-4 py-2 rounded-lg bg-glass border border-glass-border text-silver font-mono text-sm tracking-widest select-all">
+                    <code className="inline-block px-4 py-2 rounded-lg bg-glass border border-glass-border text-gold font-mono text-sm tracking-widest select-all">
                       {referralCode}
                     </code>
                     <CopyButton code={referralCode} />
                   </div>
                 </div>
                 <div className="shrink-0 hidden sm:block">
-                  <div className="w-16 h-16 rounded-xl bg-silver/5 flex items-center justify-center">
-                    <Share2 className="w-7 h-7 text-silver/50" />
+                  <div className="w-16 h-16 rounded-xl bg-gold/5 flex items-center justify-center">
+                    <Share2 className="w-7 h-7 text-gold/50" />
                   </div>
                 </div>
               </div>
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2.5 h-10 px-4 rounded-lg bg-glass border border-glass-border text-foreground/80 font-medium text-sm hover:bg-glass-strong hover:text-foreground transition-colors"
                 >
-                  <MessageSquare className="w-4 h-4 text-silver" />
+                  <MessageSquare className="w-4 h-4 text-gold" />
                   Kanal
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>

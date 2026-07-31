@@ -55,7 +55,7 @@ export function LoadingScreen({ onComplete, className }: LoadingScreenProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="mt-6 text-2xl font-bold tracking-[0.3em] text-gradient-silver"
+        className="mt-6 text-2xl font-bold tracking-[0.3em] text-gradient-gold"
       >
         AAA
       </motion.p>
@@ -64,7 +64,7 @@ export function LoadingScreen({ onComplete, className }: LoadingScreenProps) {
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 0.6, duration: 1.2, ease: 'easeInOut' }}
-        className="mt-6 h-[1px] w-24 origin-left bg-gradient-to-r from-silver/60 to-transparent"
+        className="mt-6 h-[1px] w-24 origin-left bg-gradient-to-r from-gold/60 to-transparent"
       />
     </motion.div>
   );

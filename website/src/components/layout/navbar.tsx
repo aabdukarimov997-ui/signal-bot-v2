@@ -168,7 +168,7 @@ export function Navbar({ className }: LoadingScreenProps) {
             href={TELEGRAM.BOT}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-silver transition-colors hover:bg-white/5"
+            className="hidden sm:inline-flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-gold transition-colors hover:bg-white/5"
             aria-label="Telegram Bot"
           >
             <Send className="size-4" />
@@ -215,7 +215,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                       className={cn(
                         'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         isActive
-                          ? 'bg-white/5 text-silver'
+                          ? 'bg-white/5 text-gold'
                           : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
                       )}
                     >

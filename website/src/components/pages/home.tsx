@@ -212,7 +212,7 @@ export default function HomePage() {
             <Button
               size="lg"
               variant="outline"
-              className="rounded-xl px-6 text-sm font-semibold border-glass-border text-silver hover:text-white hover:bg-white/5"
+              className="rounded-xl px-6 text-sm font-semibold border-glass-border text-gold hover:text-white hover:bg-white/5"
             >
               Telegram Bot
             </Button>
@@ -404,7 +404,7 @@ export default function HomePage() {
                   type="button"
                   onClick={prev}
                   aria-label="Oldingi banner"
-                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-silver transition-colors rounded-lg"
+                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-gold transition-colors rounded-lg"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -418,7 +418,7 @@ export default function HomePage() {
                       className={cn(
                         'h-2 rounded-full transition-all duration-300',
                         i === activeBanner
-                          ? 'w-6 bg-silver'
+                          ? 'w-6 bg-gold'
                           : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
                       )}
                     />
@@ -428,7 +428,7 @@ export default function HomePage() {
                   type="button"
                   onClick={next}
                   aria-label="Keyingi banner"
-                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-silver transition-colors rounded-lg"
+                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-gold transition-colors rounded-lg"
                 >
                   <ChevronRight className="size-4" />
                 </button>

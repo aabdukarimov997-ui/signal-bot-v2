@@ -68,7 +68,7 @@ export default function MarketPage() {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6">
-              <BarChart3 className="w-4 h-4 text-silver" />
+              <BarChart3 className="w-4 h-4 text-gold" />
               <span className="text-sm text-muted-foreground">
                 Real-time ma&apos;lumotlar
               </span>
@@ -105,7 +105,7 @@ export default function MarketPage() {
         <div className="max-w-7xl mx-auto">
           <AnimatedSection delay={0.1}>
             <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-silver" />
+              <Shield className="w-5 h-5 text-gold" />
               Kripto Valyutalar Haqida
             </h3>
           </AnimatedSection>
