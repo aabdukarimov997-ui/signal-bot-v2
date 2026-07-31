@@ -50,4 +50,4 @@ export const SIGNAL_TIERS = ['monthly', 'quarterly', 'semiannual'] as const;
 
 export type CourseTier = (typeof COURSE_TIERS)[number];
 export type SignalTier = (typeof SIGNAL_TIERS)[number];
-export type PageId = (typeof NAV_ITEMS)[number]['id'] | (typeof ADMIN_NAV_ITEMS)[number]['id'] | 'login' | 'dashboard';
+export type PageId = (typeof NAV_ITEMS)[number]['id'] | (typeof ADMIN_NAV_ITEMS)[number]['id'] | 'login' | 'dashboard' | 'blog-post';

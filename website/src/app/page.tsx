@@ -8,6 +8,7 @@ import SignalsPage from '@/components/pages/signals';
 import VipPage from '@/components/pages/vip';
 import MarketPage from '@/components/pages/market';
 import BlogPage from '@/components/pages/blog';
+import BlogDetailPage from '@/components/pages/blog-detail';
 import FAQPage from '@/components/pages/faq';
 import AboutPage from '@/components/pages/about';
 import ContactPage from '@/components/pages/contact';
@@ -35,6 +36,7 @@ function PageRouter() {
     vip: VipPage,
     market: MarketPage,
     blog: BlogPage,
+    'blog-post': BlogDetailPage,
     faq: FAQPage,
     about: AboutPage,
     contact: ContactPage,

@@ -5,17 +5,26 @@ export type PageId = string;
 interface NavigationState {
   currentPage: PageId;
   previousPage: PageId | null;
+  blogPostSlug: string | null;
   navigate: (page: PageId) => void;
+  navigateToPost: (slug: string) => void;
   goBack: () => void;
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
   currentPage: 'home',
   previousPage: null,
+  blogPostSlug: null,
   navigate: (page) =>
     set((state) => ({
       currentPage: page,
       previousPage: state.currentPage,
+    })),
+  navigateToPost: (slug) =>
+    set((state) => ({
+      currentPage: 'blog-post',
+      previousPage: state.currentPage,
+      blogPostSlug: slug,
     })),
   goBack: () =>
     set((state) => ({

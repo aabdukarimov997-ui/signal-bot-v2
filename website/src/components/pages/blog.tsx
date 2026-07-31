@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TELEGRAM } from '@/lib/constants';
+import { useNavigationStore } from '@/store';
 
 interface BlogPost {
   id: string;
@@ -74,9 +75,14 @@ function extractCategory(content: string): string {
 
 function FeaturedPostCard({ post }: { post: BlogPost }) {
   const category = extractCategory(post.content || post.title);
+  const navigateToPost = useNavigationStore((s) => s.navigateToPost);
 
   return (
-    <GlassCard className="p-0 overflow-hidden" hover>
+    <GlassCard
+      className="p-0 overflow-hidden"
+      hover
+      onClick={() => navigateToPost(post.slug)}
+    >
       <div className="relative h-[240px] sm:h-[320px]">
         {post.coverImage ? (
           <img
@@ -131,9 +137,16 @@ function BlogPostCard({
   index: number;
 }) {
   const category = extractCategory(post.content || post.title);
+  const navigateToPost = useNavigationStore((s) => s.navigateToPost);
 
   return (
-    <GlassCard key={post.id} index={index} hover className="p-0 overflow-hidden">
+    <GlassCard
+      key={post.id}
+      index={index}
+      hover
+      className="p-0 overflow-hidden"
+      onClick={() => navigateToPost(post.slug)}
+    >
       <div className="relative h-[180px]">
         {post.coverImage ? (
           <img
@@ -171,7 +184,7 @@ function BlogPostCard({
         )}
         <div className="mt-auto pt-2">
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-foreground transition-colors cursor-pointer group">
-            O&apos;qish
+            Batafsil o&apos;qish
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </span>
         </div>

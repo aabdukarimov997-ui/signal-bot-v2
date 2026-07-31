@@ -12,6 +12,7 @@ interface GlassCardProps {
   glowGold?: boolean;
   hover?: boolean;
   index?: number;
+  onClick?: () => void;
 }
 
 export function GlassCard({
@@ -22,6 +23,7 @@ export function GlassCard({
   glowGold = false,
   hover = false,
   index,
+  onClick,
 }: GlassCardProps) {
   const delay = index !== undefined ? index * 0.1 : 0;
 
@@ -45,6 +47,7 @@ export function GlassCard({
             }
           : undefined
       }
+      onClick={onClick}
       className={cn(
         glowGold ? 'glass-card-gold p-6' : 'glass-card p-6',
         glow && 'border-glow',
