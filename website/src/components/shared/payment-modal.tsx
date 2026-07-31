@@ -113,6 +113,33 @@ export default function PaymentModal({
     }
   }, [method, settings]);
 
+  // Faqat to'lov ma'lumotlari sozlangan usullarni ko'rsatamiz
+  const availableMethods = useMemo(() => {
+    return METHODS.filter((m) => {
+      switch (m.id) {
+        case 'card':
+          return Boolean(settings.card_number);
+        case 'visa':
+          return Boolean(settings.visa_card_number || settings.card_number);
+        case 'tron_trc20':
+          return Boolean(settings.ton_wallet_address);
+        case 'bnb':
+          return Boolean(settings.bnb_wallet_address);
+        case 'toncoin':
+          return Boolean(settings.toncoin_wallet_address);
+        default:
+          return true;
+      }
+    });
+  }, [settings]);
+
+  // Tanlangan usul sozlanmagan bo'lsa, birinchi mavjud usulga o'tamiz
+  useEffect(() => {
+    if (!tariffsLoading && availableMethods.length > 0 && !availableMethods.some((m) => m.id === method)) {
+      setMethod(availableMethods[0].id);
+    }
+  }, [availableMethods, tariffsLoading, method]);
+
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -240,7 +267,12 @@ export default function PaymentModal({
             <div>
               <Label className="text-sm text-foreground/80 mb-2 block">2. To‘lov usulini tanlang</Label>
               <div className="grid grid-cols-2 gap-2">
-                {METHODS.map((m) => (
+                {availableMethods.length === 0 && (
+                  <p className="col-span-2 text-sm text-muted-foreground">
+                    Hozircha to'lov usullari sozlanmagan. Iltimos, admin bilan bog'laning.
+                  </p>
+                )}
+                {availableMethods.map((m) => (
                   <button
                     key={m.id}
                     onClick={() => setMethod(m.id)}
