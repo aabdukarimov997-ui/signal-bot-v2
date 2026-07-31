@@ -240,6 +240,20 @@ export default function DashboardPage() {
     return botData?.referral.referralCode || '—';
   }, [botData]);
 
+  // Progress bar width for active subscription (declared BEFORE early return to
+  // keep React hook order stable across the authenticated/redirect states)
+  const progress = useMemo(() => {
+    const sub = botData?.subscription ?? null;
+    if (!sub) return 0;
+    const start = new Date(sub.startDate).getTime();
+    const end = new Date(sub.endDate).getTime();
+    const now = Date.now();
+    if (end <= start) return 100;
+    const total = end - start;
+    const remaining = Math.max(0, end - now);
+    return Math.min(100, Math.max(0, Math.round((remaining / total) * 100)));
+  }, [botData]);
+
   // Don't render anything while redirecting
   if (!user) return null;
 
@@ -251,18 +265,6 @@ export default function DashboardPage() {
   const activeSubCount = botData?.signalHistory.filter((s) => s.status === 'active').length ?? 0;
   const paymentsCount = botData?.payments.length ?? 0;
   const referralCount = botData?.referral.referralCount ?? 0;
-
-  // Progress bar width for active subscription
-  const progress = useMemo(() => {
-    if (!subscription) return 0;
-    const start = new Date(subscription.startDate).getTime();
-    const end = new Date(subscription.endDate).getTime();
-    const now = Date.now();
-    if (end <= start) return 100;
-    const total = end - start;
-    const remaining = Math.max(0, end - now);
-    return Math.min(100, Math.max(0, Math.round((remaining / total) * 100)));
-  }, [subscription]);
 
   return (
     <main className="min-h-screen pb-16">

@@ -16,7 +16,10 @@ const url = process.env.TMA_DATABASE_URL || process.env.BOT_DATABASE_URL || proc
 
       pool = new Pool({ host, port, database, user, password });
     } else {
-      pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+      // Railway internal DB (postgresql.railway.internal) does NOT support SSL;
+      // external/proxied URLs may require SSL, so enable it only when needed.
+      const useSsl = url.includes('railway.internal') ? false : { rejectUnauthorized: false };
+      pool = new Pool({ connectionString: url, ssl: useSsl });
     }
   }
   return pool;
