@@ -126,7 +126,8 @@ async def resolve_author_id() -> str:
             return row[0]
 
         # 3) fallback — 'admin' id bilan user yaratish (admin panel ham shu id ishlatadi)
-        now = datetime.now(timezone.utc)
+        # PostgreSQL timestamp (without time zone) ustunlari uchun naive datetime kerak
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         admin_id = "admin"
         try:
             await session.execute(
@@ -293,7 +294,9 @@ async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> No
     try:
         slug = await make_unique_slug(title)
         author_id = await resolve_author_id()
-        now = datetime.now(timezone.utc)
+        # website."BlogPost".createdAt/updatedAt — timestamp without time zone,
+        # shuning uchun naive datetime ishlatamiz (aware datetime asyncpg'da xato beradi)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         post_id = str(uuid.uuid4())
 
         async with get_session() as session:
