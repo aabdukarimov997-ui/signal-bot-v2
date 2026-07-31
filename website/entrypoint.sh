@@ -1,9 +1,6 @@
 #!/bin/sh
 set -e
 
-echo "→ Ensuring Prisma client is up to date..."
-npx prisma generate 2>&1
-
 echo "→ Running database migration (creating website schema & tables)..."
 npx prisma db push 2>&1 || {
   echo "⚠️  db push failed, trying with --accept-data-loss..."
