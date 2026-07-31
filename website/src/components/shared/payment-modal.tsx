@@ -148,7 +148,6 @@ export default function PaymentModal({
       fd.append('photo', photoFile);
       fd.append('productType', productType);
       fd.append('productId', selectedTariff.id);
-      fd.append('amount', String(selectedTariff.price));
       fd.append('paymentMethod', method);
       fd.append('telegramId', telegramId.trim());
       fd.append('fullName', fullName.trim() || 'Website User');

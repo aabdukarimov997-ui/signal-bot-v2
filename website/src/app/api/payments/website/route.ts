@@ -81,8 +81,8 @@ export async function POST(request: Request) {
 
     // ── 0.1 Tarifni DB'dan olamiz — summa klientdan emas, DB'dan ishonchli olinadi ──
     const tariffRes = await query(
-      `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
-      [productId]
+      `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 AND product_type = $2 LIMIT 1`,
+      [productId, productType]
     );
     const tariff = tariffRes.rows[0];
     if (!tariff || !tariff.is_active) {
