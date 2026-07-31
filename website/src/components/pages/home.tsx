@@ -479,8 +479,7 @@ export default function HomePage() {
                 href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gold hover:underline underline-offset-2
-              >
+                className="text-gold hover:underline underline-offset-2"              >
                 {TELEGRAM.HELP}
               </a>
             </p>
