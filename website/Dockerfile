@@ -15,13 +15,13 @@ RUN npm run build
 
 FROM node:20-alpine AS runner
 RUN apk add --no-cache openssl
+RUN npm install -g prisma@6.19.3 --no-audit --no-fund
 WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 COPY entrypoint.sh ./
