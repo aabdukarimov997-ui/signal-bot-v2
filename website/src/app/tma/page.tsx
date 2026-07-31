@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useTmaStore } from '@/lib/tma/store';
 import { useLang } from '@/components/tma/shared/LanguageProvider';
 import { TmaNavigation } from '@/components/tma/Navigation';
-import { TopOrnament, GeometricBg, DecorativeDivider } from '@/components/tma/shared/UzbekPattern';
+import { TopOrnament, GeometricBg } from '@/components/tma/shared/UzbekPattern';
+import { PatternBorder, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { HomePage } from '@/components/tma/pages/HomePage';
 import { SignalsPage } from '@/components/tma/pages/SignalsPage';
 import { CoursesPage } from '@/components/tma/pages/CoursesPage';
@@ -133,6 +134,10 @@ export default function TmaApp() {
       <GeometricBg />
       <TopOrnament />
 
+      {/* Burchak ornamentlari — yuqori qirralarda, nav ostida qolmasligi uchun */}
+      <CornerOrnament position="top-left" className="size-14 sm:size-20 text-[#d4a72c]/40" />
+      <CornerOrnament position="top-right" className="size-14 sm:size-20 text-[#d4a72c]/40" />
+
       {/* Lang Switcher */}
       <div className="fixed top-3 right-3 z-50 flex gap-1">
         {(['uz', 'en', 'ru'] as const).map((l) => (
@@ -151,6 +156,12 @@ export default function TmaApp() {
       </div>
 
       {renderPage()}
+
+      {/* Pastki naqshli tasma */}
+      <div className="relative px-3 pb-3 mt-4">
+        <PatternBorder className="text-[#d4a72c]/70 rotate-180" />
+      </div>
+
       <TmaNavigation />
     </div>
   );

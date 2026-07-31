@@ -23,20 +23,20 @@ export function TopOrnament() {
             d={`M ${i * 40} 32 Q ${i * 40 + 10} 8 ${i * 40 + 20} 16 Q ${i * 40 + 30} 24 ${i * 40 + 40} 32`}
             fill="none"
             stroke="url(#goldGrad)"
-            strokeWidth="0.5"
-            opacity="0.4"
+            strokeWidth="0.8"
+            opacity="0.7"
           />
         ))}
         {/* Horizontal line */}
-        <line x1="0" y1="31" x2="400" y2="31" stroke="url(#goldGrad)" strokeWidth="0.5" opacity="0.3" />
+        <line x1="0" y1="31" x2="400" y2="31" stroke="url(#goldGrad)" strokeWidth="0.7" opacity="0.5" />
         {/* Diamond shapes */}
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
           <polygon
             key={`diamond-${i}`}
             points={`${i * 40 + 20},4 ${i * 40 + 24},8 ${i * 40 + 20},12 ${i * 40 + 16},8`}
-            fill="rgba(212, 167, 44, 0.15)"
-            stroke="rgba(212, 167, 44, 0.2)"
-            strokeWidth="0.3"
+            fill="rgba(212, 167, 44, 0.3)"
+            stroke="rgba(212, 167, 44, 0.4)"
+            strokeWidth="0.5"
           />
         ))}
       </svg>
@@ -60,13 +60,13 @@ export function StarPattern({ className = '' }: { className?: string }) {
 // Islamic geometric pattern background
 export function GeometricBg({ className = '' }: { className?: string }) {
   return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none opacity-[0.03] ${className}`}>
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none opacity-[0.08] text-[#d4a72c] ${className}`}>
       <svg className="w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
         <defs>
           <pattern id="geo-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-            <polygon points="20,0 40,20 20,40 0,20" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
-            <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.3" />
-            <polygon points="20,4 24,16 36,20 24,24 20,36 16,24 4,20 16,16" fill="none" stroke="currentColor" strokeWidth="0.2" opacity="0.2" />
+            <polygon points="20,0 40,20 20,40 0,20" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.7" />
+            <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
+            <polygon points="20,4 24,16 36,20 24,24 20,36 16,24 4,20 16,16" fill="none" stroke="currentColor" strokeWidth="0.4" opacity="0.4" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#geo-pattern)" />
@@ -79,11 +79,11 @@ export function GeometricBg({ className = '' }: { className?: string }) {
 export function DecorativeDivider({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center gap-3 my-4 ${className}`}>
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4a72c]/30 to-transparent" />
-      <svg className="w-6 h-6 text-[#d4a72c]/40" viewBox="0 0 24 24" fill="currentColor">
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4a72c]/60 to-transparent" />
+      <svg className="w-6 h-6 text-[#d4a72c]/70" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
       </svg>
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4a72c]/30 to-transparent" />
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#d4a72c]/60 to-transparent" />
     </div>
   );
 }
@@ -91,24 +91,24 @@ export function DecorativeDivider({ className = '' }: { className?: string }) {
 // National frame/border for cards
 export function NationalFrame({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`relative p-4 rounded-2xl border border-[#d4a72c]/15 bg-gradient-to-br from-[#0f2b1f]/40 via-[#0a0a09]/60 to-[#1a0f0a]/40 ${className}`}>
+    <div className={`relative p-4 rounded-2xl border border-[#d4a72c]/25 bg-gradient-to-br from-[#0f2b1f]/40 via-[#0a0a09]/60 to-[#1a0f0a]/40 ${className}`}>
       {/* Corner ornaments */}
-      <svg className="absolute top-0 left-0 w-8 h-8 text-[#d4a72c]/20" viewBox="0 0 32 32" fill="none">
+      <svg className="absolute top-0 left-0 w-8 h-8 text-[#d4a72c]/40" viewBox="0 0 32 32" fill="none">
         <path d="M0 0h8v2H2v6H0V0z" fill="currentColor" />
         <path d="M0 32h8v-2H2v-6H0v8z" fill="currentColor" />
-        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.5" />
+        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.8" />
       </svg>
-      <svg className="absolute top-0 right-0 w-8 h-8 text-[#d4a72c]/20 rotate-90" viewBox="0 0 32 32" fill="none">
+      <svg className="absolute top-0 right-0 w-8 h-8 text-[#d4a72c]/40 rotate-90" viewBox="0 0 32 32" fill="none">
         <path d="M0 0h8v2H2v6H0V0z" fill="currentColor" />
-        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.5" />
+        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.8" />
       </svg>
-      <svg className="absolute bottom-0 left-0 w-8 h-8 text-[#d4a72c]/20 -rotate-90" viewBox="0 0 32 32" fill="none">
+      <svg className="absolute bottom-0 left-0 w-8 h-8 text-[#d4a72c]/40 -rotate-90" viewBox="0 0 32 32" fill="none">
         <path d="M0 0h8v2H2v6H0V0z" fill="currentColor" />
-        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.5" />
+        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.8" />
       </svg>
-      <svg className="absolute bottom-0 right-0 w-8 h-8 text-[#d4a72c]/20 rotate-180" viewBox="0 0 32 32" fill="none">
+      <svg className="absolute bottom-0 right-0 w-8 h-8 text-[#d4a72c]/40 rotate-180" viewBox="0 0 32 32" fill="none">
         <path d="M0 0h8v2H2v6H0V0z" fill="currentColor" />
-        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.5" />
+        <circle cx="4" cy="4" r="1" fill="currentColor" opacity="0.8" />
       </svg>
       {children}
     </div>
