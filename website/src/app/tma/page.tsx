@@ -5,7 +5,7 @@ import { useTmaStore } from '@/lib/tma/store';
 import { useLang } from '@/components/tma/shared/LanguageProvider';
 import { TmaNavigation } from '@/components/tma/Navigation';
 import { TopOrnament, GeometricBg } from '@/components/tma/shared/UzbekPattern';
-import { PatternBorder, CornerOrnament } from '@/components/shared/oriental-pattern';
+import { SherDorBorder, SherDorCorner } from '@/components/shared/sherdor-pattern';
 import { HomePage } from '@/components/tma/pages/HomePage';
 import { SignalsPage } from '@/components/tma/pages/SignalsPage';
 import { CoursesPage } from '@/components/tma/pages/CoursesPage';
@@ -134,9 +134,9 @@ export default function TmaApp() {
       <GeometricBg />
       <TopOrnament />
 
-      {/* Burchak ornamentlari — yuqori qirralarda, nav ostida qolmasligi uchun */}
-      <CornerOrnament position="top-left" className="size-14 sm:size-20 text-[#d4a72c]/40" />
-      <CornerOrnament position="top-right" className="size-14 sm:size-20 text-[#d4a72c]/40" />
+      {/* Samarqand burchak ornamentlari — yuqori qirralarda, nav ostida qolmasligi uchun */}
+      <SherDorCorner position="top-left" className="size-14 sm:size-20 text-[#d4a72c]/40" />
+      <SherDorCorner position="top-right" className="size-14 sm:size-20 text-[#d4a72c]/40" />
 
       {/* Lang Switcher */}
       <div className="fixed top-3 right-3 z-50 flex gap-1">
@@ -157,9 +157,9 @@ export default function TmaApp() {
 
       {renderPage()}
 
-      {/* Pastki naqshli tasma */}
+      {/* Pastki naqshli tasma — Samarqand Sher-Dor */}
       <div className="relative px-3 pb-3 mt-4">
-        <PatternBorder className="text-[#d4a72c]/70 rotate-180" />
+        <SherDorBorder className="text-[#d4a72c]/70 rotate-180" />
       </div>
 
       <TmaNavigation />

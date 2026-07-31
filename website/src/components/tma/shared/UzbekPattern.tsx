@@ -57,16 +57,22 @@ export function StarPattern({ className = '' }: { className?: string }) {
   );
 }
 
-// Islamic geometric pattern background
+// Samarqand Sher-Dor uslubidagi geometrik fon (Rub al-Hizb yulduzlari)
 export function GeometricBg({ className = '' }: { className?: string }) {
   return (
-    <div className={`absolute inset-0 overflow-hidden pointer-events-none opacity-[0.08] text-[#d4a72c] ${className}`}>
-      <svg className="w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="none">
+    <div className={`absolute inset-0 overflow-hidden pointer-events-none opacity-[0.09] text-[#d4a72c] ${className}`}>
+      <svg className="w-full h-full" viewBox="0 0 160 160" preserveAspectRatio="none">
         <defs>
-          <pattern id="geo-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-            <polygon points="20,0 40,20 20,40 0,20" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.7" />
-            <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.5" />
-            <polygon points="20,4 24,16 36,20 24,24 20,36 16,24 4,20 16,16" fill="none" stroke="currentColor" strokeWidth="0.4" opacity="0.4" />
+          <pattern id="geo-pattern" width="80" height="80" patternUnits="userSpaceOnUse">
+            {/* Rub al-Hizb — 8 qirrali yulduz */}
+            <polygon points="40,10 47.5,25 62.5,32.5 47.5,40 40,55 32.5,40 17.5,32.5 32.5,25" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.8" />
+            <polygon points="40,26 44,34 52,36 44,38 40,46 36,38 28,36 36,34" fill="none" stroke="rgba(47,184,160,0.8)" strokeWidth="0.5" opacity="0.7" />
+            {/* Diagonal chiziqlar */}
+            <line x1="0" y1="0" x2="80" y2="80" stroke="currentColor" strokeWidth="0.4" opacity="0.4" />
+            <line x1="80" y1="0" x2="0" y2="80" stroke="currentColor" strokeWidth="0.4" opacity="0.4" />
+            {/* Kichik yulduzlar */}
+            <polygon points="10,10 12,15 17,16 13,18 14,23 10,20 6,23 7,18 3,16 8,15" fill="currentColor" opacity="0.6" />
+            <polygon points="70,70 72,75 77,76 73,78 74,83 70,80 66,83 67,78 63,76 68,75" fill="currentColor" opacity="0.6" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#geo-pattern)" />

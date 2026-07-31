@@ -3,7 +3,7 @@
 import { Logo } from '@/components/shared/logo';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Separator } from '@/components/ui/separator';
-import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament } from '@/components/shared/oriental-pattern';
+import { SamarkandStarPattern, SherDorArabesque, SherDorCorner, SherDorDivider } from '@/components/shared/sherdor-pattern';
 import { useNavigationStore } from '@/store';
 import { SITE, NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 import type { PageId } from '@/lib/constants';
@@ -30,14 +30,14 @@ export function Footer() {
 
   return (
     <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
-      {/* Background patterns */}
-      <GeometricPattern opacity={0.09} />
-      <ArabesquePattern opacity={0.06} />
-      {/* Corner ornaments */}
-      <CornerOrnament position="top-left" />
-      <CornerOrnament position="top-right" />
-      <CornerOrnament position="bottom-left" />
-      <CornerOrnament position="bottom-right" />
+      {/* Samarqand Sher-Dor fon naqshlari */}
+      <SamarkandStarPattern opacity={0.08} />
+      <SherDorArabesque opacity={0.05} />
+      {/* Samarqand burchak ornamentlari */}
+      <SherDorCorner position="top-left" />
+      <SherDorCorner position="top-right" />
+      <SherDorCorner position="bottom-left" />
+      <SherDorCorner position="bottom-right" />
 
       {/* Decorative gold top border */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
@@ -171,7 +171,7 @@ export function Footer() {
           </div>
         </div>
 
-        <OrientalDivider variant="simple" />
+        <SherDorDivider variant="simple" />
 
         {/* Bottom Section */}
         <div className="flex flex-col items-center gap-3 py-6 sm:flex-row sm:justify-between">

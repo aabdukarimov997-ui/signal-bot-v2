@@ -24,7 +24,7 @@ import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { PriceTicker } from '@/components/shared/price-ticker';
-import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament, GoldFrame } from '@/components/shared/oriental-pattern';
+import { SamarkandStarPattern, SherDorArabesque, SherDorCorner, SherDorLion, SherDorDivider } from '@/components/shared/sherdor-pattern';
 
 /* ──────────────── stagger children container ──────────────── */
 const stagger = {
@@ -125,14 +125,14 @@ export default function HomePage() {
   /* ────────── HERO ────────── */
   const hero = (
     <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center overflow-hidden px-4 py-16 sm:py-24">
-      {/* Sharqona geometric background patterns */}
-      <GeometricPattern opacity={0.12} className="-z-[4]" />
-      <ArabesquePattern opacity={0.07} className="-z-[3]" />
-      {/* Corner ornaments — 4 ta burchakda */}
-      <CornerOrnament position="top-left" className="z-10" />
-      <CornerOrnament position="top-right" className="z-10" />
-      <CornerOrnament position="bottom-left" className="z-10" />
-      <CornerOrnament position="bottom-right" className="z-10" />
+      {/* Samarqand Sher-Dor fon naqshlari */}
+      <SamarkandStarPattern opacity={0.11} className="-z-[4]" />
+      <SherDorArabesque opacity={0.06} className="-z-[3]" />
+      {/* Samarqand burchak ornamentlari — 4 ta burchakda */}
+      <SherDorCorner position="top-left" className="z-10" />
+      <SherDorCorner position="top-right" className="z-10" />
+      <SherDorCorner position="bottom-left" className="z-10" />
+      <SherDorCorner position="bottom-right" className="z-10" />
 
       {/* Gold + emerald radial glow overlay */}
       <div
@@ -155,12 +155,9 @@ export default function HomePage() {
           <Logo size="hero" showBackground />
         </motion.div>
 
-        {/* Decorative top star */}
+        {/* Sher-Dor ramzi — sher va quyosh */}
         <motion.div variants={fadeUp} className="mb-4">
-          <svg width="32" height="16" viewBox="0 0 32 16" className="text-gold/40 mx-auto">
-            <path d="M0 8 C4 4, 8 4, 12 8 C16 12, 20 12, 24 8 C28 4, 32 4, 32 8" stroke="currentColor" strokeWidth="0.5" fill="none" />
-            <polygon points="16,2 17,6 21,6 18,8 19,12 16,9 13,12 14,8 11,6 15,6" fill="currentColor" opacity="0.6" />
-          </svg>
+          <SherDorLion className="mx-auto h-14 w-24 sm:h-16 sm:w-28" />
         </motion.div>
 
         {/* tagline - gold theme */}
@@ -250,13 +247,13 @@ export default function HomePage() {
     </motion.div>
   );
 
-  {/* ────────── ORIENTAL DIVIDER ────────── */}
-  const divider = <OrientalDivider />;
+  {/* ────────── SHER-DOR DIVIDER ────────── */}
+  const divider = <SherDorDivider />;
 
   {/* ────────── FEATURES ────────── */}
   const features = (
     <section className="relative px-4 py-20 sm:py-28 overflow-hidden">
-      <GeometricPattern opacity={0.06} className="-z-[1]" />
+      <SamarkandStarPattern opacity={0.05} className="-z-[1]" />
       <div className="mx-auto max-w-6xl relative">
         <SectionHeading
           title="Nima Uchun AAA?"
@@ -457,7 +454,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-3xl">
         <AnimatedSection>
           <GlassCard glowGold className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
-            <GeometricPattern opacity={0.09} />
+            <SamarkandStarPattern opacity={0.08} />
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 -z-10"
