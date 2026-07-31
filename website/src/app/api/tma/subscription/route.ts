@@ -5,7 +5,6 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const type = searchParams.get('type') || 'signal';
 
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
@@ -15,9 +14,9 @@ export async function GET(request: Request) {
       `SELECT s.*, t.name as tariff_name 
        FROM ${TABLES.subscriptions} s 
        JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id 
-       WHERE s.user_id = $1 AND s.status = 'active' AND s.product_type = $2 
+       WHERE s.user_id = $1 AND s.status = 'active'
        ORDER BY s.end_date DESC LIMIT 1`,
-      [userId, type]
+      [userId]
     );
 
     if (!result.rows[0]) {

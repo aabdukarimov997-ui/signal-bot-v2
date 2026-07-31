@@ -47,16 +47,18 @@ export async function POST(request: Request) {
           );
         }
 
+        // Duration: prefer duration_days (1-day / 1-week tariffs), else months
+        const tariffDays = tariff.duration_days || (tariff.duration_months || 0) * 30;
         const startDate = new Date().toISOString();
         const endDate = new Date(
-          Date.now() + (tariff.duration_months * 30 + bonusDays) * 24 * 60 * 60 * 1000
+          Date.now() + (tariffDays + bonusDays) * 24 * 60 * 60 * 1000
         ).toISOString();
 
         await query(
           `INSERT INTO ${TABLES.subscriptions} 
-           (user_id, tariff_id, status, start_date, end_date, product_type, reminder_7_sent, reminder_3_sent, reminder_1_sent)
-           VALUES ($1, $2, 'active', $3, $4, $5, false, false, false)`,
-          [userId, productId, startDate, endDate, productType]
+           (user_id, tariff_id, status, start_date, end_date, reminder_7_sent, reminder_3_sent, reminder_1_sent)
+           VALUES ($1, $2, 'active', $3, $4, false, false, false)`,
+          [userId, productId, startDate, endDate]
         );
       }
     }
