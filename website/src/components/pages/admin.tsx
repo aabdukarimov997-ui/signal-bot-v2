@@ -82,7 +82,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { SamarkandStarPattern, SherDorCorner } from '@/components/shared/sherdor-pattern';
+import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { AdminBotUsers } from '@/components/pages/admin-bot-users';
 import { AdminBotPayments } from '@/components/pages/admin-bot-payments';
 
@@ -2662,12 +2662,12 @@ export default function AdminPanel() {
       <DesktopSidebar />
       <MobileSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin relative">
-        <SamarkandStarPattern opacity={0.05} />
-        {/* Samarqand burchak ornamentlari */}
-        <SherDorCorner position="top-left" />
-        <SherDorCorner position="top-right" />
-        <SherDorCorner position="bottom-left" />
-        <SherDorCorner position="bottom-right" />
+        <GeometricPattern opacity={0.04} />
+        {/* Burchak ornamentlari */}
+        <CornerOrnament position="top-left" />
+        <CornerOrnament position="top-right" />
+        <CornerOrnament position="bottom-left" />
+        <CornerOrnament position="bottom-right" />
         <div className="relative p-4 pt-16 lg:pt-6 lg:p-8 max-w-6xl mx-auto">
           <AdminContent />
         </div>

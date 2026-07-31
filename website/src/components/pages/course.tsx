@@ -19,7 +19,7 @@ import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { SamarkandStarPattern, SherDorArabesque, SherDorCorner, SherDorDivider } from '@/components/shared/sherdor-pattern';
+import { GeometricPattern, ArabesquePattern, CornerOrnament, OrientalDivider } from '@/components/shared/oriental-pattern';
 
 /* ──────────────── animation helpers ──────────────── */
 const stagger = {
@@ -194,14 +194,14 @@ export default function CoursePage() {
   /* ────────── HERO ────────── */
   const hero = (
     <section className="relative px-4 pt-28 pb-16 sm:pt-32 sm:pb-20 overflow-hidden">
-      {/* Samarqand Sher-Dor naqshli fon */}
-      <SamarkandStarPattern opacity={0.08} className="-z-[2]" />
-      <SherDorArabesque opacity={0.045} className="-z-[3]" />
-      {/* Samarqand burchak ornamentlari */}
-      <SherDorCorner position="top-left" className="z-10" />
-      <SherDorCorner position="top-right" className="z-10" />
-      <SherDorCorner position="bottom-left" className="z-10" />
-      <SherDorCorner position="bottom-right" className="z-10" />
+      {/* Sharqona naqshli fon */}
+      <GeometricPattern opacity={0.07} className="-z-[2]" />
+      <ArabesquePattern opacity={0.045} className="-z-[3]" />
+      {/* Burchak ornamentlari */}
+      <CornerOrnament position="top-left" className="z-10" />
+      <CornerOrnament position="top-right" className="z-10" />
+      <CornerOrnament position="bottom-left" className="z-10" />
+      <CornerOrnament position="bottom-right" className="z-10" />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
@@ -448,9 +448,9 @@ export default function CoursePage() {
     <main className="flex flex-col">
       {hero}
       {pricing}
-      <SherDorDivider />
+      <OrientalDivider />
       {details}
-      <SherDorDivider />
+      <OrientalDivider />
       {telegramCta}
     </main>
   );

@@ -22,7 +22,7 @@ import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SamarkandStarPattern, SherDorArabesque, SherDorCorner } from '@/components/shared/sherdor-pattern';
+import { GeometricPattern, ArabesquePattern, CornerOrnament } from '@/components/shared/oriental-pattern';
 
 const BENEFITS = [
   {
@@ -80,14 +80,14 @@ export default function VipPage() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 px-4 sm:px-6 overflow-hidden">
-        {/* Samarqand Sher-Dor naqshli fon */}
-        <SamarkandStarPattern opacity={0.08} className="-z-[2]" />
-        <SherDorArabesque opacity={0.045} className="-z-[3]" />
-        {/* Samarqand burchak ornamentlari */}
-        <SherDorCorner position="top-left" className="z-10" />
-        <SherDorCorner position="top-right" className="z-10" />
-        <SherDorCorner position="bottom-left" className="z-10" />
-        <SherDorCorner position="bottom-right" className="z-10" />
+        {/* Sharqona naqshli fon */}
+        <GeometricPattern opacity={0.07} className="-z-[2]" />
+        <ArabesquePattern opacity={0.045} className="-z-[3]" />
+        {/* Burchak ornamentlari */}
+        <CornerOrnament position="top-left" className="z-10" />
+        <CornerOrnament position="top-right" className="z-10" />
+        <CornerOrnament position="bottom-left" className="z-10" />
+        <CornerOrnament position="bottom-right" className="z-10" />
         <div className="absolute inset-0 bg-glow pointer-events-none" />
         {/* Decorative floating elements */}
         <motion.div

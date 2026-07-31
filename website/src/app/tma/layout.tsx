@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { LanguageProvider } from '@/components/tma/shared/LanguageProvider';
-import { SherDorBorder } from '@/components/shared/sherdor-pattern';
+import { PatternBorder } from '@/components/shared/oriental-pattern';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -46,9 +46,9 @@ export default function TmaLayout({ children }: { children: React.ReactNode }) {
           <div className="tma-container min-h-screen flex flex-col">
             {/* Decorative top border */}
             <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-[#d4a72c] via-[#8b5e3c] to-[#2d6a4f]" />
-            {/* Sharqona naqshli yuqori tasma — Samarqand Sher-Dor */}
+            {/* Sharqona naqshli yuqori tasma */}
             <div className="fixed top-1 left-0 right-0 z-50 pointer-events-none">
-              <SherDorBorder className="text-[#d4a72c]/80" />
+              <PatternBorder className="text-[#d4a72c]/80" />
             </div>
             <main className="flex-1 pb-20 pt-12 px-3">
               {children}

@@ -6,8 +6,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { FloatingTelegram } from "@/components/layout/floating-telegram";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { SidePattern } from "@/components/shared/oriental-pattern";
-import { SherDorBorder } from "@/components/shared/sherdor-pattern";
+import { PatternBorder, SidePattern } from "@/components/shared/oriental-pattern";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -113,13 +112,13 @@ export default function RootLayout({
           <SidePattern className="h-full -scale-x-100" />
         </div>
         <main className="min-h-screen pt-16">
-          {/* Top ornamental pattern border — Samarqand Sher-Dor */}
-          <SherDorBorder className="relative z-10" />
+          {/* Top ornamental pattern border */}
+          <PatternBorder className="relative z-10" />
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
-          {/* Bottom ornamental pattern border — Samarqand Sher-Dor */}
-          <SherDorBorder className="relative z-10 rotate-180 -mt-px" />
+          {/* Bottom ornamental pattern border */}
+          <PatternBorder className="relative z-10 rotate-180 -mt-px" />
         </main>
         <Footer />
         <FloatingTelegram />

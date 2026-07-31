@@ -30,7 +30,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { SamarkandStarPattern, SherDorCorner } from '@/components/shared/sherdor-pattern';
+import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useNavigationStore, useAuthStore, useUIStore } from '@/store';
 import { NAV_ITEMS, TELEGRAM } from '@/lib/constants';
@@ -83,13 +83,13 @@ export function Navbar({ className }: LoadingScreenProps) {
     >
       {/* Decorative gold top border line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-      {/* Samarqand Sher-Dor naqshli fon */}
+      {/* Sharqona geometric pattern background */}
       <div className="absolute inset-0 opacity-100 pointer-events-none">
-        <SamarkandStarPattern opacity={0.08} />
+        <GeometricPattern opacity={0.09} />
       </div>
-      {/* Samarqand burchak ornamentlari */}
-      <SherDorCorner position="top-left" className="size-14 sm:size-20" />
-      <SherDorCorner position="top-right" className="size-14 sm:size-20" />
+      {/* Corner ornaments */}
+      <CornerOrnament position="top-left" className="size-14 sm:size-20" />
+      <CornerOrnament position="top-right" className="size-14 sm:size-20" />
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Logo size="sm" />
