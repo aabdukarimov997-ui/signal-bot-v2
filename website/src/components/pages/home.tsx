@@ -126,10 +126,12 @@ export default function HomePage() {
   const hero = (
     <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center overflow-hidden px-4 py-16 sm:py-24">
       {/* Sharqona geometric background patterns */}
-      <GeometricPattern opacity={0.04} className="-z-[4]" />
-      <ArabesquePattern opacity={0.025} className="-z-[3]" />
-      {/* Corner ornaments */}
+      <GeometricPattern opacity={0.06} className="-z-[4]" />
+      <ArabesquePattern opacity={0.04} className="-z-[3]" />
+      {/* Corner ornaments — 4 ta burchakda */}
       <CornerOrnament position="top-left" className="z-10" />
+      <CornerOrnament position="top-right" className="z-10" />
+      <CornerOrnament position="bottom-left" className="z-10" />
       <CornerOrnament position="bottom-right" className="z-10" />
 
       {/* Gold + emerald radial glow overlay */}
@@ -254,7 +256,7 @@ export default function HomePage() {
   {/* ────────── FEATURES ────────── */}
   const features = (
     <section className="relative px-4 py-20 sm:py-28 overflow-hidden">
-      <GeometricPattern opacity={0.015} className="-z-[1]" />
+      <GeometricPattern opacity={0.03} className="-z-[1]" />
       <div className="mx-auto max-w-6xl relative">
         <SectionHeading
           title="Nima Uchun AAA?"
@@ -455,7 +457,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-3xl">
         <AnimatedSection>
           <GlassCard glowGold className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
-            <GeometricPattern opacity={0.03} />
+            <GeometricPattern opacity={0.05} />
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 -z-10"

@@ -204,7 +204,7 @@ export function CornerOrnament({ className, position = 'top-left' }: { className
     <div
       aria-hidden
       className={cn(
-        'pointer-events-none absolute size-16 sm:size-24 text-gold/15',
+        'pointer-events-none absolute size-20 sm:size-28 text-gold/30',
         rotation[position],
         position.includes('top') ? 'top-0' : 'bottom-0',
         position.includes('left') ? 'left-0' : 'right-0',
@@ -213,25 +213,152 @@ export function CornerOrnament({ className, position = 'top-left' }: { className
     >
       <svg viewBox="0 0 100 100" fill="none" className="h-full w-full">
         <path
-          d="M0 0 L100 0 L100 5 Q50 5, 5 50 L5 100 L0 100 Z"
+          d="M0 0 L100 0 L100 6 Q50 6, 6 50 L6 100 L0 100 Z"
           fill="currentColor"
-          opacity="0.3"
+          opacity="0.35"
         />
         <path
           d="M0 0 L80 0 Q40 0, 0 40"
           stroke="currentColor"
-          strokeWidth="0.8"
+          strokeWidth="1"
           fill="none"
-          opacity="0.5"
+          opacity="0.6"
         />
         <path
           d="M0 0 L60 0 Q30 0, 0 30"
           stroke="currentColor"
-          strokeWidth="0.5"
+          strokeWidth="0.6"
+          fill="none"
+          opacity="0.5"
+        />
+        <path
+          d="M0 0 L40 0 Q20 0, 0 20"
+          stroke="currentColor"
+          strokeWidth="0.4"
           fill="none"
           opacity="0.4"
         />
-        <circle cx="8" cy="8" r="3" fill="currentColor" opacity="0.6" />
+        {/* 8-pointed star inside the corner */}
+        <polygon
+          points="30,4 32,10 38,10 33.5,13.5 35,20 30,16.5 25,20 26.5,13.5 22,10 28,10"
+          fill="currentColor"
+          opacity="0.5"
+        />
+        <circle cx="8" cy="8" r="3" fill="currentColor" opacity="0.7" />
+        <circle cx="8" cy="8" r="1" fill="currentColor" opacity="0.9" />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Decorative Pattern Border Strip (top/bottom) ───── */
+export function PatternBorder({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={cn('pointer-events-none relative h-9 w-full overflow-hidden text-gold/70', className)}
+    >
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 600 36"
+        preserveAspectRatio="none"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="pb-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+            <stop offset="12%" stopColor="currentColor" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="currentColor" stopOpacity="1" />
+            <stop offset="88%" stopColor="currentColor" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* hairlines */}
+        <line x1="0" y1="0.5" x2="600" y2="0.5" stroke="url(#pb-gold)" strokeWidth="0.6" opacity="0.6" />
+        <line x1="0" y1="35.5" x2="600" y2="35.5" stroke="url(#pb-gold)" strokeWidth="0.6" opacity="0.5" />
+        {/* repeating motif */}
+        {Array.from({ length: 10 }).map((_, i) => {
+          const x = i * 60;
+          return (
+            <g key={i}>
+              {/* arch */}
+              <path
+                d={`M ${x} 36 Q ${x + 15} 4 ${x + 30} 16 Q ${x + 45} 28 ${x + 60} 36`}
+                stroke="url(#pb-gold)"
+                strokeWidth="1.2"
+                fill="none"
+                opacity="0.85"
+              />
+              {/* top diamond */}
+              <polygon points={`${x + 30},2 ${x + 34},7 ${x + 30},12 ${x + 26},7`} fill="url(#pb-gold)" opacity="0.9" />
+              {/* side diamonds */}
+              <polygon points={`${x + 15},21 ${x + 17},24 ${x + 15},27 ${x + 13},24`} fill="url(#pb-gold)" opacity="0.5" />
+              <polygon points={`${x + 45},21 ${x + 47},24 ${x + 45},27 ${x + 43},24`} fill="url(#pb-gold)" opacity="0.5" />
+              {/* 8-pointed star center */}
+              <polygon
+                points={`${x + 30},17 ${x + 31.5},21 ${x + 36},21 ${x + 32.5},23.5 ${x + 33.5},28 ${x + 30},25 ${x + 26.5},28 ${x + 27.5},23.5 ${x + 24},21 ${x + 28.5},21`}
+                fill="url(#pb-gold)"
+                opacity="0.8"
+              />
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Vertical Side Pattern Strip (left/right edges) ───── */
+export function SidePattern({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={cn('pointer-events-none absolute inset-y-0 w-8 overflow-hidden text-gold/40', className)}
+    >
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 32 160"
+        preserveAspectRatio="none"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="sp-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+            <stop offset="10%" stopColor="currentColor" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="currentColor" stopOpacity="1" />
+            <stop offset="90%" stopColor="currentColor" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* vertical hairlines */}
+        <line x1="1" y1="0" x2="1" y2="160" stroke="url(#sp-gold)" strokeWidth="0.6" opacity="0.6" />
+        <line x1="31" y1="0" x2="31" y2="160" stroke="url(#sp-gold)" strokeWidth="0.6" opacity="0.6" />
+        {Array.from({ length: 5 }).map((_, i) => {
+          const y = i * 32;
+          return (
+            <g key={i}>
+              {/* diamond */}
+              <polygon
+                points={`16,${y + 16} 20,${y + 21} 16,${y + 26} 12,${y + 21}`}
+                fill="url(#sp-gold)"
+                opacity="0.75"
+              />
+              {/* small dots */}
+              <circle cx="16" cy={y + 5} r="2" fill="url(#sp-gold)" opacity="0.5" />
+              <circle cx="16" cy={y + 27} r="2" fill="url(#sp-gold)" opacity="0.5" />
+              {/* arabesque vine */}
+              <path
+                d={`M 16 ${y} C 23 ${y + 4}, 23 ${y + 12}, 16 ${y + 16} M 16 ${y + 16} C 9 ${y + 20}, 9 ${y + 28}, 16 ${y + 32}`}
+                stroke="url(#sp-gold)"
+                strokeWidth="0.6"
+                fill="none"
+                opacity="0.7"
+              />
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

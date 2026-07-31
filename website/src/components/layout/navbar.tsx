@@ -83,10 +83,13 @@ export function Navbar({ className }: LoadingScreenProps) {
     >
       {/* Decorative gold top border line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-      {/* Subtle geometric pattern background */}
-      <div className="absolute inset-0 opacity-[0.015] pointer-events-none">
-        <GeometricPattern opacity={0.015} />
+      {/* Sharqona geometric pattern background */}
+      <div className="absolute inset-0 opacity-100 pointer-events-none">
+        <GeometricPattern opacity={0.05} />
       </div>
+      {/* Corner ornaments */}
+      <CornerOrnament position="top-left" className="size-14 sm:size-20" />
+      <CornerOrnament position="top-right" className="size-14 sm:size-20" />
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Logo size="sm" />

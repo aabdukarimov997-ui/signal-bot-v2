@@ -31,11 +31,13 @@ export function Footer() {
   return (
     <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
       {/* Background patterns */}
-      <GeometricPattern opacity={0.02} />
-      <ArabesquePattern opacity={0.015} />
+      <GeometricPattern opacity={0.05} />
+      <ArabesquePattern opacity={0.035} />
       {/* Corner ornaments */}
       <CornerOrnament position="top-left" />
       <CornerOrnament position="top-right" />
+      <CornerOrnament position="bottom-left" />
+      <CornerOrnament position="bottom-right" />
 
       {/* Decorative gold top border */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
