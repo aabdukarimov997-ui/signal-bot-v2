@@ -22,7 +22,7 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKe
 from sqlalchemy import text
 
 from bot.database.session import get_session
-from bot.services.settings_service import get_admin_ids
+from bot.services.settings_service import get_admin_ids, get_setting
 from bot.utils.helpers import safe_edit
 from bot.utils.states import AdminBlogPostStates
 
@@ -30,11 +30,13 @@ admin_blog_router = Router()
 
 BLOG_TABLE = '"website"."BlogPost"'
 USER_TABLE = '"website"."User"'
+DEFAULT_SITE_URL = "https://website-production-8ecf.up.railway.app"
 
 # Sayt blog manzili — bot sozlamalaridagi website_url dan olinadi
-def _site_url() -> str:
+async def _site_url() -> str:
     from bot.config import settings
-    return settings.SOCIAL_WEBSITE or "https://website-production-8ecf.up.railway.app"
+    db_url = await get_setting("website_url")
+    return db_url or settings.SOCIAL_WEBSITE or DEFAULT_SITE_URL
 
 
 # ─────────────────────────────────────────────────────────
@@ -281,6 +283,13 @@ async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> No
 
     await state.clear()
 
+    # Sayt manzili — insert'dan OLDIN hisoblanadi, shuning uchun xato bo'lsa
+    # ham muvaffaqiyatli e'lon yashirmaydi (takroriy yuborish xavfi yo'q)
+    try:
+        site = await _site_url()
+    except Exception:
+        site = DEFAULT_SITE_URL
+
     try:
         slug = await make_unique_slug(title)
         author_id = await resolve_author_id()
@@ -308,7 +317,6 @@ async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> No
                 },
             )
 
-        site = _site_url()
         await safe_edit(
             callback.message,
             f"✅ <b>Post blogga joylandi!</b>\n\n"
