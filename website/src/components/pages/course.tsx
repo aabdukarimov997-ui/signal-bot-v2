@@ -10,7 +10,6 @@ import {
   MonitorSmartphone,
   Send,
 } from 'lucide-react';
-import { TELEGRAM } from '@/lib/constants';
 import type { Course } from '@/lib/types';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { GeometricPattern, ArabesquePattern, CornerOrnament, OrientalDivider } from '@/components/shared/oriental-pattern';
+import PaymentModal from '@/components/shared/payment-modal';
 
 /* ──────────────── animation helpers ──────────────── */
 const stagger = {
@@ -75,6 +75,7 @@ interface PricingCardProps {
   glow?: boolean;
   highlightBorder?: boolean;
   index: number;
+  onBuy: () => void;
 }
 
 function PricingCard({
@@ -85,6 +86,7 @@ function PricingCard({
   glow = false,
   highlightBorder = false,
   index,
+  onBuy,
 }: PricingCardProps) {
   const hasPrice = price > 0;
 
@@ -134,26 +136,20 @@ function PricingCard({
       </ul>
 
       {/* CTA button */}
-      <a
-        href={TELEGRAM.BOT}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full"
+      <Button
+        onClick={onBuy}
+        size="lg"
+        className={cn(
+          'w-full rounded-xl text-sm font-semibold',
+          glow
+            ? 'bg-gold text-gold-foreground hover:bg-gold/90'
+            : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
+        )}
+        variant={glow ? 'default' : 'outline'}
       >
-        <Button
-          size="lg"
-          className={cn(
-            'w-full rounded-xl text-sm font-semibold',
-            glow
-              ? 'bg-gold text-gold-foreground hover:bg-gold/90'
-              : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
-          )}
-          variant={glow ? 'default' : 'outline'}
-        >
-          {hasPrice ? 'Sotib olish' : "Botga murojaat qiling"}
-          <ArrowRight className="size-4 ml-1.5" />
-        </Button>
-      </a>
+        {hasPrice ? 'Sotib olish' : "Botga murojaat qiling"}
+        <ArrowRight className="size-4 ml-1.5" />
+      </Button>
     </GlassCard>
   );
 }
@@ -162,6 +158,7 @@ function PricingCard({
 export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -287,6 +284,7 @@ export default function CoursePage() {
                     ]
               }
               index={0}
+              onBuy={() => setPayOpen(true)}
             />
             <PricingCard
               tier="Professional"
@@ -306,6 +304,7 @@ export default function CoursePage() {
               }
               highlightBorder
               index={1}
+              onBuy={() => setPayOpen(true)}
             />
             <PricingCard
               tier="Master"
@@ -326,6 +325,7 @@ export default function CoursePage() {
               }
               glow
               index={2}
+              onBuy={() => setPayOpen(true)}
             />
           </div>
         )}
@@ -452,6 +452,9 @@ export default function CoursePage() {
       {details}
       <OrientalDivider />
       {telegramCta}
+
+      {/* To'lov modali */}
+      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="course" />
     </main>
   );
 }

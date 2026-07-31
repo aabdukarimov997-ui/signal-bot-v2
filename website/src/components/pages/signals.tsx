@@ -20,6 +20,7 @@ import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
+import PaymentModal from '@/components/shared/payment-modal';
 
 interface SignalData {
   id: string;
@@ -103,6 +104,7 @@ function PricingCard({
   highlight,
   glow,
   allPricesZero,
+  onBuy,
 }: {
   title: string;
   price: number;
@@ -112,6 +114,7 @@ function PricingCard({
   highlight?: boolean;
   glow?: boolean;
   allPricesZero: boolean;
+  onBuy: () => void;
 }) {
   return (
     <GlassCard
@@ -172,7 +175,7 @@ function PricingCard({
       </div>
 
       <Button
-        asChild
+        onClick={onBuy}
         className={
           highlight
             ? 'w-full bg-gold text-gold-foreground hover:bg-gold/90'
@@ -180,14 +183,8 @@ function PricingCard({
         }
         size="lg"
       >
-        <a
-          href={TELEGRAM.BOT}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Send className="size-4" />
-          {allPricesZero ? "Botga yozing" : 'Sotib olish'}
-        </a>
+        <Send className="size-4" />
+        {allPricesZero ? "Botga yozing" : 'Sotib olish'}
       </Button>
     </GlassCard>
   );
@@ -214,6 +211,7 @@ function defaultFeatures(months: number): string[] {
 export default function SignalsPage() {
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     async function fetchSignalData() {
@@ -368,6 +366,7 @@ export default function SignalsPage() {
                 features={signalData?.monthlyFeatures ?? []}
                 months={1}
                 allPricesZero={false}
+                onBuy={() => setPayOpen(true)}
               />
               <PricingCard
                 title="3 Oylik"
@@ -377,6 +376,7 @@ export default function SignalsPage() {
                 badge="Eng mashhur"
                 highlight
                 allPricesZero={false}
+                onBuy={() => setPayOpen(true)}
               />
               <PricingCard
                 title="6 Oylik"
@@ -386,6 +386,7 @@ export default function SignalsPage() {
                 badge="Eng yaxshi qiymat"
                 glow
                 allPricesZero={false}
+                onBuy={() => setPayOpen(true)}
               />
             </div>
           )}
@@ -533,6 +534,9 @@ export default function SignalsPage() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* To'lov modali */}
+      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="signal" />
 
       {/* Telegram CTA Section */}
       <section className="py-16 px-4 sm:px-6">
