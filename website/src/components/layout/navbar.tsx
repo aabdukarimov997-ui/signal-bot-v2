@@ -85,7 +85,7 @@ export function Navbar({ className }: LoadingScreenProps) {
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
       {/* Sharqona geometric pattern background */}
       <div className="absolute inset-0 opacity-100 pointer-events-none">
-        <GeometricPattern opacity={0.05} />
+        <GeometricPattern opacity={0.09} />
       </div>
       {/* Corner ornaments */}
       <CornerOrnament position="top-left" className="size-14 sm:size-20" />

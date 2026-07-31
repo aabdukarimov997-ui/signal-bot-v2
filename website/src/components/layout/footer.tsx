@@ -31,8 +31,8 @@ export function Footer() {
   return (
     <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
       {/* Background patterns */}
-      <GeometricPattern opacity={0.05} />
-      <ArabesquePattern opacity={0.035} />
+      <GeometricPattern opacity={0.09} />
+      <ArabesquePattern opacity={0.06} />
       {/* Corner ornaments */}
       <CornerOrnament position="top-left" />
       <CornerOrnament position="top-right" />

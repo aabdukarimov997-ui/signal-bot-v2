@@ -4,11 +4,11 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 /* ───── Background Pattern: Islamic Geometric Star ───── */
-export function GeometricPattern({ className, opacity = 0.03 }: { className?: string; opacity?: number }) {
+export function GeometricPattern({ className, opacity = 0.06 }: { className?: string; opacity?: number }) {
   return (
     <div
       aria-hidden
-      className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
+      className={cn('pointer-events-none absolute inset-0 overflow-hidden text-gold', className)}
     >
       <svg
         className="absolute inset-0 h-full w-full"
@@ -28,27 +28,32 @@ export function GeometricPattern({ className, opacity = 0.03 }: { className?: st
             {/* 8-pointed star */}
             <polygon
               points="60,0 72,28 105,25 90,50 120,60 90,70 105,95 72,92 60,120 48,92 15,95 30,70 0,60 30,50 15,25 48,28"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
             {/* Small diamonds between stars */}
             <polygon
               points="120,0 126,12 120,24 114,12"
-              fill={`rgba(212,167,44,${opacity * 0.7})`}
+              fill="currentColor"
+              opacity={opacity * 0.7}
             />
             <polygon
               points="0,0 6,12 0,24 -6,12"
-              fill={`rgba(212,167,44,${opacity * 0.7})`}
+              fill="currentColor"
+              opacity={opacity * 0.7}
             />
             {/* Connecting lines */}
             <line
               x1="60" y1="0" x2="60" y2="120"
-              stroke={`rgba(212,167,44,${opacity * 0.5})`}
-              strokeWidth="0.5"
+              stroke="currentColor"
+              strokeOpacity={opacity * 0.5}
+              strokeWidth="0.7"
             />
             <line
               x1="0" y1="60" x2="120" y2="60"
-              stroke={`rgba(212,167,44,${opacity * 0.5})`}
-              strokeWidth="0.5"
+              stroke="currentColor"
+              strokeOpacity={opacity * 0.5}
+              strokeWidth="0.7"
             />
           </pattern>
         </defs>
@@ -59,11 +64,11 @@ export function GeometricPattern({ className, opacity = 0.03 }: { className?: st
 }
 
 /* ───── Background Pattern: Arabesque / Floral ───── */
-export function ArabesquePattern({ className, opacity = 0.02 }: { className?: string; opacity?: number }) {
+export function ArabesquePattern({ className, opacity = 0.04 }: { className?: string; opacity?: number }) {
   return (
     <div
       aria-hidden
-      className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
+      className={cn('pointer-events-none absolute inset-0 overflow-hidden text-gold', className)}
     >
       <svg
         className="absolute inset-0 h-full w-full"
@@ -83,39 +88,46 @@ export function ArabesquePattern({ className, opacity = 0.02 }: { className?: st
             {/* Curved arabesque vines */}
             <path
               d="M60,0 C80,20 100,5 120,20 M0,60 C20,40 5,20 20,0 M60,120 C80,100 100,115 120,100 M120,60 C100,80 115,100 100,120"
-              stroke={`rgba(212,167,44,${opacity * 0.8})`}
-              strokeWidth="0.5"
+              stroke="currentColor"
+              strokeOpacity={opacity * 0.8}
+              strokeWidth="0.7"
               fill="none"
             />
             {/* Leaf shapes */}
             <ellipse
               cx="60" cy="30" rx="8" ry="4"
               transform="rotate(30,60,30)"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
             <ellipse
               cx="90" cy="60" rx="8" ry="4"
               transform="rotate(120,90,60)"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
             <ellipse
               cx="60" cy="90" rx="8" ry="4"
               transform="rotate(210,60,90)"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
             <ellipse
               cx="30" cy="60" rx="8" ry="4"
               transform="rotate(300,30,60)"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
             {/* Center motif */}
             <circle
               cx="60" cy="60" r="6"
-              fill={`rgba(212,167,44,${opacity * 0.6})`}
+              fill="currentColor"
+              opacity={opacity * 0.6}
             />
             <circle
               cx="60" cy="60" r="2"
-              fill={`rgba(212,167,44,${opacity})`}
+              fill="currentColor"
+              opacity={opacity}
             />
           </pattern>
         </defs>
@@ -204,7 +216,7 @@ export function CornerOrnament({ className, position = 'top-left' }: { className
     <div
       aria-hidden
       className={cn(
-        'pointer-events-none absolute size-20 sm:size-28 text-gold/30',
+        'pointer-events-none absolute size-20 sm:size-28 text-gold/45',
         rotation[position],
         position.includes('top') ? 'top-0' : 'bottom-0',
         position.includes('left') ? 'left-0' : 'right-0',
@@ -256,7 +268,7 @@ export function PatternBorder({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={cn('pointer-events-none relative h-9 w-full overflow-hidden text-gold/70', className)}
+      className={cn('pointer-events-none relative h-9 w-full overflow-hidden text-gold/90', className)}
     >
       <svg
         className="absolute inset-0 h-full w-full"
@@ -314,7 +326,7 @@ export function SidePattern({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={cn('pointer-events-none absolute inset-y-0 w-8 overflow-hidden text-gold/40', className)}
+      className={cn('pointer-events-none absolute inset-y-0 w-8 overflow-hidden text-gold/60', className)}
     >
       <svg
         className="absolute inset-0 h-full w-full"
