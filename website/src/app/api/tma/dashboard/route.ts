@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       `SELECT s.*, t.name as tariff_name
        FROM ${TABLES.subscriptions} s
        LEFT JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id
-       WHERE s.user_id = $1 AND (s.product_type = 'signal' OR s.product_type IS NULL)
+       WHERE s.user_id = $1
        ORDER BY s.end_date DESC LIMIT 20`,
       [userId]
     );
