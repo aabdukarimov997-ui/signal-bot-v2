@@ -68,5 +68,12 @@ class AdminChannelAnnouncementStates(StatesGroup):
     confirm = State()                   # Tasdiqlash
 
 
+class AdminBlogPostStates(StatesGroup):
+    waiting_title = State()
+    waiting_excerpt = State()
+    waiting_content = State()
+    confirm = State()
+
+
 class ContactState(StatesGroup):
     waiting_message = State()
