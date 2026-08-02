@@ -59,8 +59,6 @@ async def on_startup() -> None:
 async def main() -> None:
     register_routers()
     register_middlewares()
-    await setup_scheduler(bot)
-    start_scheduler()
 
     # ─── Delete webhook FIRST, before any DB work ─────────────────
     # This prevents race conditions where another service re-sets
@@ -137,6 +135,10 @@ async def main() -> None:
             session.add(
                 SignalTariff(name=c_name, duration_months=1, price=c_price, product_type="course", sort_order=1),
             )
+
+    # ─── Setup scheduler AFTER tables exist and settings are seeded ─
+    await setup_scheduler(bot)
+    start_scheduler()
 
     # Check if setup wizard is needed
     setup_done = await is_setup_completed()

@@ -18,7 +18,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("payments", sa.Column("invoice_id", sa.String(32), nullable=True, unique=True))
+    # Idempotent: the payments table is created by create_all (which already
+    # includes invoice_id in the model), so guard against re-adding the column.
+    bind = op.get_bind()
+    from sqlalchemy import inspect
+    inspector = inspect(bind)
+    columns = [c["name"] for c in inspector.get_columns("payments")]
+    if "invoice_id" not in columns:
+        op.add_column("payments", sa.Column("invoice_id", sa.String(32), nullable=True, unique=True))
 
 
 def downgrade() -> None:
