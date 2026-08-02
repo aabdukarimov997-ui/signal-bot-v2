@@ -32,7 +32,16 @@ export async function GET(request: Request) {
       [userId]
     );
     const sub = subRes.rows[0] || null;
-    let subscription = null;
+    let subscription: {
+      id: any;
+      tariffName: any;
+      productType: string;
+      status: any;
+      startDate: any;
+      endDate: any;
+      daysLeft: number;
+      inviteLink: any;
+    } | null = null;
     if (sub) {
       const end = new Date(sub.end_date);
       const daysLeft = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));

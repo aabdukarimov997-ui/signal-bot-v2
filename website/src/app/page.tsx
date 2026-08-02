@@ -1,7 +1,7 @@
 'use client';
 
 import { useLayoutEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { useNavigationStore, initHashRouter } from '@/store';
 import HomePage from '@/components/pages/home';
 import CoursePage from '@/components/pages/course';
@@ -18,7 +18,7 @@ import DashboardPage from '@/components/pages/dashboard';
 import AdminPanel from '@/components/pages/admin';
 import PayPage from '@/components/pages/pay';
 
-const pageTransition = {
+const pageTransition: Variants = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } },
   exit: { opacity: 0, y: -12, transition: { duration: 0.25 } },

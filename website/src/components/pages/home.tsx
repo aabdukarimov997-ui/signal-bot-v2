@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   GraduationCap,
   Activity,
@@ -27,11 +27,11 @@ import { PriceTicker } from '@/components/shared/price-ticker';
 import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament, GoldFrame } from '@/components/shared/oriental-pattern';
 
 /* ──────────────── stagger children container ──────────────── */
-const stagger = {
+const stagger: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 };
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,

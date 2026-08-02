@@ -8,7 +8,7 @@ import {
   Lock,
   Users,
   Clock,
-  Infinity,
+  Infinity as InfinityIcon,
   Send,
   Star,
   Quote,
@@ -51,7 +51,7 @@ const BENEFITS = [
     description: 'Yangi funksiyalar va kurslarga erta kirish',
   },
   {
-    icon: Infinity,
+    icon: InfinityIcon,
     title: 'Lifetime Access',
     description: 'Umrbod VIP kirish',
   },
@@ -246,7 +246,7 @@ export default function VipPage() {
               </Badge>
               <div className="mb-6 mt-2">
                 <div className="flex items-center gap-2 mb-3">
-                  <Infinity className="size-5 text-gold" />
+                  <InfinityIcon className="size-5 text-gold" />
                   <Crown className="size-5 text-gold" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-1">

@@ -4,7 +4,7 @@ import { useTmaStore, type TmaPage } from '@/lib/tma/store';
 import { useLang } from './shared/LanguageProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const navItems: Array<{ id: TmaPage; icon: string; labelKey: string }> = [
+const navItems: Array<{ id: TmaPage | 'more'; icon: string; labelKey: string }> = [
   { id: 'home', icon: '🏠', labelKey: 'nav_home' },
   { id: 'signals', icon: '📈', labelKey: 'nav_signals' },
   { id: 'courses', icon: '📚', labelKey: 'nav_courses' },
@@ -31,7 +31,7 @@ export function TmaNavigation() {
     }
   };
 
-  const isActive = (id: TmaPage) => {
+  const isActive = (id: TmaPage | 'more') => {
     if (id === currentPage) return true;
     if (id === 'signals' && currentPage === 'payment') return true;
     return false;
