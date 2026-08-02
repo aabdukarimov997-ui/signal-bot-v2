@@ -8,9 +8,10 @@ interface NavigationState {
   previousPage: PageId | null;
   blogPostSlug: string | null;
   payProductType: PayProductType;
+  payTariffId: string | null;
   navigate: (page: PageId) => void;
   navigateToPost: (slug: string) => void;
-  navigateToPay: (productType?: PayProductType) => void;
+  navigateToPay: (productType?: PayProductType, tariffId?: string | null) => void;
   goBack: () => void;
 }
 
@@ -20,25 +21,27 @@ export function pageToHash(page: PageId, slug?: string | null): string {
   return `#${page}`;
 }
 
-/** URL hash → sahifa ID + slug + to'lov turi */
+/** URL hash → sahifa ID + slug + to'lov turi + tarif ID */
 export function parseHash(hash: string): {
   page: PageId;
   slug: string | null;
   payProductType: PayProductType;
+  payTariffId: string | null;
 } {
   const cleaned = hash.replace(/^#\/?/, '');
-  const [first, second] = cleaned.split('/');
+  const [first, second, third] = cleaned.split('/');
   if (first === 'blog-post') {
-    return { page: 'blog-post', slug: second || null, payProductType: 'signal' };
+    return { page: 'blog-post', slug: second || null, payProductType: 'signal', payTariffId: null };
   }
   if (first === 'pay') {
     return {
       page: 'pay',
       slug: null,
       payProductType: second === 'course' ? 'course' : 'signal',
+      payTariffId: third || null,
     };
   }
-  return { page: first || 'home', slug: null, payProductType: 'signal' };
+  return { page: first || 'home', slug: null, payProductType: 'signal', payTariffId: null };
 }
 
 /** Hash ni store bilan sinxronlashtiruvchi router (clientda bir marta ishga tushiriladi) */
@@ -50,12 +53,13 @@ export function initHashRouter() {
   hashRouterInitialized = true;
 
   const syncFromHash = (isInit = false) => {
-    const { page, slug, payProductType } = parseHash(window.location.hash);
+    const { page, slug, payProductType, payTariffId } = parseHash(window.location.hash);
     useNavigationStore.setState((state) => ({
       currentPage: page,
       previousPage: isInit ? state.previousPage : state.currentPage,
       blogPostSlug: slug,
       payProductType,
+      payTariffId,
     }));
   };
 
@@ -68,6 +72,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
   previousPage: null,
   blogPostSlug: null,
   payProductType: 'signal',
+  payTariffId: null,
   navigate: (page) => {
     if (typeof window === 'undefined') {
       set((state) => ({ currentPage: page, previousPage: state.currentPage }));
@@ -102,13 +107,14 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       window.location.hash = hash;
     }
   },
-  navigateToPay: (productType = 'signal') => {
-    const hash = `#pay/${productType}`;
+  navigateToPay: (productType = 'signal', tariffId = null) => {
+    const hash = `#pay/${productType}${tariffId ? `/${tariffId}` : ''}`;
     if (typeof window === 'undefined') {
       set((state) => ({
         currentPage: 'pay',
         previousPage: state.currentPage,
         payProductType: productType,
+        payTariffId: tariffId,
       }));
       return;
     }
@@ -117,6 +123,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
         currentPage: 'pay',
         previousPage: state.currentPage,
         payProductType: productType,
+        payTariffId: tariffId,
       }));
     } else {
       window.location.hash = hash;

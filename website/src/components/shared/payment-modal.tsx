@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Loader2, Send, ShieldCheck, UploadCloud } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -43,15 +43,19 @@ export default function PaymentModal({
   open,
   onOpenChange,
   productType,
+  initialTariffId = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   productType: 'signal' | 'course';
+  /** Reklama linki orqali kelganda avtomatik tanlanadigan tarif ID (#pay/signal/{id}) */
+  initialTariffId?: string | null;
 }) {
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
   const [tariffsLoading, setTariffsLoading] = useState(true);
   const [settings, setSettings] = useState<SettingsMap>({});
   const [selectedTariff, setSelectedTariff] = useState<Tariff | null>(null);
+  const screenshotRef = useRef<HTMLDivElement>(null);
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [telegramId, setTelegramId] = useState('');
   const [fullName, setFullName] = useState('');
@@ -71,14 +75,20 @@ export default function PaymentModal({
       ]);
       const tData = await tRes.json();
       const sData = await sRes.json();
-      setTariffs(tData.tariffs || []);
+      const loadedTariffs = tData.tariffs || [];
+      setTariffs(loadedTariffs);
       setSettings(sData.settings || {});
+      // Reklama deep-link'ida tarifni avtomatik tanlaymiz
+      if (initialTariffId) {
+        const match = loadedTariffs.find((t) => t.id === initialTariffId);
+        if (match) setSelectedTariff(match);
+      }
     } catch {
       setError("Ma'lumotlarni yuklashda xatolik");
     } finally {
       setTariffsLoading(false);
     }
-  }, [productType]);
+  }, [productType, initialTariffId]);
 
   useEffect(() => {
     if (open) {
@@ -139,6 +149,16 @@ export default function PaymentModal({
       setMethod(availableMethods[0].id);
     }
   }, [availableMethods, tariffsLoading, method]);
+
+  // Reklama deep-link'ida tarif avtomatik tanlansa, skrinshot bo'limiga sakraymiz
+  useEffect(() => {
+    if (!open || !initialTariffId || !selectedTariff) return;
+    if (selectedTariff.id !== initialTariffId) return;
+    const t = setTimeout(() => {
+      screenshotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 350);
+    return () => clearTimeout(t);
+  }, [open, initialTariffId, selectedTariff]);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -342,7 +362,7 @@ export default function PaymentModal({
             </div>
 
             {/* ── 5. Skrinshot yuklash ── */}
-            <div>
+            <div ref={screenshotRef} className="scroll-mt-6">
               <Label className="text-sm text-foreground/80 mb-2 block">
                 To‘lov skrinshoti <span className="text-destructive">*</span>
               </Label>

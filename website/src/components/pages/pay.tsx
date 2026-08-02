@@ -15,7 +15,7 @@ import PaymentModal from '@/components/shared/payment-modal';
  * Sahifa ichida PaymentModal avtomatik ochiq holatda turadi.
  */
 export default function PayPage() {
-  const { payProductType, navigate, previousPage } = useNavigationStore();
+  const { payProductType, payTariffId, navigate, previousPage } = useNavigationStore();
 
   const isCourse = payProductType === 'course';
 
@@ -62,6 +62,7 @@ export default function PayPage() {
           }
         }}
         productType={payProductType}
+        initialTariffId={payTariffId}
       />
 
       {/* Info section */}
