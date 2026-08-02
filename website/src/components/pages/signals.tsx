@@ -20,7 +20,7 @@ import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
-import PaymentModal from '@/components/shared/payment-modal';
+import { useNavigationStore } from '@/store';
 
 interface SignalData {
   id: string;
@@ -209,9 +209,9 @@ function defaultFeatures(months: number): string[] {
 }
 
 export default function SignalsPage() {
+  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     async function fetchSignalData() {
@@ -366,7 +366,7 @@ export default function SignalsPage() {
                 features={signalData?.monthlyFeatures ?? []}
                 months={1}
                 allPricesZero={false}
-                onBuy={() => setPayOpen(true)}
+                onBuy={() => navigateToPay('signal')}
               />
               <PricingCard
                 title="3 Oylik"
@@ -376,7 +376,7 @@ export default function SignalsPage() {
                 badge="Eng mashhur"
                 highlight
                 allPricesZero={false}
-                onBuy={() => setPayOpen(true)}
+                onBuy={() => navigateToPay('signal')}
               />
               <PricingCard
                 title="6 Oylik"
@@ -386,7 +386,7 @@ export default function SignalsPage() {
                 badge="Eng yaxshi qiymat"
                 glow
                 allPricesZero={false}
-                onBuy={() => setPayOpen(true)}
+                onBuy={() => navigateToPay('signal')}
               />
             </div>
           )}
@@ -534,9 +534,6 @@ export default function SignalsPage() {
           </AnimatedSection>
         </div>
       </section>
-
-      {/* To'lov modali */}
-      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="signal" />
 
       {/* Telegram CTA Section */}
       <section className="py-16 px-4 sm:px-6">

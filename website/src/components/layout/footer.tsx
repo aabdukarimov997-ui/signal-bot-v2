@@ -4,7 +4,7 @@ import { Logo } from '@/components/shared/logo';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Separator } from '@/components/ui/separator';
 import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { useNavigationStore } from '@/store';
+import { pageToHash } from '@/store';
 import { SITE, NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 import type { PageId } from '@/lib/constants';
 
@@ -26,8 +26,6 @@ const LEGAL_LINKS: { id: PageId; label: string }[] = [
 ];
 
 export function Footer() {
-  const navigate = useNavigationStore((s) => s.navigate);
-
   return (
     <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
       {/* Background patterns */}
@@ -68,14 +66,13 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   {QUICK_LINKS.map((link) => (
                     <li key={link.id}>
-                      <button
-                        type="button"
-                        onClick={() => navigate(link.id)}
+                      <a
+                        href={pageToHash(link.id)}
                         className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
                         <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -90,14 +87,13 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   {RESOURCE_LINKS.map((link) => (
                     <li key={link.label}>
-                      <button
-                        type="button"
-                        onClick={() => navigate(link.id)}
+                      <a
+                        href={pageToHash(link.id)}
                         className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
                         <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>
@@ -112,14 +108,13 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   {LEGAL_LINKS.map((link) => (
                     <li key={link.label}>
-                      <button
-                        type="button"
-                        onClick={() => navigate(link.id)}
+                      <a
+                        href={pageToHash(link.id)}
                         className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                       >
                         <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>

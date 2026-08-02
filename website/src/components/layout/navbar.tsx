@@ -32,7 +32,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { useNavigationStore, useAuthStore, useUIStore } from '@/store';
+import { useNavigationStore, useAuthStore, useUIStore, pageToHash } from '@/store';
 import { NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -52,7 +52,7 @@ interface LoadingScreenProps {
 }
 
 export function Navbar({ className }: LoadingScreenProps) {
-  const { currentPage, navigate } = useNavigationStore();
+  const { currentPage } = useNavigationStore();
   const { user } = useAuthStore();
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [scrolled, setScrolled] = useState(false);
@@ -101,10 +101,9 @@ export function Navbar({ className }: LoadingScreenProps) {
             const isActive = currentPage === item.id;
 
             return (
-              <button
+              <a
                 key={item.id}
-                type="button"
-                onClick={() => navigate(item.id)}
+                href={pageToHash(item.id)}
                 className={cn(
                   'relative px-3 py-2 text-sm font-medium transition-colors rounded-md group',
                   isActive
@@ -125,7 +124,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                 )}
                 {/* Gold underline on hover */}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-gradient-to-r from-gold/0 via-gold/60 to-gold/0 group-hover:w-3/4 transition-all duration-300 rounded-full" />
-              </button>
+              </a>
             );
           })}
         </div>
@@ -134,37 +133,31 @@ export function Navbar({ className }: LoadingScreenProps) {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('dashboard')}
-                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+              <a
+                href="#dashboard"
+                className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
               >
                 <LayoutDashboard className="size-4 mr-1.5" />
                 Dashboard
-              </Button>
+              </a>
               {isAdmin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('admin-users')}
-                  className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+                <a
+                  href="#admin-users"
+                  className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
                 >
                   <Shield className="size-4 mr-1.5" />
                   Admin
-                </Button>
+                </a>
               )}
             </>
           ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('login')}
-              className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+            <a
+              href="#login"
+              className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
             >
               <LogIn className="size-4 mr-1.5" />
               Login
-            </Button>
+            </a>
           )}
 
           {/* Theme Toggle */}
@@ -212,13 +205,10 @@ export function Navbar({ className }: LoadingScreenProps) {
                   const isActive = currentPage === item.id;
 
                   return (
-                    <button
+                    <a
                       key={item.id}
-                      type="button"
-                      onClick={() => {
-                        navigate(item.id);
-                        setMobileMenuOpen(false);
-                      }}
+                      href={pageToHash(item.id)}
+                      onClick={() => setMobileMenuOpen(false)}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         isActive
@@ -228,7 +218,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                     >
                       {Icon && <Icon className="size-4 shrink-0" />}
                       {item.label}
-                    </button>
+                    </a>
                   );
                 })}
               </div>
@@ -238,43 +228,34 @@ export function Navbar({ className }: LoadingScreenProps) {
               <div className="p-4 space-y-2">
                 {user ? (
                   <>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        navigate('dashboard');
-                        setMobileMenuOpen(false);
-                      }}
+                    <a
+                      href="#dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                     >
                       <LayoutDashboard className="size-4 mr-2" />
                       Dashboard
-                    </Button>
+                    </a>
                     {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          navigate('admin-users');
-                          setMobileMenuOpen(false);
-                        }}
+                      <a
+                        href="#admin-users"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                       >
                         <Shield className="size-4 mr-2" />
                         Admin Panel
-                      </Button>
+                      </a>
                     )}
                   </>
                 ) : (
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      navigate('login');
-                      setMobileMenuOpen(false);
-                    }}
+                  <a
+                    href="#login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
                   >
                     <LogIn className="size-4 mr-2" />
                     Login
-                  </Button>
+                  </a>
                 )}
 
                 <a

@@ -1,7 +1,8 @@
 'use client';
 
+import { useLayoutEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useNavigationStore } from '@/store';
+import { useNavigationStore, initHashRouter } from '@/store';
 import HomePage from '@/components/pages/home';
 import CoursePage from '@/components/pages/course';
 import SignalsPage from '@/components/pages/signals';
@@ -15,6 +16,7 @@ import ContactPage from '@/components/pages/contact';
 import LoginPage from '@/components/pages/login';
 import DashboardPage from '@/components/pages/dashboard';
 import AdminPanel from '@/components/pages/admin';
+import PayPage from '@/components/pages/pay';
 
 const pageTransition = {
   initial: { opacity: 0, y: 12 },
@@ -42,6 +44,7 @@ function PageRouter() {
     contact: ContactPage,
     login: LoginPage,
     dashboard: DashboardPage,
+    pay: PayPage,
   };
 
   const PageComponent = pages[currentPage] || HomePage;
@@ -62,5 +65,11 @@ function PageRouter() {
 }
 
 export default function Home() {
+  // useLayoutEffect — paint'dan oldin hash'ni o'qib, #signals kabi
+  // deep-link'da home'ning bir lahzali flash'ini oldini oladi
+  useLayoutEffect(() => {
+    initHashRouter();
+  }, []);
+
   return <PageRouter />;
 }

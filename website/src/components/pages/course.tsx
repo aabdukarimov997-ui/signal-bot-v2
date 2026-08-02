@@ -19,7 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { GeometricPattern, ArabesquePattern, CornerOrnament, OrientalDivider } from '@/components/shared/oriental-pattern';
-import PaymentModal from '@/components/shared/payment-modal';
+import { TELEGRAM } from '@/lib/constants';
+import { useNavigationStore } from '@/store';
 
 /* ──────────────── animation helpers ──────────────── */
 const stagger = {
@@ -136,29 +137,43 @@ function PricingCard({
       </ul>
 
       {/* CTA button */}
-      <Button
-        onClick={onBuy}
-        size="lg"
-        className={cn(
-          'w-full rounded-xl text-sm font-semibold',
-          glow
-            ? 'bg-gold text-gold-foreground hover:bg-gold/90'
-            : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
-        )}
-        variant={glow ? 'default' : 'outline'}
-      >
-        {hasPrice ? 'Sotib olish' : "Botga murojaat qiling"}
-        <ArrowRight className="size-4 ml-1.5" />
-      </Button>
+      {hasPrice ? (
+        <Button
+          onClick={onBuy}
+          size="lg"
+          className={cn(
+            'w-full rounded-xl text-sm font-semibold',
+            glow
+              ? 'bg-gold text-gold-foreground hover:bg-gold/90'
+              : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
+          )}
+          variant={glow ? 'default' : 'outline'}
+        >
+          Sotib olish
+          <ArrowRight className="size-4 ml-1.5" />
+        </Button>
+      ) : (
+        <Button
+          asChild
+          size="lg"
+          className="w-full rounded-xl text-sm font-semibold border border-glass-border text-gold hover:text-white hover:bg-white/5"
+          variant="outline"
+        >
+          <a href={TELEGRAM.BOT} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2">
+            Botga murojaat qiling
+            <ArrowRight className="size-4 ml-1.5" />
+          </a>
+        </Button>
+      )}
     </GlassCard>
   );
 }
 
 /* ──────────────── main component ──────────────── */
 export default function CoursePage() {
+  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -284,7 +299,7 @@ export default function CoursePage() {
                     ]
               }
               index={0}
-              onBuy={() => setPayOpen(true)}
+              onBuy={() => navigateToPay('course')}
             />
             <PricingCard
               tier="Professional"
@@ -304,7 +319,7 @@ export default function CoursePage() {
               }
               highlightBorder
               index={1}
-              onBuy={() => setPayOpen(true)}
+              onBuy={() => navigateToPay('course')}
             />
             <PricingCard
               tier="Master"
@@ -325,7 +340,7 @@ export default function CoursePage() {
               }
               glow
               index={2}
-              onBuy={() => setPayOpen(true)}
+              onBuy={() => navigateToPay('course')}
             />
           </div>
         )}
@@ -453,8 +468,6 @@ export default function CoursePage() {
       <OrientalDivider />
       {telegramCta}
 
-      {/* To'lov modali */}
-      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="course" />
     </main>
   );
 }
