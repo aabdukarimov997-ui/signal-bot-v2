@@ -65,7 +65,10 @@ async def create_subscription(
             # Extend existing subscription (add days to current end_date)
             # Eslatma flaglarini RESET qilamiz — yangi muddat bo'yicha
             # eslatmalar qayta hisoblansin (7/3/1 kun qolganda 1 martadan)
-            existing_sub.end_date = existing_sub.end_date + timedelta(days=duration_days)
+            # Bazani max(now, end_date) qilamiz — end_date o'tib ketgan bo'lsa
+            # (eski aktiv qator, hali expire bo'lmagan) kunlardan yutqazmaslik uchun
+            base = max(now, existing_sub.end_date)
+            existing_sub.end_date = base + timedelta(days=duration_days)
             existing_sub.reminder_7_sent = False
             existing_sub.reminder_3_sent = False
             existing_sub.reminder_1_sent = False
@@ -95,7 +98,10 @@ async def extend_subscription(user_id: str, extra_days: int) -> Optional[Subscri
         )
         sub = result.scalars().first()
         if sub:
-            sub.end_date = sub.end_date + timedelta(days=extra_days)
+            # Bazani max(now, end_date) qilamiz — end_date o'tib ketgan bo'lsa
+            # foydalanuvchi kunlardan yutqazmasligi uchun
+            base = max(datetime.now(timezone.utc), sub.end_date)
+            sub.end_date = base + timedelta(days=extra_days)
             # Eslatma flaglarini reset qilamiz — yangi muddat bo'yicha hisoblansin
             sub.reminder_7_sent = False
             sub.reminder_3_sent = False
@@ -132,11 +138,18 @@ async def get_expiring_soon(days_left: int, days_min: int = 0) -> list[Subscript
         target_max = now + timedelta(days=days_left)
         target_min = now + timedelta(days=days_min)
         result = await session.execute(
-            select(Subscription).join(User, Subscription.user_id == User.id).where(
+            select(Subscription)
+            .join(User, Subscription.user_id == User.id)
+            .outerjoin(SignalTariff, Subscription.tariff_id == SignalTariff.id)
+            .where(
                 Subscription.status == "active",
                 Subscription.end_date <= target_max,
                 Subscription.end_date > target_min,
             )
+            # Dublikat aktiv qatorlarni oldini olish: har bir (user, product_type) uchun
+            # FAQAT eng oxirgi muddatli obuna qaytariladi — eski qator eslatma trigger qilmaydi
+            .distinct(User.id, SignalTariff.product_type)
+            .order_by(User.id, SignalTariff.product_type, Subscription.end_date.desc())
         )
         return list(result.scalars().all())
 

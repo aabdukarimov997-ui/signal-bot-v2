@@ -53,6 +53,11 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
       }
 
+      // Dublikat tasdiqlashni oldini olish — faqat 'pending' to'lov tasdiqlanadi
+      if (payment.status !== 'pending') {
+        return NextResponse.json({ error: 'To‘lov allaqachon ko‘rib chiqilgan' }, { status: 409 });
+      }
+
       // Get tariff
       const tariffResult = await query(
         `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
@@ -71,17 +76,43 @@ export async function PUT(request: Request) {
         await query(`UPDATE ${TABLES.users} SET referral_bonus_days = 0 WHERE id = $1`, [payment.user_id]);
       }
 
-      // Create subscription
+      // Create or EXTEND subscription (dublikat aktiv qatorlardan qochamiz)
       if (tariff) {
-        const startDate = new Date().toISOString();
-        const endDate = new Date(
-          Date.now() + (tariff.duration_months * 30 + bonusDays) * 24 * 60 * 60 * 1000
-        ).toISOString();
-        await query(
-          `INSERT INTO ${TABLES.subscriptions} (user_id, tariff_id, status, start_date, end_date, product_type)
-           VALUES ($1, $2, 'active', $3, $4, $5)`,
-          [payment.user_id, payment.product_id, startDate, endDate, payment.product_type]
+        const tariffDays = tariff.duration_days || (tariff.duration_months || 0) * 30;
+        const totalDays = tariffDays + bonusDays;
+
+        const existingRes = await query(
+          `SELECT s.* FROM ${TABLES.subscriptions} s
+           JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id
+           WHERE s.user_id = $1 AND s.status = 'active' AND t.product_type = $2
+           ORDER BY s.end_date DESC LIMIT 1`,
+          [payment.user_id, payment.product_type]
         );
+        const existingSub = existingRes.rows[0];
+
+        if (existingSub) {
+          const baseTime = Math.max(Date.now(), new Date(existingSub.end_date).getTime());
+          const newEnd = new Date(baseTime + totalDays * 24 * 60 * 60 * 1000);
+          await query(
+            `UPDATE ${TABLES.subscriptions}
+             SET end_date = $1,
+                 reminder_7_sent = false,
+                 reminder_3_sent = false,
+                 reminder_1_sent = false
+             WHERE id = $2`,
+            [newEnd.toISOString(), existingSub.id]
+          );
+        } else {
+          const startDate = new Date().toISOString();
+          const endDate = new Date(
+            Date.now() + totalDays * 24 * 60 * 60 * 1000
+          ).toISOString();
+          await query(
+            `INSERT INTO ${TABLES.subscriptions} (user_id, tariff_id, status, start_date, end_date, product_type, reminder_7_sent, reminder_3_sent, reminder_1_sent)
+             VALUES ($1, $2, 'active', $3, $4, $5, false, false, false)`,
+            [payment.user_id, payment.product_id, startDate, endDate, payment.product_type]
+          );
+        }
       }
 
       // Update payment status
