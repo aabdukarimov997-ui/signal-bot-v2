@@ -30,7 +30,7 @@ admin_blog_router = Router()
 
 BLOG_TABLE = '"website"."BlogPost"'
 USER_TABLE = '"website"."User"'
-DEFAULT_SITE_URL = "https://website-production-8ecf.up.railway.app"
+DEFAULT_SITE_URL = "https://atanalysis.serveirc.com"
 
 # Sayt blog manzili — bot sozlamalaridagi website_url dan olinadi
 async def _site_url() -> str:

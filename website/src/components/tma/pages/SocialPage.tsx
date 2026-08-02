@@ -12,7 +12,7 @@ export function SocialPage() {
     { icon: '📷', labelKey: 'instagram', url: 'https://instagram.com/abdulloh_treydr', color: 'from-[#833ab4] to-[#fd1d1d]' },
     { icon: '▶️', labelKey: 'youtube', url: 'https://youtube.com/@abdulloh_treydr', color: 'from-[#ff0000] to-[#cc0000]' },
     { icon: '🐦', labelKey: 'twitter', url: 'https://x.com/abdulloh_treydr', color: 'from-[#1da1f2] to-[#0d8bd9]' },
-    { icon: '🌐', labelKey: 'website', url: 'https://website-production-69eb.up.railway.app', color: 'from-[#d4a72c] to-[#8b5e3c]' },
+    { icon: '🌐', labelKey: 'website', url: 'https://atanalysis.serveirc.com', color: 'from-[#d4a72c] to-[#8b5e3c]' },
     { icon: '📢', labelKey: 'free_channel', url: 'https://t.me/Mexc_Kucoin_Bitget', color: 'from-[#2dd4a0] to-[#1a9e76]' },
   ];
 
