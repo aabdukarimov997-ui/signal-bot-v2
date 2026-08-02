@@ -44,6 +44,24 @@ export function parseHash(hash: string): {
   return { page: first || 'home', slug: null, payProductType: 'signal', payTariffId: null };
 }
 
+/** Reklama deep-linki: ?page=pay&type=signal&tariff={id} — # belgisisiz.
+ *  Ijtimoiy tarmoqlarda # belgisi linkni buza oladi, shuning uchun query ishlatamiz. */
+export function parseQueryParams(): {
+  page: PageId | null;
+  payProductType: PayProductType;
+  payTariffId: string | null;
+} {
+  if (typeof window === 'undefined') {
+    return { page: null, payProductType: 'signal', payTariffId: null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+  if (!page) return { page: null, payProductType: 'signal', payTariffId: null };
+  const payProductType: PayProductType = params.get('type') === 'course' ? 'course' : 'signal';
+  const payTariffId = params.get('tariff');
+  return { page, payProductType, payTariffId };
+}
+
 /** Hash ni store bilan sinxronlashtiruvchi router (clientda bir marta ishga tushiriladi) */
 let hashRouterInitialized = false;
 
@@ -63,7 +81,20 @@ export function initHashRouter() {
     }));
   };
 
-  syncFromHash(true);
+  // Avval query-param deep-linkni tekshiramiz (reklama linklari: ?page=pay&type=signal&tariff={id})
+  const query = parseQueryParams();
+  if (query.page) {
+    useNavigationStore.setState((state) => ({
+      currentPage: query.page as PageId,
+      previousPage: state.previousPage,
+      blogPostSlug: null,
+      payProductType: query.payProductType,
+      payTariffId: query.payTariffId,
+    }));
+  } else {
+    syncFromHash(true);
+  }
+
   window.addEventListener('hashchange', () => syncFromHash());
 }
 
