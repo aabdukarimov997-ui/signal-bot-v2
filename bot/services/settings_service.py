@@ -5,6 +5,15 @@ from sqlalchemy import select, delete
 
 from bot.database.session import get_session
 from bot.models.project_settings import ProjectSettings
+from bot.models.tariff import SignalTariff
+
+# Price settings that map to signal_tariffs rows
+PRICE_TARIFF_MAP = {
+    "price_1_month": ("signal", 1),
+    "price_3_month": ("signal", 3),
+    "price_6_month": ("signal", 6),
+    "course_price_1_month": ("course", 1),
+}
 
 # Default settings keys with descriptions
 SETTINGS_KEYS = {
@@ -129,6 +138,23 @@ async def set_setting(key: str, value: str) -> None:
         else:
             desc = SETTINGS_KEYS.get(key, "")
             session.add(ProjectSettings(key=key, value=value, description=desc))
+
+        # Sync price settings with signal_tariffs so bot shows updated prices
+        if key in PRICE_TARIFF_MAP:
+            product_type, duration = PRICE_TARIFF_MAP[key]
+            try:
+                new_price = float(value)
+            except (TypeError, ValueError):
+                return
+            tariff_result = await session.execute(
+                select(SignalTariff).where(
+                    SignalTariff.product_type == product_type,
+                    SignalTariff.duration_months == duration,
+                )
+            )
+            tariff = tariff_result.scalar_one_or_none()
+            if tariff:
+                tariff.price = new_price
 
 
 async def is_setup_completed() -> bool:
