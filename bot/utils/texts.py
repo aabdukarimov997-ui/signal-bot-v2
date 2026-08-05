@@ -261,6 +261,7 @@ ADMIN_STATS_TEXT = (
     "📈 <b>Statistika</b>\n\n"
     "👥 Foydalanuvchilar: <b>{users}</b>\n"
     "✅ Aktiv obunalar: <b>{subscriptions}</b>\n"
+    "🔐 Kanal a'zolari: <b>{channel_members}</b>\n"
     "💰 Umumiy daromad: <b>${revenue}</b>\n"
     "📅 Bugungi daromad: <b>${today_revenue}</b>"
 )
