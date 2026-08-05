@@ -1,8 +1,10 @@
 """
 💰 USD → UZB SO'M (UZS) jonli kurs xizmati.
 
-Markaziy Bank API dan USD/UZS kursini oladi va 5 daqiqa cache'laydi.
-API: https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/
+USD/UZS kursini oladi va 5 daqiqa cache'laydi.
+Bir nechta API manbalari:
+1. CBU (Markaziy Bank) — https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/
+2. open.er-api.com (fallback) — https://open.er-api.com/v6/latest/USD
 """
 
 import logging
@@ -13,17 +15,57 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-# CBU API endpoint — USD kursi
+# API endpoints — USD kursi
 CBU_API_URL = "https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/"
+ER_API_URL = "https://open.er-api.com/v6/latest/USD"
 
 # Cache: {rate: float, timestamp: float}
 _cache: dict[str, float | None] = {"rate": None, "timestamp": 0}
 CACHE_TTL = 300  # 5 daqiqa
 
+# Oxirgi ma'lum kurs (fallback)
+FALLBACK_RATE = 11900.0
+
 
 def _format_uzs(amount: float) -> str:
     """Summani UZS formatida chiroyli ko'rsatish: 1 250 000 so'm"""
     return f"{amount:,.0f}".replace(",", " ") + " so'm"
+
+
+async def _fetch_cbu() -> Optional[float]:
+    """Markaziy Bank API dan USD/UZS kursini oladi."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(CBU_API_URL, timeout=8) as resp:
+                if resp.status != 200:
+                    logger.warning("CBU API %d", resp.status)
+                    return None
+                data = await resp.json()
+                if isinstance(data, list) and len(data) > 0:
+                    rate_str = data[0].get("Rate")
+                    if rate_str:
+                        return float(rate_str)
+    except Exception as e:
+        logger.warning("CBU API xatolik: %s", e)
+    return None
+
+
+async def _fetch_er_api() -> Optional[float]:
+    """open.er-api.com dan USD/UZS kursini oladi (fallback)."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(ER_API_URL, timeout=8) as resp:
+                if resp.status != 200:
+                    logger.warning("ER API %d", resp.status)
+                    return None
+                data = await resp.json()
+                if data.get("result") == "success":
+                    rate = data.get("rates", {}).get("UZS")
+                    if rate:
+                        return float(rate)
+    except Exception as e:
+        logger.warning("ER API xatolik: %s", e)
+    return None
 
 
 async def get_usd_uzs_rate(*, force_refresh: bool = False) -> Optional[float]:
@@ -32,40 +74,35 @@ async def get_usd_uzs_rate(*, force_refresh: bool = False) -> Optional[float]:
     1 USD = ? UZS
 
     Avval cache'dan tekshiradi, agar 5 daqiqadan eski bo'lsa yoki
-    force_refresh=True bo'lsa, CBU API dan yangilab oladi.
+    force_refresh=True bo'lsa, API'dan yangilab oladi.
     """
     now = time.time()
     if not force_refresh and _cache["rate"] is not None and (now - _cache["timestamp"]) < CACHE_TTL:
         return _cache["rate"]
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(CBU_API_URL, timeout=10) as resp:
-                if resp.status != 200:
-                    logger.warning("CBU API %d: %s", resp.status, await resp.text())
-                    return _cache["rate"]  # Eski kursni qaytar
+    # 1) CBU API
+    rate = await _fetch_cbu()
+    if rate is not None:
+        _cache["rate"] = rate
+        _cache["timestamp"] = now
+        logger.info("USD/UZS kurs yangilandi (CBU): 1 USD = %.2f UZS", rate)
+        return rate
 
-                data = await resp.json()
-                # API returns: [{"id": "1", "Code": "USD", "Ccy": "USD", ... "Rate": "12950.00"}]
-                if isinstance(data, list) and len(data) > 0:
-                    rate_str = data[0].get("Rate")
-                    if rate_str:
-                        rate = float(rate_str)
-                        _cache["rate"] = rate
-                        _cache["timestamp"] = now
-                        logger.info("USD/UZS kurs yangilandi: 1 USD = %.2f UZS", rate)
-                        return rate
+    # 2) Fallback: open.er-api.com
+    rate = await _fetch_er_api()
+    if rate is not None:
+        _cache["rate"] = rate
+        _cache["timestamp"] = now
+        logger.info("USD/UZS kurs yangilandi (ER API): 1 USD = %.2f UZS", rate)
+        return rate
 
-        logger.warning("CBU API dan kurs olishda xatolik: %s", data)
+    # 3) Cache'da eski kurs bo'lsa, uni qaytar
+    if _cache["rate"] is not None:
         return _cache["rate"]
 
-    except Exception as e:
-        logger.error("CBU API xatolik: %s", e)
-        # Agar cache'da kurs bo'lsa, eski kursni qaytar
-        if _cache["rate"] is not None:
-            return _cache["rate"]
-        # Fallback: so'nggi ma'lum kurs
-        return 13000.0  # 1 USD ≈ 13 000 UZS (fallback)
+    # 4) So'nggi ma'lum kurs
+    logger.warning("Kurs olishda xatolik — fallback %.0f ishlatilmoqda", FALLBACK_RATE)
+    return FALLBACK_RATE
 
 
 async def get_uzs_amount(usd_amount: float) -> tuple[float, float, str]:
@@ -74,7 +111,7 @@ async def get_uzs_amount(usd_amount: float) -> tuple[float, float, str]:
 
     Returns: (uzs_amount, exchange_rate, formatted_uzs_string)
     """
-    rate = await get_usd_uzs_rate() or 13000.0
+    rate = await get_usd_uzs_rate() or FALLBACK_RATE
     uzs = usd_amount * rate
     return uzs, rate, _format_uzs(uzs)
 
@@ -93,7 +130,7 @@ async def format_payment_with_uzs(
 
     Returns: (formatted_text, exchange_rate)
     """
-    rate = await get_usd_uzs_rate(force_refresh=force_refresh) or 13000.0
+    rate = await get_usd_uzs_rate(force_refresh=force_refresh) or FALLBACK_RATE
     uzs_amount = usd_amount * rate
     uzs_str = _format_uzs(uzs_amount)
 
