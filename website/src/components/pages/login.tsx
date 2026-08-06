@@ -59,6 +59,28 @@ export default function LoginPage() {
         role: user.role,
       });
 
+      // Zustand persist localStorage'ga yozilishini kutmagan holda
+      // to'g'ridan-to'g'ri saqlaymiz (reload uchun)
+      try {
+        localStorage.setItem(
+          'aaa-auth',
+          JSON.stringify({
+            state: {
+              user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+              },
+              isLoading: false,
+            },
+            version: 0,
+          })
+        );
+      } catch (e) {
+        console.error('localStorage write failed:', e);
+      }
+
       toast.success(`Xush kelibsiz, ${user.name}!`);
 
       // Admin bo'lsa — admin paneldan chiqmasdan qoladi
