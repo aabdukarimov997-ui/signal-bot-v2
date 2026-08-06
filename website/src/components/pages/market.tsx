@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
@@ -9,10 +10,21 @@ import {
   Bitcoin,
   Hexagon,
   Sun,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
+import { CRYPTO_TICKERS } from '@/lib/constants';
+
+interface CryptoPrice {
+  symbol: string;
+  price: number;
+  changePercent: number;
+  high: number;
+  low: number;
+}
 
 const CRYPTO_INFO: {
   ticker: string;
@@ -55,7 +67,51 @@ const CRYPTO_INFO: {
   },
 ];
 
+function formatPrice(price: number): string {
+  if (price >= 1000) return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  if (price >= 1) return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 6 });
+}
+
 export default function MarketPage() {
+  const [prices, setPrices] = useState<Record<string, CryptoPrice>>({});
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [error, setError] = useState(false);
+
+  const fetchPrices = async () => {
+    try {
+      const symbols = CRYPTO_TICKERS.join(',');
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${symbols}`);
+      if (!res.ok) throw new Error('Binance API error');
+      const data = await res.json();
+      const map: Record<string, CryptoPrice> = {};
+      for (const item of data) {
+        map[item.symbol] = {
+          symbol: item.symbol,
+          price: parseFloat(item.lastPrice),
+          changePercent: parseFloat(item.priceChangePercent),
+          high: parseFloat(item.highPrice),
+          low: parseFloat(item.lowPrice),
+        };
+      }
+      setPrices(map);
+      setLastUpdate(new Date());
+      setError(false);
+    } catch (e) {
+      console.error('Price fetch failed:', e);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000); // har 30 soniyada yangilanadi
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -68,7 +124,7 @@ export default function MarketPage() {
             transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-6">
-              <BarChart3 className="w-4 h-4 text-gold" />
+              <BarChart3 className="w-4 h-4 text-silver" />
               <span className="text-sm text-muted-foreground">
                 Real-time ma&apos;lumotlar
               </span>
@@ -91,28 +147,39 @@ export default function MarketPage() {
             className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground"
           >
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Live</span>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  error ? 'bg-red-400' : 'bg-emerald-400'
+                } animate-pulse`}
+              />
+              <span>{error ? 'Offline' : 'Live'}</span>
             </div>
             <span>Binance</span>
             <span>Asia/Tashkent</span>
+            {lastUpdate && !error && (
+              <span className="text-xs opacity-60">
+                Yangilandi: {lastUpdate.toLocaleTimeString('uz-UZ')}
+              </span>
+            )}
           </motion.div>
         </div>
       </section>
 
-      {/* Market Info Cards */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-16">
+      {/* Live Prices */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-12">
         <div className="max-w-7xl mx-auto">
-          <AnimatedSection delay={0.1}>
+          <AnimatedSection delay={0.05}>
             <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-gold" />
-              Kripto Valyutalar Haqida
+              <TrendingUp className="w-5 h-5 text-silver" />
+              Jonli Narxlar
             </h3>
           </AnimatedSection>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {CRYPTO_INFO.map((crypto, i) => {
               const Icon = crypto.icon;
+              const price = prices[crypto.ticker];
+              const up = price ? price.changePercent >= 0 : true;
               return (
                 <GlassCard key={crypto.ticker} index={i} hover>
                   <div className="flex flex-col gap-4">
@@ -129,7 +196,7 @@ export default function MarketPage() {
                           style={{ color: crypto.color }}
                         />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h4 className="font-semibold text-foreground">
                           {crypto.name}
                         </h4>
@@ -137,7 +204,54 @@ export default function MarketPage() {
                           {crypto.ticker}
                         </p>
                       </div>
+                      {price && (
+                        <div
+                          className={`flex items-center gap-1 text-sm font-semibold ${
+                            up ? 'text-emerald-400' : 'text-red-400'
+                          }`}
+                        >
+                          {up ? (
+                            <TrendingUp className="w-4 h-4" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4" />
+                          )}
+                          {up ? '+' : ''}
+                          {price.changePercent.toFixed(2)}%
+                        </div>
+                      )}
                     </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-end justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          Narx
+                        </span>
+                        <span className="text-2xl font-bold text-foreground tabular-nums">
+                          {loading && !price
+                            ? '...'
+                            : price
+                            ? formatPrice(price.price)
+                            : '—'}
+                        </span>
+                      </div>
+                      {price && (
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="glass rounded-lg px-3 py-2">
+                            <div className="text-muted-foreground">24h Yuqori</div>
+                            <div className="font-medium text-emerald-400 tabular-nums">
+                              {formatPrice(price.high)}
+                            </div>
+                          </div>
+                          <div className="glass rounded-lg px-3 py-2">
+                            <div className="text-muted-foreground">24h Past</div>
+                            <div className="font-medium text-red-400 tabular-nums">
+                              {formatPrice(price.low)}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {crypto.description}
                     </p>
