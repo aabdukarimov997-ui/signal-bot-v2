@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type PageId = string;
 export type PayProductType = 'signal' | 'course';
@@ -179,13 +180,20 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isLoading: false,
-  login: (user) => set({ user }),
-  logout: () => set({ user: null }),
-  setLoading: (isLoading) => set({ isLoading }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      isLoading: false,
+      login: (user) => set({ user }),
+      logout: () => set({ user: null }),
+      setLoading: (isLoading) => set({ isLoading }),
+    }),
+    {
+      name: 'aaa-auth',
+    }
+  )
+);
 
 interface UIState {
   isMobileMenuOpen: boolean;
