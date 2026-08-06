@@ -1,11 +1,12 @@
 'use client';
 
+import { Instagram, Youtube, Send } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Separator } from '@/components/ui/separator';
 import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament } from '@/components/shared/oriental-pattern';
 import { pageToHash } from '@/store';
-import { SITE, NAV_ITEMS, TELEGRAM } from '@/lib/constants';
+import { SITE, NAV_ITEMS, TELEGRAM, SOCIAL } from '@/lib/constants';
 import type { PageId } from '@/lib/constants';
 
 const QUICK_LINKS = NAV_ITEMS.map((item) => ({
@@ -129,13 +130,35 @@ export function Footer() {
                 <ul className="space-y-2.5">
                   <li>
                     <a
-                      href={TELEGRAM.MARKETING_CHANNEL}
+                      href={SOCIAL.INSTAGRAM}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
-                      Telegram Channel
+                      <Instagram className="w-4 h-4" />
+                      Instagram
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={SOCIAL.YOUTUBE}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                    >
+                      <Youtube className="w-4 h-4" />
+                      YouTube
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={SOCIAL.TELEGRAM}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      Telegram
                     </a>
                   </li>
                   <li>
@@ -145,7 +168,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
+                      <Send className="w-4 h-4" />
                       Telegram Bot
                     </a>
                   </li>
@@ -156,7 +179,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
+                      <Send className="w-4 h-4" />
                       Support
                     </a>
                   </li>

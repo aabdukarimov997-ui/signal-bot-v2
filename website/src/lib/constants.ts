@@ -4,6 +4,12 @@ export const TELEGRAM = {
   HELP: '@abdulloh1997ka',
 } as const;
 
+export const SOCIAL = {
+  INSTAGRAM: 'https://www.instagram.com/abdulloh_trader_signal',
+  YOUTUBE: 'https://www.youtube.com/@Abdullohtraderkanali',
+  TELEGRAM: 'https://t.me/abdullohtreydr',
+} as const;
+
 export const SITE = {
   NAME: 'AAA',
   FOUNDER: 'ABDULLOH',
