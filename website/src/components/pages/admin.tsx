@@ -83,6 +83,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
+import { MarketBackground } from '@/components/shared/market-background';
 import { AdminBotUsers } from '@/components/pages/admin-bot-users';
 import { AdminBotPayments } from '@/components/pages/admin-bot-payments';
 import dynamic from 'next/dynamic';
@@ -1300,6 +1301,7 @@ export default function AdminPanel() {
       <DesktopSidebar />
       <MobileSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin relative">
+        <MarketBackground />
         <GeometricPattern opacity={0.04} />
         {/* Burchak ornamentlari */}
         <CornerOrnament position="top-left" />
