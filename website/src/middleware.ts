@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // Admin subdomain'lar ro'yxati (admin.xxx.up.railway.app)
 const ADMIN_SUBDOMAINS = ['admin'];
 
+// To'liq admin domainlar (Railway avtomatik yaratgan)
+const ADMIN_HOSTS = [
+  'website-production-2b08.up.railway.app',
+  'admin-',
+];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
@@ -10,7 +16,10 @@ export function middleware(request: NextRequest) {
   // Subdomain aniqlash: admin.xxx.up.railway.app
   const subdomain = hostname.split('.')[0]?.toLowerCase();
 
-  const isAdminSubdomain = ADMIN_SUBDOMAINS.includes(subdomain) || hostname.startsWith('admin-');
+  const isAdminSubdomain =
+    ADMIN_SUBDOMAINS.includes(subdomain) ||
+    hostname.startsWith('admin-') ||
+    ADMIN_HOSTS.some((h) => h === hostname || hostname.startsWith(h));
 
   // Admin subdomain -> /admin ga yo'naltirish
   if (isAdminSubdomain && !pathname.startsWith('/admin')) {
