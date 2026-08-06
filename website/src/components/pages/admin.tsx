@@ -83,7 +83,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { MarketBackground } from '@/components/shared/market-background';
+import { AdminBackground } from '@/components/shared/admin-background';
 import { AdminBotUsers } from '@/components/pages/admin-bot-users';
 import { AdminBotPayments } from '@/components/pages/admin-bot-payments';
 import dynamic from 'next/dynamic';
@@ -102,6 +102,9 @@ const AdminBanners = dynamic(() => import('@/components/pages/admin-banners'), {
   loading: () => <LoadingState />,
 });
 const AdminAnalytics = dynamic(() => import('@/components/pages/admin-analytics'), {
+  loading: () => <LoadingState />,
+});
+const AdminAppearance = dynamic(() => import('@/components/pages/admin-appearance'), {
   loading: () => <LoadingState />,
 });
 
@@ -1254,6 +1257,8 @@ function AdminContent() {
       return <AdminCoupons />;
     case 'admin-telegram':
       return <AdminTelegram />;
+    case 'admin-appearance':
+      return <AdminAppearance />;
     default:
       return <AdminUsers />;
   }
@@ -1301,7 +1306,7 @@ export default function AdminPanel() {
       <DesktopSidebar />
       <MobileSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin relative">
-        <MarketBackground />
+        <AdminBackground />
         <GeometricPattern opacity={0.04} />
         {/* Burchak ornamentlari */}
         <CornerOrnament position="top-left" />

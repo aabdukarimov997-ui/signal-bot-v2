@@ -47,6 +47,7 @@ export const ADMIN_NAV_ITEMS = [
   { id: 'admin-bot-users', label: 'Bot Foyd.', icon: 'Users' },
   { id: 'admin-bot-payments', label: 'Bot Tolovlar', icon: 'CreditCard' },
   { id: 'admin-telegram', label: 'Telegram', icon: 'Send' },
+  { id: 'admin-appearance', label: 'Orqa fon', icon: 'Image' },
 ] as const;
 
 export const CRYPTO_TICKERS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'GRAMUSDT'] as const;
