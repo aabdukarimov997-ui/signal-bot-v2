@@ -135,7 +135,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <Instagram className="w-4 h-4" />
+                      <Instagram className="w-4 h-4 text-pink-500" />
                       Instagram
                     </a>
                   </li>
@@ -146,7 +146,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <Youtube className="w-4 h-4" />
+                      <Youtube className="w-4 h-4 text-red-600" />
                       YouTube
                     </a>
                   </li>
@@ -157,7 +157,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 text-sky-500" />
                       Telegram
                     </a>
                   </li>
@@ -168,7 +168,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 text-sky-500" />
                       Telegram Bot
                     </a>
                   </li>
@@ -179,7 +179,7 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 text-sky-500" />
                       Support
                     </a>
                   </li>
