@@ -60,6 +60,13 @@ export default function LoginPage() {
       });
 
       toast.success(`Xush kelibsiz, ${user.name}!`);
+
+      // Admin bo'lsa — admin paneldan chiqmasdan qoladi
+      if (user.role === 'ADMIN') {
+        window.location.href = '/admin';
+        return;
+      }
+
       navigate('dashboard');
     } catch (err) {
       const message =
@@ -120,15 +127,15 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="login-email"
-                type="email"
-                placeholder="email@example.com"
+                type="text"
+                placeholder="Login yoki email"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (error) setError(null);
                 }}
                 aria-invalid={!!error}
-                autoComplete="email"
+                autoComplete="username"
                 className="bg-glass border-glass-border h-11"
               />
             </div>
