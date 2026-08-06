@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigationStore, useAuthStore } from '@/store';
+import { useNavigationStore, useAuthStore, parseHash } from '@/store';
 import { ADMIN_NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 import { toast } from 'sonner';
 import {
@@ -1296,6 +1296,21 @@ function AccessDenied() {
    ═══════════════════════════════════════════════════════════════ */
 export default function AdminPanel() {
   const user = useAuthStore((s) => s.user);
+
+  // Admin panelda hashchange ni tinglash — sidebar navigatsiyasi uchun
+  useEffect(() => {
+    const sync = () => {
+      const { page } = parseHash(window.location.hash);
+      const navStore = useNavigationStore.getState();
+      if (navStore.currentPage !== page && typeof page === 'string') {
+        useNavigationStore.setState({ currentPage: page });
+      }
+    };
+    window.addEventListener('hashchange', sync);
+    // Boshlang'ich holatni sinxronlash
+    sync();
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
 
   if (!user || user.role !== 'ADMIN') {
     return <AccessDenied />;
