@@ -57,11 +57,10 @@ export function AdminBackground() {
 
   return (
     <>
-      {/* Orqa fon rasmi */}
+      {/* Orqa fon rasmi — eng orqa qatlam */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 overflow-hidden"
-        style={{ zIndex: 0 }}
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -69,15 +68,15 @@ export function AdminBackground() {
           alt=""
           className="w-full h-full object-cover"
           style={{
-            opacity: 0.5,
-            filter: bg.dim === 'dim' ? 'brightness(0.5)' : 'brightness(0.8)',
+            opacity: 0.4,
+            filter: bg.dim === 'dim' ? 'brightness(0.45)' : 'brightness(0.7)',
           }}
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.75) 50%, rgba(2,6,23,0.9) 100%)',
+              'linear-gradient(180deg, rgba(2,6,23,0.5) 0%, rgba(2,6,23,0.68) 50%, rgba(2,6,23,0.82) 100%)',
           }}
         />
       </div>

@@ -1318,9 +1318,11 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <DesktopSidebar />
-      <MobileSidebar />
-      <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin relative">
+      <div className="relative z-20">
+        <DesktopSidebar />
+        <MobileSidebar />
+      </div>
+      <main className="relative z-10 flex-1 min-w-0 overflow-y-auto scrollbar-thin">
         <AdminBackground />
         <GeometricPattern opacity={0.04} />
         {/* Burchak ornamentlari */}
