@@ -5,36 +5,24 @@ import { motion } from 'framer-motion';
 import { useTmaStore } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
 import { NationalFrame } from '../shared/UzbekPattern';
-import { api } from '@/lib/tma/api';
 
 export function PaymentPage() {
-  const { selectedTariff, user, navigate, setSubscription } = useTmaStore();
+  const { selectedTariff, navigate } = useTmaStore();
   const { t } = useLang();
   const [method, setMethod] = useState<'stars' | 'card' | null>(null);
   const [processing, setProcessing] = useState(false);
   const [done, setDone] = useState(false);
 
   const handleStarsPayment = async () => {
-    if (!user || !selectedTariff) return;
+    if (!selectedTariff) return;
     setProcessing(true);
     try {
-      // Try Telegram Stars via WebApp
+      // Bot'ga o'tamiz — u Stars invoice yuboradi, to'lov bot tomonida to'liq bajariladi
       // @ts-ignore
       const tg = window.Telegram?.WebApp;
       if (tg) {
-        // Send invoice via bot - open bot chat with message
         tg.openTelegramLink(`https://t.me/AT_analysis_bot?start=pay_stars_${selectedTariff.id}`);
       }
-      
-      // Create payment record
-      await api.createPayment({
-        userId: user.id,
-        productType: 'signal',
-        productId: selectedTariff.id,
-        amount: selectedTariff.price,
-        paymentMethod: 'stars',
-      });
-      
       setDone(true);
     } catch (err) {
       console.error(err);
@@ -44,25 +32,16 @@ export function PaymentPage() {
   };
 
   const handleCardPayment = async () => {
-    if (!user || !selectedTariff) return;
+    if (!selectedTariff) return;
     setProcessing(true);
     try {
-      // Create pending payment (admin will approve)
-      await api.createPayment({
-        userId: user.id,
-        productType: 'signal',
-        productId: selectedTariff.id,
-        amount: selectedTariff.price,
-        paymentMethod: 'card',
-      });
-      
-      // Open bot for card details + receipt upload
+      // Bot'ga o'tamiz — u to'lov usullari + chek yuklash oqimini ko'rsatadi,
+      // admin tasdiqlagach invite link beriladi
       // @ts-ignore
       const tg = window.Telegram?.WebApp;
       if (tg) {
         tg.openTelegramLink(`https://t.me/AT_analysis_bot?start=pay_card_${selectedTariff.id}`);
       }
-      
       setDone(true);
     } catch (err) {
       console.error(err);

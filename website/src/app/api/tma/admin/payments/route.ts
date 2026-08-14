@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import {
+  getChannelId,
+  getInviteLink,
+  notifyPaymentApproved,
+  notifyPaymentRejected,
+} from '@/lib/tma/telegram';
 
 export async function GET() {
   try {
@@ -120,11 +126,52 @@ export async function PUT(request: Request) {
         `UPDATE ${TABLES.payments} SET status = 'approved', reviewed_by = $1, reviewed_at = NOW() WHERE id = $2`,
         [adminTelegramId || 0, paymentId]
       );
+
+      // Bot tomoni: invite link yaratish + obunaga yozish + foydalanuvchiga Telegram xabar
+      try {
+        const channelId = await getChannelId(tariff);
+        const inviteLink = await getInviteLink(channelId);
+        if (inviteLink) {
+          await query(
+            `UPDATE ${TABLES.subscriptions} SET invite_link = $1
+             WHERE id = (SELECT s.id FROM ${TABLES.subscriptions} s
+                         WHERE s.user_id = $2 AND s.status = 'active' AND s.product_type = $3
+                         ORDER BY s.end_date DESC LIMIT 1)`,
+            [inviteLink, payment.user_id, payment.product_type]
+          );
+        }
+        if (user?.telegram_id) {
+          await notifyPaymentApproved(String(user.telegram_id), inviteLink);
+        }
+      } catch (e) {
+        console.error('Bot approve side failed:', e);
+      }
     } else if (action === 'reject') {
       await query(
         `UPDATE ${TABLES.payments} SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW() WHERE id = $2`,
         [adminTelegramId || 0, paymentId]
       );
+
+      // Bot tomoni: foydalanuvchiga rad etilgani haqida xabar
+      try {
+        const paymentResult = await query(
+          `SELECT * FROM ${TABLES.payments} WHERE id = $1 LIMIT 1`,
+          [paymentId]
+        );
+        const paymentRow = paymentResult.rows[0];
+        if (paymentRow) {
+          const userResult = await query(
+            `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
+            [paymentRow.user_id]
+          );
+          const targetUser = userResult.rows[0];
+          if (targetUser?.telegram_id) {
+            await notifyPaymentRejected(String(targetUser.telegram_id));
+          }
+        }
+      } catch (e) {
+        console.error('Bot reject side failed:', e);
+      }
     }
 
     return NextResponse.json({ success: true });

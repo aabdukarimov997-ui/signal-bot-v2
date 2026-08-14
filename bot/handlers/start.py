@@ -2,15 +2,16 @@ import logging
 
 from aiogram import Router, Bot, F
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, LabeledPrice
 from aiogram.fsm.context import FSMContext
 
 from bot.config import settings
 from bot.models.user import User
 from bot.services.user_service import get_or_create_user, update_user_activity, get_user_by_telegram_id
-from bot.services.settings_service import is_setup_completed, get_setting, get_admin_ids
-from bot.utils.keyboards import main_menu_kb
-from bot.utils.texts import START_TEXT
+from bot.services.settings_service import is_setup_completed, get_setting, get_admin_ids, get_enabled_payment_methods
+from bot.services.subscription_service import get_tariff_by_id
+from bot.utils.keyboards import main_menu_kb, payment_method_kb
+from bot.utils.texts import START_TEXT, PAYMENT_METHOD_TEXT
 from bot.utils.states import AdminSettingsStates
 
 start_router = Router()
@@ -29,6 +30,15 @@ async def _send_welcome(bot: Bot, chat_id: int, text: str, reply_markup, video_f
 @start_router.message(Command("start"))
 async def start_handler(message: Message, command: CommandObject, user: User, bot: Bot) -> None:
     await update_user_activity(user.telegram_id)
+
+    # TMA (Mini App) to'lov hand-off: /start pay_stars_{tariff_id} va /start pay_card_{tariff_id}
+    if command.args:
+        if command.args.startswith("pay_stars_"):
+            await _handle_pay_stars(message, user, bot, command.args.replace("pay_stars_", ""))
+            return
+        if command.args.startswith("pay_card_"):
+            await _handle_pay_card(message, user, bot, command.args.replace("pay_card_", ""))
+            return
 
     # Check if setup wizard is needed for admin
     if user.telegram_id in await get_admin_ids():
@@ -115,3 +125,57 @@ async def test_video_handler(message: Message, user: User, bot: Bot) -> None:
         return
     await message.answer(f"📹 Joriy file_id: <code>{current_video}</code>\n\nVideoni qayta yuboraman:")
     await _send_welcome(bot, message.chat.id, welcome_msg, None, current_video)
+
+# ─── TMA to'lov hand-off handler'lar ─────────────────────────────────
+# Mini App (TMA) dan /start pay_stars_{tariff_id} yoki /start pay_card_{tariff_id}
+# payload bilan keladi — bu yerda bot'ning nativ to'lov oqimiga ulanamiz.
+
+
+async def _handle_pay_stars(message: Message, user: User, bot: Bot, tariff_id: str) -> None:
+    """Telegram Stars to'lov: invoice yuboramiz, foydalanuvchi to'lagach
+    successful_payment_handler to'liq oqimni bajaradi (obuna + invite link + xabar)."""
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await message.answer("❌ Tarif topilmadi.")
+        return
+
+    stars_key = f"signal_stars_{tariff.duration_months}_month"
+    stars_from_db = await get_setting(stars_key)
+    stars_amount = 0
+    if stars_from_db and str(stars_from_db).isdigit():
+        stars_amount = int(stars_from_db)
+    if stars_amount <= 0:
+        stars_amount = tariff.stars_price or 0
+    if stars_amount <= 0:
+        await message.answer(
+            "❌ Stars narxi sozlanmagan. Iltimos, karta orqali to'lang yoki admin bilan bog'laning."
+        )
+        return
+
+    prices = [LabeledPrice(label=tariff.label or tariff.name, amount=int(stars_amount))]
+    await bot.send_invoice(
+        chat_id=message.chat.id,
+        title=f"📈 {tariff.label or tariff.name}",
+        description=f"Signal kanaliga {tariff.label or tariff.name} obuna",
+        payload=f"signal_stars_{tariff.id}",
+        provider_token="",
+        currency="XTR",
+        prices=prices,
+    )
+
+
+async def _handle_pay_card(message: Message, user: User, bot: Bot, tariff_id: str) -> None:
+    """Karta/chek to'lov: to'lov usullari menyusini ko'rsatamiz —
+    qolgan oqim (chek yuklash → admin tasdiqlash → invite link) nativ tarzda ishlaydi."""
+    tariff = await get_tariff_by_id(tariff_id)
+    if not tariff:
+        await message.answer("❌ Tarif topilmadi.")
+        return
+
+    enabled_methods = await get_enabled_payment_methods()
+    text = (
+        f"📈 <b>{tariff.label or tariff.name}</b>\n\n"
+        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n"
+        f"{PAYMENT_METHOD_TEXT}"
+    )
+    await message.answer(text, reply_markup=payment_method_kb(tariff.id, enabled_methods))

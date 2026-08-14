@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { sendAdminPaymentNotification } from '@/lib/tma/telegram';
 
 export async function POST(request: Request) {
   try {
@@ -90,6 +91,28 @@ export async function POST(request: Request) {
             [userId, productId, startDate, endDate]
           );
         }
+      }
+    }
+
+    // Adminlarga Telegram xabar yuboramiz (karta/chek to'lovlar uchun) —
+    // admin tugmani bossa, BOT to'liq oqimni bajaradi (invite link + obuna + xabar)
+    if (!isAutoApprove) {
+      try {
+        const userResult = await query(
+          `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
+          [userId]
+        );
+        const tariffResult = await query(
+          `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
+          [productId]
+        );
+        await sendAdminPaymentNotification(
+          result.rows[0],
+          userResult.rows[0],
+          tariffResult.rows[0]
+        );
+      } catch (e) {
+        console.error('Admin payment notification failed:', e);
       }
     }
 
