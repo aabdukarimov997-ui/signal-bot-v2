@@ -17,6 +17,7 @@ import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
+import PaymentModal from '@/components/shared/payment-modal';
 import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -103,6 +104,7 @@ function PricingCard({
   highlight,
   glow,
   allPricesZero,
+  onPay,
 }: {
   title: string;
   price: number;
@@ -112,6 +114,7 @@ function PricingCard({
   highlight?: boolean;
   glow?: boolean;
   allPricesZero: boolean;
+  onPay?: () => void;
 }) {
   return (
     <GlassCard
@@ -171,24 +174,39 @@ function PricingCard({
         )}
       </div>
 
-      <Button
-        asChild
-        className={
-          highlight
-            ? 'w-full bg-silver text-silver-foreground hover:bg-silver/90'
-            : 'w-full glass-card hover:bg-silver/10 text-silver'
-        }
-        size="lg"
-      >
-        <a
-          href={TELEGRAM.BOT}
-          target="_blank"
-          rel="noopener noreferrer"
+      {allPricesZero ? (
+        <Button
+          asChild
+          className={
+            highlight
+              ? 'w-full bg-silver text-silver-foreground hover:bg-silver/90'
+              : 'w-full glass-card hover:bg-silver/10 text-silver'
+          }
+          size="lg"
+        >
+          <a
+            href={TELEGRAM.BOT}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Send className="size-4" />
+            Botga yozing
+          </a>
+        </Button>
+      ) : (
+        <Button
+          onClick={onPay}
+          className={
+            highlight
+              ? 'w-full bg-silver text-silver-foreground hover:bg-silver/90'
+              : 'w-full glass-card hover:bg-silver/10 text-silver'
+          }
+          size="lg"
         >
           <Send className="size-4" />
-          {allPricesZero ? "Botga yozing" : 'Sotib olish'}
-        </a>
-      </Button>
+          Sotib olish
+        </Button>
+      )}
     </GlassCard>
   );
 }
@@ -214,6 +232,10 @@ function defaultFeatures(months: number): string[] {
 export default function SignalsPage() {
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [loading, setLoading] = useState(true);
+  // In-site to'lov uchun tariflar (oylar -> tarif ID)
+  const [tariffByMonths, setTariffByMonths] = useState<Record<number, string>>({});
+  const [payOpen, setPayOpen] = useState(false);
+  const [payTariffId, setPayTariffId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSignalData() {
@@ -230,7 +252,23 @@ export default function SignalsPage() {
       }
     }
     fetchSignalData();
+    // In-site to'lov uchun signal tariflarini yuklaymiz
+    fetch('/api/tma/tariffs?type=signal')
+      .then((r) => r.json())
+      .then((d) => {
+        const map: Record<number, string> = {};
+        for (const t of d.tariffs || []) {
+          if (t.durationMonths && t.isActive) map[t.durationMonths] = t.id;
+        }
+        setTariffByMonths(map);
+      })
+      .catch(() => {});
   }, []);
+
+  const openPay = (months: number) => {
+    setPayTariffId(tariffByMonths[months] ?? null);
+    setPayOpen(true);
+  };
 
   const monthlyPrice = signalData?.monthlyPrice ?? 0;
   const quarterlyPrice = signalData?.quarterlyPrice ?? 0;
@@ -361,6 +399,7 @@ export default function SignalsPage() {
                 features={signalData?.monthlyFeatures ?? []}
                 months={1}
                 allPricesZero={false}
+                onPay={() => openPay(1)}
               />
               <PricingCard
                 title="3 Oylik"
@@ -370,6 +409,7 @@ export default function SignalsPage() {
                 badge="Eng mashhur"
                 highlight
                 allPricesZero={false}
+                onPay={() => openPay(3)}
               />
               <PricingCard
                 title="6 Oylik"
@@ -379,6 +419,7 @@ export default function SignalsPage() {
                 badge="Eng yaxshi qiymat"
                 glow
                 allPricesZero={false}
+                onPay={() => openPay(6)}
               />
             </div>
           )}
@@ -547,6 +588,14 @@ export default function SignalsPage() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* In-site to'lov modali — saytdan chiqmasdan xarid */}
+      <PaymentModal
+        open={payOpen}
+        onOpenChange={setPayOpen}
+        productType="signal"
+        initialTariffId={payTariffId}
+      />
     </main>
   );
 }
