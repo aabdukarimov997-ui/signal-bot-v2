@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     // ── Active subscription (latest, any product type) ──
     const subRes = await query(
-      `SELECT s.*, t.name as tariff_name
+      `SELECT s.*, t.name as tariff_name, t.product_type as tariff_product_type
        FROM ${TABLES.subscriptions} s
        LEFT JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id
        WHERE s.user_id = $1 AND s.status = 'active'

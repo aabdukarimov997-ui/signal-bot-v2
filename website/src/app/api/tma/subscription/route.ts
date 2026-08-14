@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     }
 
     const result = await query(
-      `SELECT s.*, t.name as tariff_name 
+      `SELECT s.*, t.name as tariff_name, t.product_type as tariff_product_type
        FROM ${TABLES.subscriptions} s 
        JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id 
        WHERE s.user_id = $1 AND s.status = 'active'
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         startDate: s.start_date,
         endDate: s.end_date,
         inviteLink: s.invite_link,
-        productType: s.product_type,
+        productType: s.product_type ?? s.tariff_product_type,
         daysLeft,
       },
     });

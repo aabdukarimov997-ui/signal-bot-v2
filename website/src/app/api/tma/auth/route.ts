@@ -19,6 +19,8 @@ export async function POST(request: Request) {
     const telegramId = String(tgUser.id);
     const fullName = tgUser.first_name || tgUser.last_name || 'User';
     const username = tgUser.username || '';
+    // users.language ustuni NOT NULL — bot modeliga mos ravishda yozamiz
+    const language = tgUser.language_code || 'uz';
 
     // Find or create user in bot DB
     let result = await query(
@@ -31,17 +33,17 @@ export async function POST(request: Request) {
     if (!dbUser) {
       const refCode = `ref_${telegramId}`;
       result = await query(
-        `INSERT INTO ${TABLES.users} (telegram_id, full_name, username, referral_code, is_banned, referral_bonus_days, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, false, 0, NOW(), NOW())
+        `INSERT INTO ${TABLES.users} (telegram_id, full_name, username, language, referral_code, is_banned, referral_bonus_days, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, false, 0, NOW(), NOW())
          RETURNING *`,
-        [telegramId, fullName, username, refCode]
+        [telegramId, fullName, username, language, refCode]
       );
       dbUser = result.rows[0];
     } else {
       // Update activity
       await query(
-        `UPDATE ${TABLES.users} SET full_name = $1, username = $2, updated_at = NOW() WHERE telegram_id = $3`,
-        [fullName, username, telegramId]
+        `UPDATE ${TABLES.users} SET full_name = $1, username = $2, language = $3, updated_at = NOW() WHERE telegram_id = $4`,
+        [fullName, username, language, telegramId]
       );
     }
 

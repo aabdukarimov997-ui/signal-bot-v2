@@ -114,9 +114,9 @@ export async function PUT(request: Request) {
             Date.now() + totalDays * 24 * 60 * 60 * 1000
           ).toISOString();
           await query(
-            `INSERT INTO ${TABLES.subscriptions} (user_id, tariff_id, status, start_date, end_date, product_type, reminder_7_sent, reminder_3_sent, reminder_1_sent)
-             VALUES ($1, $2, 'active', $3, $4, $5, false, false, false)`,
-            [payment.user_id, payment.product_id, startDate, endDate, payment.product_type]
+            `INSERT INTO ${TABLES.subscriptions} (user_id, tariff_id, status, start_date, end_date, reminder_7_sent, reminder_3_sent, reminder_1_sent)
+             VALUES ($1, $2, 'active', $3, $4, false, false, false)`,
+            [payment.user_id, payment.product_id, startDate, endDate]
           );
         }
       }
@@ -135,7 +135,8 @@ export async function PUT(request: Request) {
           await query(
             `UPDATE ${TABLES.subscriptions} SET invite_link = $1
              WHERE id = (SELECT s.id FROM ${TABLES.subscriptions} s
-                         WHERE s.user_id = $2 AND s.status = 'active' AND s.product_type = $3
+                         JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id
+                         WHERE s.user_id = $2 AND s.status = 'active' AND t.product_type = $3
                          ORDER BY s.end_date DESC LIMIT 1)`,
             [inviteLink, payment.user_id, payment.product_type]
           );
