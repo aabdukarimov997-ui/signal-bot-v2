@@ -99,10 +99,16 @@ export async function GET(request: Request) {
       });
     }
 
-    // Sessiya cookie yaratamiz va admin panelga yo'naltiramiz
+    // Sessiya cookie yaratamiz va admin panelga yo'naltiramiz.
+    // Muhim: ichki Railway hostiga emas, jamoat URL'iga yo'naltiramiz.
     const sessionToken = createSessionToken();
+    const base =
+      process.env.RAILWAY_PUBLIC_DOMAIN ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://aaa-abdulloh-8ecf.up.railway.app";
+    const baseUrl = /^https?:\/\//.test(base) ? base : `https://${base}`;
     const response = NextResponse.redirect(
-      new URL("/#/admin-users", request.url)
+      new URL("/#/admin-users", baseUrl.replace(/\/$/, ""))
     );
     response.cookies.set(COOKIE_NAME, sessionToken, authCookieOptions());
     return response;
