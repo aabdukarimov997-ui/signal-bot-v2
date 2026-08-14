@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useNavigationStore } from '@/store';
 import { cn } from '@/lib/utils';
 
 const LOGO_SIZES = {
@@ -22,12 +23,14 @@ interface LogoProps {
 }
 
 export function Logo({ size = 'md', className, showBackground = false }: LogoProps) {
+  const navigate = useNavigationStore((s) => s.navigate);
   const dimension = LOGO_SIZES[size];
   const isLarge = size === 'hero' || size === '2xl';
 
   return (
-    <motion.a
-      href="#home"
+    <motion.button
+      type="button"
+      onClick={() => navigate('home')}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -42,12 +45,12 @@ export function Logo({ size = 'md', className, showBackground = false }: LogoPro
           )}
           style={{
             background: isLarge
-              ? 'radial-gradient(ellipse at center, rgba(45, 212, 160, 0.12) 0%, rgba(45, 212, 160, 0.04) 40%, rgba(10, 10, 9, 0.9) 100%)'
-              : 'radial-gradient(ellipse at center, rgba(45, 212, 160, 0.1) 0%, rgba(10, 10, 9, 0.95) 100%)',
-            border: '1px solid rgba(45, 212, 160, 0.15)',
+              ? 'radial-gradient(ellipse at center, rgba(46, 230, 168, 0.14) 0%, rgba(245, 185, 62, 0.05) 40%, rgba(8, 10, 17, 0.92) 100%)'
+              : 'radial-gradient(ellipse at center, rgba(46, 230, 168, 0.12) 0%, rgba(8, 10, 17, 0.95) 100%)',
+            border: '1px solid rgba(46, 230, 168, 0.18)',
             boxShadow: isLarge
-              ? '0 0 60px rgba(45, 212, 160, 0.08), 0 0 120px rgba(45, 212, 160, 0.04), inset 0 1px 0 rgba(45, 212, 160, 0.1)'
-              : '0 0 30px rgba(45, 212, 160, 0.06), inset 0 1px 0 rgba(45, 212, 160, 0.08)',
+              ? '0 0 60px rgba(46, 230, 168, 0.1), 0 0 120px rgba(245, 185, 62, 0.04), inset 0 1px 0 rgba(46, 230, 168, 0.12)'
+              : '0 0 30px rgba(46, 230, 168, 0.08), inset 0 1px 0 rgba(46, 230, 168, 0.1)',
             padding: isLarge ? '2rem' : '1rem',
           }}
         />
@@ -60,6 +63,6 @@ export function Logo({ size = 'md', className, showBackground = false }: LogoPro
         priority={isLarge}
         className="object-contain relative z-10"
       />
-    </motion.a>
+    </motion.button>
   );
 }

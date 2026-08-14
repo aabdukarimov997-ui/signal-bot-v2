@@ -15,7 +15,7 @@ export const SITE = {
   FOUNDER: 'ABDULLOH',
   TAGLINE: 'CRYPTO | SPOT | STOCKS',
   DESCRIPTION: 'Premium Crypto Trading Academy va Signal Platformasi',
-  URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://atanalysis.serveirc.com',
+  URL: 'https://aaa-trading.academy',
 } as const;
 
 export const NAV_ITEMS = [
@@ -42,12 +42,8 @@ export const ADMIN_NAV_ITEMS = [
   { id: 'admin-referrals', label: 'Referral', icon: 'Share2' },
   { id: 'admin-banners', label: 'Bannerlar', icon: 'Layout' },
   { id: 'admin-pricing', label: 'Narxlar', icon: 'DollarSign' },
-  { id: 'admin-faq', label: 'FAQ', icon: 'HelpCircle' },
   { id: 'admin-coupons', label: 'Kuponlar', icon: 'Ticket' },
-  { id: 'admin-bot-users', label: 'Bot Foyd.', icon: 'Users' },
-  { id: 'admin-bot-payments', label: 'Bot Tolovlar', icon: 'CreditCard' },
   { id: 'admin-telegram', label: 'Telegram', icon: 'Send' },
-  { id: 'admin-appearance', label: 'Orqa fon', icon: 'Image' },
 ] as const;
 
 export const CRYPTO_TICKERS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'GRAMUSDT'] as const;
@@ -57,4 +53,4 @@ export const SIGNAL_TIERS = ['monthly', 'quarterly', 'semiannual'] as const;
 
 export type CourseTier = (typeof COURSE_TIERS)[number];
 export type SignalTier = (typeof SIGNAL_TIERS)[number];
-export type PageId = (typeof NAV_ITEMS)[number]['id'] | (typeof ADMIN_NAV_ITEMS)[number]['id'] | 'login' | 'dashboard' | 'blog-post';
+export type PageId = (typeof NAV_ITEMS)[number]['id'] | (typeof ADMIN_NAV_ITEMS)[number]['id'] | 'login' | 'dashboard';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigationStore, useAuthStore, parseHash } from '@/store';
+import { useNavigationStore, useAuthStore } from '@/store';
 import { ADMIN_NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 import { toast } from 'sonner';
 import {
@@ -82,31 +82,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { AdminBackground } from '@/components/shared/admin-background';
-import { AdminBotUsers } from '@/components/pages/admin-bot-users';
-import { AdminBotPayments } from '@/components/pages/admin-bot-payments';
-import dynamic from 'next/dynamic';
-
-/* ─── Lazy-loaded admin sections (next/dynamic) ─────────────── */
-const AdminBlog = dynamic(() => import('@/components/pages/admin-blog'), {
-  loading: () => <LoadingState />,
-});
-const AdminFAQ = dynamic(() => import('@/components/pages/admin-faq'), {
-  loading: () => <LoadingState />,
-});
-const AdminCoupons = dynamic(() => import('@/components/pages/admin-coupons'), {
-  loading: () => <LoadingState />,
-});
-const AdminBanners = dynamic(() => import('@/components/pages/admin-banners'), {
-  loading: () => <LoadingState />,
-});
-const AdminAnalytics = dynamic(() => import('@/components/pages/admin-analytics'), {
-  loading: () => <LoadingState />,
-});
-const AdminAppearance = dynamic(() => import('@/components/pages/admin-appearance'), {
-  loading: () => <LoadingState />,
-});
 
 /* ─── Icon Lookup ──────────────────────────────────────────── */
 const iconMap: Record<string, LucideIcon> = {
@@ -177,10 +152,10 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-glass-border">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/15">
-          <Shield className="h-5 w-5 text-gold" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-silver/10">
+          <Shield className="h-5 w-5 text-silver" />
         </div>
-        <span className="text-sm font-semibold tracking-wide text-gradient-oriental">
+        <span className="text-sm font-semibold tracking-wide text-foreground">
           Admin Panel
         </span>
       </div>
@@ -197,8 +172,8 @@ function SidebarContent({
                   onClick={() => nav(item.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                     isActive
-                      ? 'bg-gold/10 text-gold font-medium'
-                      : 'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground'
+                      ? 'bg-silver/10 text-silver font-medium'
+                      : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                   }`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -214,7 +189,7 @@ function SidebarContent({
       <div className="border-t border-glass-border p-3 space-y-1">
         <button
           onClick={() => nav('home')}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-white/[0.04] hover:text-foreground transition-colors"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Asosiy sahifaga qaytish
@@ -250,7 +225,7 @@ function MobileSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden fixed top-4 left-4 z-50 text-gold hover:bg-gold/10"
+          className="lg:hidden fixed top-4 left-4 z-50 text-silver hover:bg-silver/10"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -327,7 +302,7 @@ function AdminUsers() {
               placeholder="Ism yoki email bo'yicha qidirish..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-white/[0.03] border-glass-border"
+              className="pl-9 bg-muted/30 border-glass-border"
             />
           </div>
         </div>
@@ -352,7 +327,7 @@ function AdminUsers() {
                 </TableRow>
               )}
               {filtered.map((u) => (
-                <TableRow key={u.id} className="border-glass-border hover:bg-white/[0.02]">
+                <TableRow key={u.id} className="border-glass-border hover:bg-muted/20">
                   <TableCell className="font-medium text-foreground">{u.name || '—'}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
@@ -360,8 +335,8 @@ function AdminUsers() {
                       variant={u.role === 'ADMIN' ? 'default' : 'secondary'}
                       className={
                         u.role === 'ADMIN'
-                          ? 'bg-gold/20 text-gold border-gold/30'
-                          : 'bg-white/[0.05] text-muted-foreground border-glass-border'
+                          ? 'bg-silver/20 text-silver border-silver/30'
+                          : 'bg-muted/50 text-muted-foreground border-glass-border'
                       }
                     >
                       {u.role}
@@ -382,7 +357,7 @@ function AdminUsers() {
                         </Button>
                         <Button
                           size="sm"
-                          className="bg-gold/20 text-gold hover:bg-gold/30"
+                          className="bg-silver/20 text-silver hover:bg-silver/30"
                           onClick={() => toggleRole(u)}
                         >
                           Ha
@@ -392,7 +367,7 @@ function AdminUsers() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-muted-foreground hover:text-gold"
+                        className="text-muted-foreground hover:text-silver"
                         onClick={() => setConfirmId(u.id)}
                       >
                         {u.role === 'USER' ? 'Admin qilish' : 'User qilish'}
@@ -503,7 +478,7 @@ function AdminCourses() {
             <Input
               value={form.name}
               onChange={(e) => upd('name', e.target.value)}
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
           <div className="space-y-2">
@@ -512,7 +487,7 @@ function AdminCourses() {
               value={form.description}
               onChange={(e) => upd('description', e.target.value)}
               rows={4}
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
 
@@ -544,7 +519,7 @@ function AdminCourses() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-gold/20 text-gold hover:bg-gold/30"
+              className="bg-silver/20 text-silver hover:bg-silver/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -571,7 +546,7 @@ function TierForm({
 }) {
   return (
     <div className="space-y-2 rounded-lg border border-glass-border p-4">
-      <h3 className="text-sm font-semibold text-gold">{label}</h3>
+      <h3 className="text-sm font-semibold text-silver">{label}</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <Label className="text-muted-foreground text-xs">Narx (so'm)</Label>
@@ -579,7 +554,7 @@ function TierForm({
             type="number"
             value={price || ''}
             onChange={(e) => onPriceChange(Number(e.target.value) || 0)}
-            className="bg-white/[0.03] border-glass-border"
+            className="bg-muted/30 border-glass-border"
           />
         </div>
         <div className="space-y-1">
@@ -588,7 +563,7 @@ function TierForm({
             value={features}
             onChange={(e) => onFeaturesChange(e.target.value)}
             placeholder="Xususiyat 1, Xususiyat 2, ..."
-            className="bg-white/[0.03] border-glass-border"
+            className="bg-muted/30 border-glass-border"
           />
         </div>
       </div>
@@ -690,7 +665,7 @@ function AdminSignals() {
             <Input
               value={form.name}
               onChange={(e) => upd('name', e.target.value)}
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
           <div className="space-y-2">
@@ -699,7 +674,7 @@ function AdminSignals() {
               value={form.description}
               onChange={(e) => upd('description', e.target.value)}
               rows={4}
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
 
@@ -731,7 +706,7 @@ function AdminSignals() {
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-gold/20 text-gold hover:bg-gold/30"
+              className="bg-silver/20 text-silver hover:bg-silver/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -739,6 +714,298 @@ function AdminSignals() {
           </div>
         </div>
       </AdminGlassCard>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 4 — BLOG
+   ═══════════════════════════════════════════════════════════════ */
+function AdminBlog() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    published: false,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/blog?all=true');
+      const data = await res.json();
+      if (Array.isArray(data)) setPosts(data);
+    } catch {
+      toast.error('Maqolalarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const generateSlug = (title: string) =>
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0621-\u064A]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ title: '', slug: '', content: '', excerpt: '', published: false });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (post: any) => {
+    setEditing(post);
+    setForm({
+      title: post.title,
+      slug: post.slug,
+      content: post.content,
+      excerpt: post.excerpt,
+      published: post.published,
+    });
+    setDialogOpen(true);
+  };
+
+  const save = async () => {
+    if (!form.title.trim()) {
+      toast.error('Sarlavha kiritilishi shart');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editing) {
+        await fetch('/api/blog', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editing.id, ...form }),
+        });
+        toast.success('Maqola muvaffaqiyatli yangilandi');
+      } else {
+        const slug = form.slug || generateSlug(form.title);
+        await fetch('/api/blog', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, slug, authorId: 'admin' }),
+        });
+        toast.success('Maqola muvaffaqiyatli yaratildi');
+      }
+      setDialogOpen(false);
+      fetchPosts();
+    } catch {
+      toast.error('Maqolani saqlashda xatolik');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePost = async () => {
+    if (!deleteId) return;
+    try {
+      await fetch('/api/blog', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteId }),
+      });
+      toast.success('Maqola muvaffaqiyatli o\'chirildi');
+      setDeleteId(null);
+      fetchPosts();
+    } catch {
+      toast.error('Maqolani o\'chirishda xatolik');
+    }
+  };
+
+  if (loading) return <LoadingState />;
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground">Blog</h2>
+        <Button
+          onClick={openNew}
+          className="bg-silver/20 text-silver hover:bg-silver/30"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Yangi maqola
+        </Button>
+      </div>
+      <AdminGlassCard>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-glass-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Sarlavha</TableHead>
+                <TableHead className="text-muted-foreground">Slug</TableHead>
+                <TableHead className="text-muted-foreground">Holat</TableHead>
+                <TableHead className="text-muted-foreground">Sana</TableHead>
+                <TableHead className="text-muted-foreground text-right">Amallar</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {posts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    Hali maqola yo'q
+                  </TableCell>
+                </TableRow>
+              )}
+              {posts.map((post) => (
+                <TableRow key={post.id} className="border-glass-border hover:bg-muted/20">
+                  <TableCell className="font-medium text-foreground max-w-[200px] truncate">
+                    {post.title}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs max-w-[150px] truncate">
+                    {post.slug}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={post.published ? 'default' : 'secondary'}
+                      className={
+                        post.published
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      }
+                    >
+                      {post.published ? 'Nashr etilgan' : 'Qoralama'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDate(post.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        onClick={() => openEdit(post)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                        onClick={() => setDeleteId(post.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </AdminGlassCard>
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-card border-glass-border max-h-[85vh] overflow-y-auto scrollbar-thin">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {editing ? 'Maqolani tahrirlash' : 'Yangi maqola'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Sarlavha</Label>
+              <Input
+                value={form.title}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, title: e.target.value }));
+                  if (!editing) {
+                    setForm((p) => ({ ...p, slug: generateSlug(e.target.value) }));
+                  }
+                }}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Slug</Label>
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Qisqacha</Label>
+              <Textarea
+                value={form.excerpt}
+                onChange={(e) => setForm((p) => ({ ...p, excerpt: e.target.value }))}
+                rows={2}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Mazmun</Label>
+              <Textarea
+                value={form.content}
+                onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
+                rows={8}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={form.published}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, published: v }))}
+              />
+              <Label className="text-muted-foreground">Nashr etilgan</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setDialogOpen(false)}
+              className="text-muted-foreground"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="bg-silver/20 text-silver hover:bg-silver/30"
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editing ? 'Yangilash' : 'Yaratish'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent className="bg-card border-glass-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Maqolani o'chirish
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ushbu maqolani o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground">Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deletePost}
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30"
+            >
+              O'chirish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -802,7 +1069,7 @@ function AdminSEO() {
               value={settings.site_title}
               onChange={(e) => setSettings((p) => ({ ...p, site_title: e.target.value }))}
               placeholder="AAA Crypto Trading Academy"
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
           <div className="space-y-2">
@@ -814,7 +1081,7 @@ function AdminSEO() {
               }
               rows={3}
               placeholder="Premium Crypto Trading Academy va Signal Platformasi"
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
           <div className="space-y-2">
@@ -823,14 +1090,14 @@ function AdminSEO() {
               value={settings.og_image}
               onChange={(e) => setSettings((p) => ({ ...p, og_image: e.target.value }))}
               placeholder="https://example.com/og-image.jpg"
-              className="bg-white/[0.03] border-glass-border"
+              className="bg-muted/30 border-glass-border"
             />
           </div>
           <div className="pt-2">
             <Button
               onClick={save}
               disabled={saving}
-              className="bg-gold/20 text-gold hover:bg-gold/30"
+              className="bg-silver/20 text-silver hover:bg-silver/30"
             >
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Saqlash
@@ -850,8 +1117,8 @@ function AdminMedia() {
     <>
       <h2 className="text-xl font-bold text-foreground mb-4">Media</h2>
       <AdminGlassCard className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="h-16 w-16 rounded-full bg-gold/10 flex items-center justify-center mb-4">
-          <Upload className="h-8 w-8 text-gold/50" />
+        <div className="h-16 w-16 rounded-full bg-silver/10 flex items-center justify-center mb-4">
+          <Upload className="h-8 w-8 text-silver/50" />
         </div>
         <p className="text-muted-foreground text-lg font-medium">
           Media boshqaruvi tez orada qo&apos;shiladi
@@ -860,6 +1127,108 @@ function AdminMedia() {
           Rasm, video va fayllarni boshqarish imkoniyati
         </p>
       </AdminGlassCard>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 7 — ANALYTICS
+   ═══════════════════════════════════════════════════════════════ */
+function AdminAnalytics() {
+  const [data, setData] = useState<{
+    totalUsers: number;
+    totalPayments: number;
+    revenue: number;
+    pageViewsByType: Record<string, number>;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/analytics');
+        const json = await res.json();
+        setData(json);
+      } catch {
+        toast.error('Analitikani yuklashda xatolik');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) return <LoadingState />;
+
+  const totalPageViews = data
+    ? Object.values(data.pageViewsByType).reduce((a, b) => a + b, 0)
+    : 0;
+
+  const cards = [
+    {
+      label: 'Jami foydalanuvchilar',
+      value: data?.totalUsers ?? 0,
+      icon: Users,
+      color: 'text-blue-400',
+    },
+    {
+      label: 'Jami to\'lovlar',
+      value: data?.totalPayments ?? 0,
+      icon: CreditCard,
+      color: 'text-emerald-400',
+    },
+    {
+      label: 'Tushum',
+      value: data ? formatCurrency(data.revenue) : '0',
+      icon: DollarSign,
+      color: 'text-yellow-400',
+    },
+    {
+      label: 'Sahifa ko\'rishlar',
+      value: totalPageViews,
+      icon: BarChart3,
+      color: 'text-purple-400',
+    },
+  ];
+
+  return (
+    <>
+      <h2 className="text-xl font-bold text-foreground mb-4">Analytics</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <AdminGlassCard key={c.label} className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-muted/40 flex items-center justify-center shrink-0">
+                <Icon className={`h-6 w-6 ${c.color}`} />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">{c.label}</p>
+                <p className="text-foreground text-xl font-bold">{c.value}</p>
+              </div>
+            </AdminGlassCard>
+          );
+        })}
+      </div>
+
+      {data && data.pageViewsByType && Object.keys(data.pageViewsByType).length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+            Sahifa ko\'rishlar turi bo&apos;yicha
+          </h3>
+          <AdminGlassCard>
+            <div className="space-y-2">
+              {Object.entries(data.pageViewsByType).map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between py-1">
+                  <span className="text-sm text-muted-foreground">{type}</span>
+                  <Badge variant="secondary" className="bg-muted/50 text-foreground border-glass-border">
+                    {count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </AdminGlassCard>
+        </div>
+      )}
     </>
   );
 }
@@ -903,10 +1272,10 @@ function AdminPayments() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-bold text-foreground">To&apos;lovlar</h2>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-44 bg-white/[0.03] border-glass-border">
+          <SelectTrigger className="w-full sm:w-44 bg-muted/30 border-glass-border">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[#0a0a09] border-glass-border">
+          <SelectContent className="bg-card border-glass-border">
             <SelectItem value="ALL">Barchasi</SelectItem>
             <SelectItem value="PENDING">Kutilmoqda</SelectItem>
             <SelectItem value="COMPLETED">Tugallangan</SelectItem>
@@ -937,7 +1306,7 @@ function AdminPayments() {
                 </TableRow>
               )}
               {payments.map((p) => (
-                <TableRow key={p.id} className="border-glass-border hover:bg-white/[0.02]">
+                <TableRow key={p.id} className="border-glass-border hover:bg-muted/20">
                   <TableCell className="text-foreground">
                     {p.user?.name || p.user?.email || '—'}
                   </TableCell>
@@ -949,7 +1318,7 @@ function AdminPayments() {
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={statusColor[p.status] ?? 'bg-white/[0.05] text-muted-foreground'}
+                      className={statusColor[p.status] ?? 'bg-muted/50 text-muted-foreground'}
                     >
                       {p.status}
                     </Badge>
@@ -1013,7 +1382,7 @@ function AdminReferrals() {
                 </TableRow>
               )}
               {referrals.map((r) => (
-                <TableRow key={r.id} className="border-glass-border hover:bg-white/[0.02]">
+                <TableRow key={r.id} className="border-glass-border hover:bg-muted/20">
                   <TableCell className="text-foreground">
                     {r.referrer?.name || r.referrer?.email || '—'}
                   </TableCell>
@@ -1021,7 +1390,7 @@ function AdminReferrals() {
                     {r.referred?.name || r.referred?.email || '—'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
+                    <Badge variant="secondary" className="bg-silver/10 text-silver border-silver/20">
                       {r.code}
                     </Badge>
                   </TableCell>
@@ -1034,6 +1403,292 @@ function AdminReferrals() {
           </Table>
         </div>
       </AdminGlassCard>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 10 — BANNERLAR
+   ═══════════════════════════════════════════════════════════════ */
+function AdminBanners() {
+  const [banners, setBanners] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    title: '',
+    subtitle: '',
+    imageUrl: '',
+    link: '',
+    isActive: true,
+    order: 0,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const fetchBanners = useCallback(async () => {
+    try {
+      const res = await fetch('/api/banners?all=true');
+      const data = await res.json();
+      if (Array.isArray(data)) setBanners(data);
+    } catch {
+      toast.error('Bannerlarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ title: '', subtitle: '', imageUrl: '', link: '', isActive: true, order: 0 });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (banner: any) => {
+    setEditing(banner);
+    setForm({
+      title: banner.title,
+      subtitle: banner.subtitle,
+      imageUrl: banner.imageUrl,
+      link: banner.link,
+      isActive: banner.isActive,
+      order: banner.order,
+    });
+    setDialogOpen(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      if (editing) {
+        await fetch('/api/banners', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editing.id, ...form }),
+        });
+        toast.success('Banner muvaffaqiyatli yangilandi');
+      } else {
+        await fetch('/api/banners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+        toast.success('Banner muvaffaqiyatli yaratildi');
+      }
+      setDialogOpen(false);
+      fetchBanners();
+    } catch {
+      toast.error('Bannerni saqlashda xatolik');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteBanner = async () => {
+    if (!deleteId) return;
+    try {
+      await fetch('/api/banners', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteId }),
+      });
+      toast.success('Banner muvaffaqiyatli o\'chirildi');
+      setDeleteId(null);
+      fetchBanners();
+    } catch {
+      toast.error('Bannerni o\'chirishda xatolik');
+    }
+  };
+
+  if (loading) return <LoadingState />;
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground">Bannerlar</h2>
+        <Button
+          onClick={openNew}
+          className="bg-silver/20 text-silver hover:bg-silver/30"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Yangi banner
+        </Button>
+      </div>
+      <AdminGlassCard>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-glass-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Sarlavha</TableHead>
+                <TableHead className="text-muted-foreground">Pastki sarlavha</TableHead>
+                <TableHead className="text-muted-foreground">Havola</TableHead>
+                <TableHead className="text-muted-foreground">Holat</TableHead>
+                <TableHead className="text-muted-foreground">Tartib</TableHead>
+                <TableHead className="text-muted-foreground text-right">Amallar</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {banners.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Hali banner yo&apos;q
+                  </TableCell>
+                </TableRow>
+              )}
+              {banners.map((b) => (
+                <TableRow key={b.id} className="border-glass-border hover:bg-muted/20">
+                  <TableCell className="font-medium text-foreground">{b.title || '—'}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[150px] truncate">
+                    {b.subtitle || '—'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-[120px] truncate">
+                    {b.link || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={b.isActive ? 'default' : 'secondary'}
+                      className={
+                        b.isActive
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : 'bg-muted/50 text-muted-foreground border-glass-border'
+                      }
+                    >
+                      {b.isActive ? 'Faol' : 'Nofaol'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{b.order}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        onClick={() => openEdit(b)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                        onClick={() => setDeleteId(b.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </AdminGlassCard>
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-card border-glass-border max-h-[85vh] overflow-y-auto scrollbar-thin">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {editing ? 'Bannerni tahrirlash' : 'Yangi banner'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Sarlavha</Label>
+              <Input
+                value={form.title}
+                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Pastki sarlavha</Label>
+              <Input
+                value={form.subtitle}
+                onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Rasm URL</Label>
+              <Input
+                value={form.imageUrl}
+                onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
+                placeholder="https://example.com/banner.jpg"
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Havola</Label>
+              <Input
+                value={form.link}
+                onChange={(e) => setForm((p) => ({ ...p, link: e.target.value }))}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Tartib raqami</Label>
+              <Input
+                type="number"
+                value={form.order}
+                onChange={(e) => setForm((p) => ({ ...p, order: Number(e.target.value) || 0 }))}
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, isActive: v }))}
+              />
+              <Label className="text-muted-foreground">Faol</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setDialogOpen(false)}
+              className="text-muted-foreground"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="bg-silver/20 text-silver hover:bg-silver/30"
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editing ? 'Yangilash' : 'Yaratish'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent className="bg-card border-glass-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Bannerni o&apos;chirish
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ushbu bannerni o&apos;chirishni xohlaysizmi? Bu amalni qaytarib bo&apos;lmaydi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground">Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteBanner}
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30"
+            >
+              O&apos;chirish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -1074,8 +1729,8 @@ function AdminPricing() {
 
       <AdminGlassCard className="mb-6">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-            <Info className="h-5 w-5 text-gold" />
+          <div className="h-10 w-10 rounded-lg bg-silver/10 flex items-center justify-center shrink-0">
+            <Info className="h-5 w-5 text-silver" />
           </div>
           <p className="text-muted-foreground text-sm">
             Barcha narxlar Admin Panel orqali boshqariladi. Tahrirlash uchun tegishli sahifaga o&apos;ting.
@@ -1099,7 +1754,7 @@ function AdminPricing() {
         <div className="sm:col-span-3 flex justify-end">
           <Button
             variant="ghost"
-            className="text-gold hover:text-gold hover:bg-gold/10"
+            className="text-silver hover:text-silver hover:bg-silver/10"
             onClick={() => navigate('admin-courses')}
           >
             Kurslarni tahrirlash
@@ -1124,7 +1779,7 @@ function AdminPricing() {
         <div className="sm:col-span-3 flex justify-end">
           <Button
             variant="ghost"
-            className="text-gold hover:text-gold hover:bg-gold/10"
+            className="text-silver hover:text-silver hover:bg-silver/10"
             onClick={() => navigate('admin-signals')}
           >
             Signallarni tahrirlash
@@ -1132,6 +1787,315 @@ function AdminPricing() {
           </Button>
         </div>
       </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 12 — KUPONLAR
+   ═══════════════════════════════════════════════════════════════ */
+function AdminCoupons() {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    code: '',
+    discountPercent: 0,
+    validFrom: '',
+    validTo: '',
+    maxUses: 100,
+    isActive: true,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const fetchCoupons = useCallback(async () => {
+    try {
+      const res = await fetch('/api/coupons');
+      const data = await res.json();
+      if (Array.isArray(data)) setCoupons(data);
+    } catch {
+      toast.error('Kuponlarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCoupons();
+  }, [fetchCoupons]);
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({
+      code: '',
+      discountPercent: 0,
+      validFrom: new Date().toISOString().split('T')[0],
+      validTo: '',
+      maxUses: 100,
+      isActive: true,
+    });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (coupon: any) => {
+    setEditing(coupon);
+    setForm({
+      code: coupon.code,
+      discountPercent: coupon.discountPercent,
+      validFrom: coupon.validFrom ? coupon.validFrom.split('T')[0] : '',
+      validTo: coupon.validTo ? coupon.validTo.split('T')[0] : '',
+      maxUses: coupon.maxUses,
+      isActive: coupon.isActive,
+    });
+    setDialogOpen(true);
+  };
+
+  const save = async () => {
+    if (!form.code.trim() || !form.validTo) {
+      toast.error('Kod va amal qilish muddati kiritilishi shart');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editing) {
+        await fetch('/api/coupons', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editing.id, ...form }),
+        });
+        toast.success('Kupon muvaffaqiyatli yangilandi');
+      } else {
+        await fetch('/api/coupons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+        toast.success('Kupon muvaffaqiyatli yaratildi');
+      }
+      setDialogOpen(false);
+      fetchCoupons();
+    } catch {
+      toast.error('Kuponni saqlashda xatolik');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteCoupon = async () => {
+    if (!deleteId) return;
+    try {
+      await fetch('/api/coupons', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: deleteId }),
+      });
+      toast.success('Kupon muvaffaqiyatli o\'chirildi');
+      setDeleteId(null);
+      fetchCoupons();
+    } catch {
+      toast.error('Kuponni o\'chirishda xatolik');
+    }
+  };
+
+  if (loading) return <LoadingState />;
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-foreground">Kuponlar</h2>
+        <Button
+          onClick={openNew}
+          className="bg-silver/20 text-silver hover:bg-silver/30"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Yangi kupon
+        </Button>
+      </div>
+      <AdminGlassCard>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-glass-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Kod</TableHead>
+                <TableHead className="text-muted-foreground">Chegirma</TableHead>
+                <TableHead className="text-muted-foreground">Amal qilish muddati</TableHead>
+                <TableHead className="text-muted-foreground">Foydalanish</TableHead>
+                <TableHead className="text-muted-foreground">Holat</TableHead>
+                <TableHead className="text-muted-foreground text-right">Amallar</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {coupons.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Hali kupon yo&apos;q
+                  </TableCell>
+                </TableRow>
+              )}
+              {coupons.map((c) => (
+                <TableRow key={c.id} className="border-glass-border hover:bg-muted/20">
+                  <TableCell className="font-mono font-medium text-silver">{c.code}</TableCell>
+                  <TableCell className="text-foreground">{c.discountPercent}%</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDate(c.validTo)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {c.usedCount}/{c.maxUses}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={c.isActive ? 'default' : 'secondary'}
+                      className={
+                        c.isActive
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : 'bg-muted/50 text-muted-foreground border-glass-border'
+                      }
+                    >
+                      {c.isActive ? 'Faol' : 'Nofaol'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-silver"
+                        onClick={() => openEdit(c)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                        onClick={() => setDeleteId(c.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </AdminGlassCard>
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="bg-card border-glass-border max-h-[85vh] overflow-y-auto scrollbar-thin">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {editing ? 'Kuponni tahrirlash' : 'Yangi kupon'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Kupon kodi</Label>
+              <Input
+                value={form.code}
+                onChange={(e) => setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+                placeholder="SAVE20"
+                className="bg-muted/30 border-glass-border font-mono"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Chegirma foizi</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={form.discountPercent}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, discountPercent: Number(e.target.value) || 0 }))
+                }
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Boshlanish sanasi</Label>
+                <Input
+                  type="date"
+                  value={form.validFrom}
+                  onChange={(e) => setForm((p) => ({ ...p, validFrom: e.target.value }))}
+                  className="bg-muted/30 border-glass-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Tugash sanasi</Label>
+                <Input
+                  type="date"
+                  value={form.validTo}
+                  onChange={(e) => setForm((p) => ({ ...p, validTo: e.target.value }))}
+                  className="bg-muted/30 border-glass-border"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-muted-foreground">Maksimal foydalanish</Label>
+              <Input
+                type="number"
+                min={1}
+                value={form.maxUses}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, maxUses: Number(e.target.value) || 1 }))
+                }
+                className="bg-muted/30 border-glass-border"
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(v) => setForm((p) => ({ ...p, isActive: v }))}
+              />
+              <Label className="text-muted-foreground">Faol</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setDialogOpen(false)}
+              className="text-muted-foreground"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="bg-silver/20 text-silver hover:bg-silver/30"
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editing ? 'Yangilash' : 'Yaratish'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent className="bg-card border-glass-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Kuponni o&apos;chirish
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ushbu kuponni o&apos;chirishni xohlaysizmi? Bu amalni qaytarib bo&apos;lmaydi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-muted-foreground">Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteCoupon}
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30"
+            >
+              O&apos;chirish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
@@ -1168,8 +2132,8 @@ function AdminTelegram() {
             <AdminGlassCard key={link.label}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-gold" />
+                  <div className="h-10 w-10 rounded-lg bg-silver/10 flex items-center justify-center shrink-0">
+                    <Icon className="h-5 w-5 text-silver" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{link.label}</p>
@@ -1180,7 +2144,7 @@ function AdminTelegram() {
                   href={link.value.startsWith('@') ? `https://t.me/${link.value.slice(1)}` : link.value}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 transition-colors"
+                  className="flex items-center gap-1 text-xs text-silver hover:text-silver/80 transition-colors"
                 >
                   Ochiq
                   <ExternalLink className="h-3 w-3" />
@@ -1195,8 +2159,8 @@ function AdminTelegram() {
       <div className="mt-8">
         <h3 className="text-lg font-semibold text-foreground mb-3">Statistika</h3>
         <AdminGlassCard className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="h-12 w-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
-            <BarChart3 className="h-6 w-6 text-gold/50" />
+          <div className="h-12 w-12 rounded-full bg-silver/10 flex items-center justify-center mb-3">
+            <BarChart3 className="h-6 w-6 text-silver/50" />
           </div>
           <p className="text-muted-foreground text-sm">
             Telegram statistikasi tez orada qo&apos;shiladi
@@ -1213,7 +2177,7 @@ function AdminTelegram() {
 function LoadingState() {
   return (
     <div className="flex items-center justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      <Loader2 className="h-8 w-8 animate-spin text-silver" />
     </div>
   );
 }
@@ -1225,8 +2189,6 @@ function AdminContent() {
   const currentPage = useNavigationStore((s) => s.currentPage);
 
   switch (currentPage) {
-    case 'admin-bot-users':
-      return <AdminBotUsers />;
     case 'admin-users':
       return <AdminUsers />;
     case 'admin-courses':
@@ -1235,16 +2197,12 @@ function AdminContent() {
       return <AdminSignals />;
     case 'admin-blog':
       return <AdminBlog />;
-    case 'admin-faq':
-      return <AdminFAQ />;
     case 'admin-seo':
       return <AdminSEO />;
     case 'admin-media':
       return <AdminMedia />;
     case 'admin-analytics':
       return <AdminAnalytics />;
-    case 'admin-bot-payments':
-      return <AdminBotPayments />;
     case 'admin-payments':
       return <AdminPayments />;
     case 'admin-referrals':
@@ -1257,8 +2215,6 @@ function AdminContent() {
       return <AdminCoupons />;
     case 'admin-telegram':
       return <AdminTelegram />;
-    case 'admin-appearance':
-      return <AdminAppearance />;
     default:
       return <AdminUsers />;
   }
@@ -1282,7 +2238,7 @@ function AccessDenied() {
         </p>
         <Button
           onClick={() => navigate('login')}
-          className="bg-gold/20 text-gold hover:bg-gold/30"
+          className="bg-silver/20 text-silver hover:bg-silver/30"
         >
           Tizimga kirish
         </Button>
@@ -1297,40 +2253,16 @@ function AccessDenied() {
 export default function AdminPanel() {
   const user = useAuthStore((s) => s.user);
 
-  // Admin panelda hashchange ni tinglash — sidebar navigatsiyasi uchun
-  useEffect(() => {
-    const sync = () => {
-      const { page } = parseHash(window.location.hash);
-      const navStore = useNavigationStore.getState();
-      if (navStore.currentPage !== page && typeof page === 'string') {
-        useNavigationStore.setState({ currentPage: page });
-      }
-    };
-    window.addEventListener('hashchange', sync);
-    // Boshlang'ich holatni sinxronlash
-    sync();
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
-
   if (!user || user.role !== 'ADMIN') {
     return <AccessDenied />;
   }
 
   return (
     <div className="flex min-h-screen bg-background">
-      <div className="relative" style={{ zIndex: 30 }}>
-        <DesktopSidebar />
-        <MobileSidebar />
-      </div>
-      <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin relative" style={{ zIndex: 10 }}>
-        <AdminBackground />
-        <GeometricPattern opacity={0.04} />
-        {/* Burchak ornamentlari */}
-        <CornerOrnament position="top-left" />
-        <CornerOrnament position="top-right" />
-        <CornerOrnament position="bottom-left" />
-        <CornerOrnament position="bottom-right" />
-        <div className="relative p-4 pt-16 lg:pt-6 lg:p-8 max-w-6xl mx-auto">
+      <DesktopSidebar />
+      <MobileSidebar />
+      <main className="flex-1 min-w-0 overflow-y-auto scrollbar-thin">
+        <div className="p-4 pt-16 lg:pt-6 lg:p-8 max-w-6xl mx-auto">
           <AdminContent />
         </div>
       </main>

@@ -34,7 +34,7 @@ export function SectionHeading({
         className
       )}
     >
-      <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl text-gradient">
+      <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gradient">
         {title}
       </h2>
       {subtitle && (

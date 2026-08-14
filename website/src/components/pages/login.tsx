@@ -6,6 +6,7 @@ import { Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Logo } from '@/components/shared/logo';
 import { GlassCard } from '@/components/shared/glass-card';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { useNavigationStore, useAuthStore } from '@/store';
 import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -59,36 +60,7 @@ export default function LoginPage() {
         role: user.role,
       });
 
-      // Zustand persist localStorage'ga yozilishini kutmagan holda
-      // to'g'ridan-to'g'ri saqlaymiz (reload uchun)
-      try {
-        localStorage.setItem(
-          'aaa-auth',
-          JSON.stringify({
-            state: {
-              user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-              },
-              isLoading: false,
-            },
-            version: 0,
-          })
-        );
-      } catch (e) {
-        console.error('localStorage write failed:', e);
-      }
-
       toast.success(`Xush kelibsiz, ${user.name}!`);
-
-      // Admin bo'lsa — admin paneldan chiqmasdan qoladi
-      if (user.role === 'ADMIN') {
-        window.location.href = '/admin';
-        return;
-      }
-
       navigate('dashboard');
     } catch (err) {
       const message =
@@ -104,7 +76,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4 py-20">
       {/* Background glow */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(192,192,192,0.05)_0%,transparent_70%)]" />
+        <TradingHeroDecor variant="lock" />
       </div>
 
       <motion.div
@@ -149,15 +121,15 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="login-email"
-                type="text"
-                placeholder="Login yoki email"
+                type="email"
+                placeholder="email@example.com"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (error) setError(null);
                 }}
                 aria-invalid={!!error}
-                autoComplete="username"
+                autoComplete="email"
                 className="bg-glass border-glass-border h-11"
               />
             </div>
@@ -212,32 +184,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-glass-border" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-[#0a0a09] text-muted-foreground">yoki</span>
-            </div>
-          </div>
-
-          {/* Telegram Login */}
-          <a
-            href={TELEGRAM.BOT}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg border border-gold/20 bg-glass text-foreground font-medium text-sm hover:bg-glass-strong transition-colors duration-200"
-          >
-            <Send className="w-4 h-4 text-gold" />
-            Telegram orqali kirish
-          </a>
-
-          {/* Hint */}
-          <p className="mt-6 text-center text-xs text-muted-foreground/60">
-            Login va parol bilan kirish
-          </p>
         </GlassCard>
       </motion.div>
     </main>

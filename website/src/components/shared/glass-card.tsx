@@ -9,10 +9,8 @@ interface GlassCardProps {
   className?: string;
   glow?: boolean;
   glowEmerald?: boolean;
-  glowGold?: boolean;
   hover?: boolean;
   index?: number;
-  onClick?: () => void;
 }
 
 export function GlassCard({
@@ -20,10 +18,8 @@ export function GlassCard({
   className,
   glow = false,
   glowEmerald = false,
-  glowGold = false,
   hover = false,
   index,
-  onClick,
 }: GlassCardProps) {
   const delay = index !== undefined ? index * 0.1 : 0;
 
@@ -41,18 +37,14 @@ export function GlassCard({
         hover
           ? {
               scale: 1.02,
-              boxShadow: glowGold
-                ? '0 0 30px rgba(212, 167, 44, 0.15)'
-                : '0 0 30px rgba(45, 212, 160, 0.1)',
+              boxShadow: '0 0 34px var(--accent-glow-12), inset 0 1px 0 rgba(255,255,255,0.06)',
             }
           : undefined
       }
-      onClick={onClick}
       className={cn(
-        glowGold ? 'glass-card-gold p-6' : 'glass-card p-6',
+        'glass-card p-6',
         glow && 'border-glow',
         glowEmerald && 'border-glow-emerald',
-        glowGold && 'border-glow-gold',
         hover && 'transition-shadow duration-300 cursor-pointer',
         className
       )}

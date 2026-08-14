@@ -15,12 +15,11 @@ import {
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { useNavigationStore } from '@/store';
 
 interface SignalData {
   id: string;
@@ -104,7 +103,6 @@ function PricingCard({
   highlight,
   glow,
   allPricesZero,
-  onBuy,
 }: {
   title: string;
   price: number;
@@ -114,20 +112,19 @@ function PricingCard({
   highlight?: boolean;
   glow?: boolean;
   allPricesZero: boolean;
-  onBuy: () => void;
 }) {
   return (
     <GlassCard
       hover
       className={`relative flex flex-col ${
         highlight
-          ? 'border-gold/30 bg-gold/[0.03]'
+          ? 'border-silver/30 bg-silver/[0.03]'
           : ''
       }`}
       glow={glow}
     >
       {badge && (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-gold-foreground border-gold/30 text-xs font-semibold px-3 py-1">
+        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-silver text-silver-foreground border-silver/30 text-xs font-semibold px-3 py-1">
           {badge}
         </Badge>
       )}
@@ -135,10 +132,10 @@ function PricingCard({
         <h3 className="text-xl font-bold text-foreground">{title}</h3>
         <div className="mt-3 flex items-baseline gap-1">
           {allPricesZero ? (
-            <span className="text-3xl font-bold text-gold">Bog'laning</span>
+            <span className="text-3xl font-bold text-silver">Bog'laning</span>
           ) : (
             <>
-              <span className="text-3xl font-bold text-gold">
+              <span className="text-3xl font-bold text-silver">
                 {formatPrice(price, months)}
               </span>
               {months > 1 && (
@@ -167,7 +164,7 @@ function PricingCard({
               transition={{ delay: i * 0.05 }}
               className="flex items-start gap-2.5"
             >
-              <Check className="size-4 text-gold mt-0.5 shrink-0" />
+              <Check className="size-4 text-silver mt-0.5 shrink-0" />
               <span className="text-sm text-muted-foreground">{feature}</span>
             </motion.div>
           )
@@ -175,16 +172,22 @@ function PricingCard({
       </div>
 
       <Button
-        onClick={onBuy}
+        asChild
         className={
           highlight
-            ? 'w-full bg-gold text-gold-foreground hover:bg-gold/90'
-            : 'w-full glass-card hover:bg-gold/10 text-gold'
+            ? 'w-full bg-silver text-silver-foreground hover:bg-silver/90'
+            : 'w-full glass-card hover:bg-silver/10 text-silver'
         }
         size="lg"
       >
-        <Send className="size-4" />
-        {allPricesZero ? "Botga yozing" : 'Sotib olish'}
+        <a
+          href={TELEGRAM.BOT}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Send className="size-4" />
+          {allPricesZero ? "Botga yozing" : 'Sotib olish'}
+        </a>
       </Button>
     </GlassCard>
   );
@@ -209,7 +212,6 @@ function defaultFeatures(months: number): string[] {
 }
 
 export default function SignalsPage() {
-  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -240,26 +242,19 @@ export default function SignalsPage() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 px-4 sm:px-6 overflow-hidden">
-        {/* Sharqona naqshli fon */}
-        <GeometricPattern opacity={0.07} className="-z-[2]" />
-        {/* Burchak ornamentlari */}
-        <CornerOrnament position="top-left" className="z-10" />
-        <CornerOrnament position="top-right" className="z-10" />
-        <CornerOrnament position="bottom-left" className="z-10" />
-        <CornerOrnament position="bottom-right" className="z-10" />
-        <div className="absolute inset-0 bg-glow pointer-events-none" />
+        <TradingHeroDecor variant="signals" className="-z-10" />
         <div className="max-w-4xl mx-auto text-center relative">
           <AnimatedSection>
             <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 rounded-full mb-6">
-              <Activity className="size-4 text-gold" />
-              <span className="text-sm text-gold font-medium">
+              <Activity className="size-4 text-silver" />
+              <span className="text-sm text-silver font-medium">
                 Professional Signallar
               </span>
             </div>
           </AnimatedSection>
 
           <AnimatedSection delay={0.1}>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient mb-4">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient mb-4">
               AT_analysis
             </h1>
           </AnimatedSection>
@@ -287,8 +282,8 @@ export default function SignalsPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {STATS.map((stat, i) => (
               <GlassCard key={stat.label} index={i} className="text-center">
-                <div className="inline-flex items-center justify-center size-10 rounded-lg bg-gold/10 mb-3">
-                  <stat.icon className="size-5 text-gold" />
+                <div className="inline-flex items-center justify-center size-10 rounded-lg bg-silver/10 mb-3">
+                  <stat.icon className="size-5 text-silver" />
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-1">
                   {stat.label}
@@ -317,24 +312,24 @@ export default function SignalsPage() {
                   key={i}
                   className="glass-card p-6 animate-pulse-slow"
                 >
-                  <div className="h-6 bg-gold/10 rounded w-24 mb-4" />
-                  <div className="h-10 bg-gold/10 rounded w-32 mb-6" />
+                  <div className="h-6 bg-silver/10 rounded w-24 mb-4" />
+                  <div className="h-10 bg-silver/10 rounded w-32 mb-6" />
                   <div className="space-y-3">
                     {[1, 2, 3, 4].map((j) => (
                       <div
                         key={j}
-                        className="h-4 bg-gold/10 rounded w-full"
+                        className="h-4 bg-silver/10 rounded w-full"
                       />
                     ))}
                   </div>
-                  <div className="h-10 bg-gold/10 rounded w-full mt-6" />
+                  <div className="h-10 bg-silver/10 rounded w-full mt-6" />
                 </div>
               ))}
             </div>
           ) : allPricesZero ? (
             <AnimatedSection>
               <GlassCard className="max-w-lg mx-auto text-center py-12">
-                <MessageCircle className="size-12 text-gold mx-auto mb-4" />
+                <MessageCircle className="size-12 text-silver mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-foreground mb-2">
                   Narxlar tez orada e'lon qilinadi
                 </h3>
@@ -344,7 +339,7 @@ export default function SignalsPage() {
                 </p>
                 <Button
                   asChild
-                  className="bg-gold text-gold-foreground hover:bg-gold/90"
+                  className="bg-silver text-silver-foreground hover:bg-silver/90"
                   size="lg"
                 >
                   <a
@@ -366,7 +361,6 @@ export default function SignalsPage() {
                 features={signalData?.monthlyFeatures ?? []}
                 months={1}
                 allPricesZero={false}
-                onBuy={() => navigateToPay('signal')}
               />
               <PricingCard
                 title="3 Oylik"
@@ -376,7 +370,6 @@ export default function SignalsPage() {
                 badge="Eng mashhur"
                 highlight
                 allPricesZero={false}
-                onBuy={() => navigateToPay('signal')}
               />
               <PricingCard
                 title="6 Oylik"
@@ -386,7 +379,6 @@ export default function SignalsPage() {
                 badge="Eng yaxshi qiymat"
                 glow
                 allPricesZero={false}
-                onBuy={() => navigateToPay('signal')}
               />
             </div>
           )}
@@ -403,15 +395,15 @@ export default function SignalsPage() {
 
           <div className="relative">
             {/* Connecting line — desktop */}
-            <div className="hidden md:block absolute top-10 left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+            <div className="hidden md:block absolute top-10 left-[calc(12.5%+20px)] right-[calc(12.5%+20px)] h-px bg-gradient-to-r from-transparent via-silver/20 to-transparent" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
               {STEPS.map((step, i) => (
                 <AnimatedSection key={step.number} delay={i * 0.15}>
                   <div className="flex flex-col items-center text-center">
                     <div className="relative mb-4">
-                      <div className="size-12 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center">
-                        <span className="text-lg font-bold text-gold">
+                      <div className="size-12 rounded-full bg-silver/10 border border-silver/20 flex items-center justify-center">
+                        <span className="text-lg font-bold text-silver">
                           {step.number}
                         </span>
                       </div>
@@ -442,7 +434,7 @@ export default function SignalsPage() {
             {/* Telegram-style message bubble */}
             <div className="glass-card overflow-hidden">
               {/* Channel header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gold/10 bg-gold/[0.03]">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-silver/10 bg-silver/[0.03]">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e0e0e0] via-[#c0c0c0] to-[#7c7b7b] flex items-center justify-center shrink-0">
                   <span className="text-sm font-bold text-[#040303] select-none">A</span>
                 </div>
@@ -479,7 +471,7 @@ export default function SignalsPage() {
 
                 {/* Signal levels */}
                 <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-gold/[0.04]">
+                  <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-silver/[0.04]">
                     <span className="text-xs text-muted-foreground">Entry</span>
                     <span className="text-sm font-semibold text-foreground">$92,400</span>
                   </div>
@@ -494,14 +486,14 @@ export default function SignalsPage() {
                 </div>
 
                 {/* Result */}
-                <div className="flex items-center justify-between pt-2 border-t border-gold/10">
+                <div className="flex items-center justify-between pt-2 border-t border-silver/10">
                   <span className="text-xs text-muted-foreground">Natija</span>
                   <span className="text-sm font-bold text-emerald">+5.52%</span>
                 </div>
               </div>
 
               {/* Reactions / link */}
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gold/10 bg-gold/[0.02]">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-silver/10 bg-silver/[0.02]">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="text-base">🔥</span>
                   <span className="text-xs">128</span>
@@ -510,7 +502,7 @@ export default function SignalsPage() {
                   href="https://t.me/abdullohtreydr/5077"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-gold/60 hover:text-gold transition-colors"
+                  className="text-xs text-silver/60 hover:text-silver transition-colors"
                 >
                   t.me/abdullohtreydr/5077 →
                 </a>
@@ -540,7 +532,7 @@ export default function SignalsPage() {
         <div className="max-w-2xl mx-auto text-center">
           <AnimatedSection>
             <div className="glass-card p-8 sm:p-12 bg-glow">
-              <Send className="size-10 text-gold mx-auto mb-4" />
+              <Send className="size-10 text-silver mx-auto mb-4" />
               <h2 className="text-2xl sm:text-3xl font-bold text-gradient mb-3">
                 Signallarni boshlang
               </h2>

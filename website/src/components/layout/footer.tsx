@@ -4,8 +4,7 @@ import { Instagram, Youtube, Send } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Separator } from '@/components/ui/separator';
-import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { pageToHash } from '@/store';
+import { useNavigationStore } from '@/store';
 import { SITE, NAV_ITEMS, TELEGRAM, SOCIAL } from '@/lib/constants';
 import type { PageId } from '@/lib/constants';
 
@@ -27,29 +26,16 @@ const LEGAL_LINKS: { id: PageId; label: string }[] = [
 ];
 
 export function Footer() {
+  const navigate = useNavigationStore((s) => s.navigate);
+
   return (
-    <footer className="relative mt-auto border-t border-glass-border overflow-hidden">
-      {/* Background patterns */}
-      <GeometricPattern opacity={0.09} />
-      <ArabesquePattern opacity={0.06} />
-      {/* Corner ornaments */}
-      <CornerOrnament position="top-left" />
-      <CornerOrnament position="top-right" />
-      <CornerOrnament position="bottom-left" />
-      <CornerOrnament position="bottom-right" />
-
-      {/* Decorative gold top border */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+    <footer className="relative mt-auto border-t border-glass-border">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top Section */}
         <div className="py-12 sm:py-16">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="max-w-sm space-y-4">
-              <div className="flex items-center gap-3">
-                <Logo size="sm" />
-                <span className="text-lg font-bold text-gradient-oriental">{SITE.NAME}</span>
-              </div>
+              <Logo size="sm" />
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {SITE.DESCRIPTION}
               </p>
@@ -60,20 +46,19 @@ export function Footer() {
             <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4">
               {/* Quick Links */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-gold/60" />
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
                   Quick Links
                 </h3>
                 <ul className="space-y-2.5">
                   {QUICK_LINKS.map((link) => (
                     <li key={link.id}>
-                      <a
-                        href={pageToHash(link.id)}
-                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      <button
+                        type="button"
+                        onClick={() => navigate(link.id)}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -81,20 +66,19 @@ export function Footer() {
 
               {/* Resources */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-gold/60" />
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
                   Resources
                 </h3>
                 <ul className="space-y-2.5">
                   {RESOURCE_LINKS.map((link) => (
                     <li key={link.label}>
-                      <a
-                        href={pageToHash(link.id)}
-                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      <button
+                        type="button"
+                        onClick={() => navigate(link.id)}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -102,20 +86,19 @@ export function Footer() {
 
               {/* Legal */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-gold/60" />
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
                   Legal
                 </h3>
                 <ul className="space-y-2.5">
                   {LEGAL_LINKS.map((link) => (
                     <li key={link.label}>
-                      <a
-                        href={pageToHash(link.id)}
-                        className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      <button
+                        type="button"
+                        onClick={() => navigate(link.id)}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <span className="size-1 rounded-full bg-gold/0 group-hover:bg-gold/50 transition-all duration-300" />
                         {link.label}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -123,19 +106,20 @@ export function Footer() {
 
               {/* Connect */}
               <div>
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-gold/60" />
+                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-emerald">
                   Connect
                 </h3>
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   <li>
                     <a
                       href={SOCIAL.INSTAGRAM}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Instagram className="w-4 h-4 text-pink-500" />
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                        <Instagram className="size-3.5" />
+                      </span>
                       Instagram
                     </a>
                   </li>
@@ -144,9 +128,11 @@ export function Footer() {
                       href={SOCIAL.YOUTUBE}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Youtube className="w-4 h-4 text-red-600" />
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-[#ff0000] text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                        <Youtube className="size-3.5" />
+                      </span>
                       YouTube
                     </a>
                   </li>
@@ -155,9 +141,11 @@ export function Footer() {
                       href={SOCIAL.TELEGRAM}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Send className="w-4 h-4 text-sky-500" />
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-[#229ED9] text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                        <Send className="size-3.5" />
+                      </span>
                       Telegram
                     </a>
                   </li>
@@ -166,9 +154,11 @@ export function Footer() {
                       href={TELEGRAM.BOT}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Send className="w-4 h-4 text-sky-500" />
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-[#229ED9] text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                        <Send className="size-3.5" />
+                      </span>
                       Telegram Bot
                     </a>
                   </li>
@@ -177,9 +167,11 @@ export function Footer() {
                       href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-gold-light transition-colors group flex items-center gap-2"
+                      className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Send className="w-4 h-4 text-sky-500" />
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-emerald text-emerald-foreground shadow-sm transition-transform duration-300 group-hover:scale-110">
+                        <Send className="size-3.5" />
+                      </span>
                       Support
                     </a>
                   </li>
@@ -189,19 +181,16 @@ export function Footer() {
           </div>
         </div>
 
-        <OrientalDivider variant="simple" />
+        <Separator className="bg-glass-border" />
 
         {/* Bottom Section */}
         <div className="flex flex-col items-center gap-3 py-6 sm:flex-row sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            © 2025 {SITE.NAME} by {SITE.FOUNDER}. All rights reserved.
+            © 2024 {SITE.NAME} by {SITE.FOUNDER}. All rights reserved.
           </p>
-          <div className="flex items-center gap-3">
-            <p className="text-xs font-medium tracking-[0.2em] text-gold/60">
-              {SITE.TAGLINE}
-            </p>
-            <span className="size-1.5 rotate-45 bg-gold/30" />
-          </div>
+          <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground/60">
+            {SITE.TAGLINE}
+          </p>
         </div>
       </div>
     </footer>

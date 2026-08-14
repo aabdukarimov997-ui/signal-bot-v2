@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap,
   Activity,
@@ -21,17 +21,19 @@ import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
 import { Logo } from '@/components/shared/logo';
+import { MarketTicker } from '@/components/shared/market-ticker';
+import { TradingBg } from '@/components/shared/trading-bg';
+import { FearGreedIndex } from '@/components/shared/fear-greed';
+import { MarketPulse } from '@/components/shared/market-pulse';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { PriceTicker } from '@/components/shared/price-ticker';
-import { GeometricPattern, ArabesquePattern, OrientalDivider, CornerOrnament, GoldFrame } from '@/components/shared/oriental-pattern';
 
 /* ──────────────── stagger children container ──────────────── */
-const stagger: Variants = {
+const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 };
-const fadeUp: Variants = {
+const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
@@ -87,6 +89,17 @@ export default function HomePage() {
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannersReady, setBannersReady] = useState(false);
 
+  /* force-start the hero bull/bear animations after mount (some browsers
+     defer CSS animation start-times; this guarantees they run) */
+  useEffect(() => {
+    document.querySelectorAll('.animate-bull, .animate-bear').forEach((el) => {
+      el.getAnimations().forEach((a) => {
+        a.cancel();
+        a.play();
+      });
+    });
+  }, []);
+
   /* fetch banners */
   useEffect(() => {
     let cancelled = false;
@@ -124,140 +137,201 @@ export default function HomePage() {
 
   /* ────────── HERO ────────── */
   const hero = (
-    <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center overflow-hidden px-4 py-16 sm:py-24">
-      {/* Sharqona geometric background patterns */}
-      <GeometricPattern opacity={0.12} className="-z-[4]" />
-      <ArabesquePattern opacity={0.07} className="-z-[3]" />
-      {/* Corner ornaments — 4 ta burchakda */}
-      <CornerOrnament position="top-left" className="z-10" />
-      <CornerOrnament position="top-right" className="z-10" />
-      <CornerOrnament position="bottom-left" className="z-10" />
-      <CornerOrnament position="bottom-right" className="z-10" />
+    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col overflow-hidden">
+      {/* live market ticker */}
+      <MarketTicker />
 
-      {/* Gold + emerald radial glow overlay */}
+      {/* animated candlestick canvas background */}
+      <TradingBg className="opacity-70" />
+
+      {/* aurora orbs */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-[5]"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 20%, rgba(212,167,44,0.08) 0%, rgba(45,212,160,0.04) 25%, rgba(212,167,44,0.02) 45%, rgba(192,192,192,0.03) 60%, transparent 75%)',
-        }}
+        className="glow-orb -top-24 left-1/2 h-[420px] w-[720px] -translate-x-1/2 bg-emerald/12"
+      />
+      <div
+        aria-hidden
+        className="glow-orb -bottom-40 -left-24 h-[380px] w-[380px] bg-gold/8"
+      />
+      <div
+        aria-hidden
+        className="glow-orb -right-32 top-1/3 h-[360px] w-[360px] bg-[#3ec9f5]/8"
       />
 
+      {/* live bull & bear silhouettes (bull market vs bear market) */}
+      <div aria-hidden className="pointer-events-none absolute bottom-0 left-0 z-0 animate-bull">
+        <img
+          src="/bull-silhouette.svg"
+          alt=""
+          className="h-[36vh] w-auto max-h-[420px] select-none opacity-[0.24] sm:h-[44vh] lg:h-[50vh]"
+          style={{
+            transform: 'scaleX(-1)',
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.3) 65%, transparent 100%)',
+            WebkitMaskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.3) 65%, transparent 100%)',
+          }}
+        />
+      </div>
+      <div aria-hidden className="pointer-events-none absolute bottom-0 right-0 z-0 animate-bear">
+        <img
+          src="/bear-silhouette.svg"
+          alt=""
+          className="h-[42vh] w-auto max-h-[480px] select-none opacity-[0.2] sm:h-[52vh] lg:h-[58vh]"
+          style={{
+            maskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.3) 65%, transparent 100%)',
+            WebkitMaskImage:
+              'linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.3) 65%, transparent 100%)',
+          }}
+        />
+      </div>
+
+      {/* floating stat cards (desktop) */}
       <motion.div
-        variants={stagger}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col items-center text-center max-w-4xl mx-auto"
+        aria-hidden
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.9, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="absolute right-[6%] top-[30%] z-10 hidden xl:block"
       >
-        {/* large logo with background */}
-        <motion.div variants={fadeUp} className="mb-6">
-          <Logo size="hero" showBackground />
-        </motion.div>
-
-        {/* Decorative top star */}
-        <motion.div variants={fadeUp} className="mb-4">
-          <svg width="32" height="16" viewBox="0 0 32 16" className="text-gold/40 mx-auto">
-            <path d="M0 8 C4 4, 8 4, 12 8 C16 12, 20 12, 24 8 C28 4, 32 4, 32 8" stroke="currentColor" strokeWidth="0.5" fill="none" />
-            <polygon points="16,2 17,6 21,6 18,8 19,12 16,9 13,12 14,8 11,6 15,6" fill="currentColor" opacity="0.6" />
-          </svg>
-        </motion.div>
-
-        {/* tagline - gold theme */}
-        <motion.span
-          variants={fadeUp}
-          className="mb-4 inline-block rounded-full border border-gold/20 px-4 py-1.5 text-xs tracking-widest text-gold/80 uppercase glass-gold"
-        >
-          {SITE.TAGLINE}
-        </motion.span>
-
-        {/* heading - oriental text gradient */}
-        <motion.h1
-          variants={fadeUp}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight"
-        >
-          <span className="text-gradient-oriental">Professional Crypto</span>
-          <br />
-          <span className="text-gradient-oriental">Trading Academy</span>
-        </motion.h1>
-
-        {/* description */}
-        <motion.p
-          variants={fadeUp}
-          className="mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed"
-        >
-          AAA Crypto Trading Academy — kripto valyuta bozorida professional
-          savdo qilishni o&apos;rganish uchun eng yaxshi platforma. Nazariy
-          bilimlar, amaliy mashg&apos;ulotlar, aniq signallar va faol
-          hamjamiyat bilan muvaffaqiyatga erishish osonroq.
-        </motion.p>
-
-        {/* CTA buttons */}
-        <motion.div
-          variants={fadeUp}
-          className="mt-8 flex flex-wrap items-center justify-center gap-3"
-        >
-          <Button
-            size="lg"
-            onClick={() => navigate('course')}
-            className="rounded-xl px-6 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
-          >
-            Trading Haqiqati
-            <ArrowRight className="size-4 ml-1" />
-          </Button>
-
-          <a
-            href={TELEGRAM.BOT}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-xl px-6 text-sm font-semibold border-glass-border text-gold hover:text-white hover:bg-white/5"
-            >
-              Telegram Bot
-            </Button>
-          </a>
-
-          <a
-            href={TELEGRAM.MARKETING_CHANNEL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button
-              size="lg"
-              variant="ghost"
-              className="rounded-xl px-6 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Kanalga Qo&apos;shiling
-            </Button>
-          </a>
-        </motion.div>
+        <div className="glass-card animate-float rounded-2xl px-5 py-4">
+          <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            Signal Win Rate
+          </p>
+          <p className="mt-1 font-display text-3xl font-bold text-gradient-emerald">
+            94%
+          </p>
+        </div>
       </motion.div>
 
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0, x: -40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.05, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="absolute left-[6%] top-[46%] z-10 hidden xl:block"
+      >
+        <div className="glass-card animate-float-slow rounded-2xl px-5 py-4">
+          <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            Kunlik Signallar
+          </p>
+          <p className="mt-1 font-display text-3xl font-bold text-gradient-gold">
+            3–5
+          </p>
+        </div>
+      </motion.div>
 
+      <motion.div
+        aria-hidden
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="absolute bottom-[22%] right-[12%] z-10 hidden xl:block"
+      >
+        <div className="glass-card animate-float rounded-2xl px-5 py-4" style={{ animationDelay: '1.5s' }}>
+          <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+            Bozor Tajribasi
+          </p>
+          <p className="mt-1 font-display text-3xl font-bold text-gradient-silver">
+            5+ yil
+          </p>
+        </div>
+      </motion.div>
+
+      {/* centered hero content */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-16 sm:py-24">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+          className="flex max-w-4xl flex-col items-center text-center mx-auto"
+        >
+          {/* large logo with background */}
+          <motion.div variants={fadeUp} className="mb-6">
+            <Logo size="hero" showBackground />
+          </motion.div>
+
+          {/* tagline */}
+          <motion.span
+            variants={fadeUp}
+            className="mb-4 inline-block rounded-full border border-emerald/25 px-4 py-1.5 text-xs tracking-widest text-emerald/90 uppercase glass-emerald"
+          >
+            {SITE.TAGLINE}
+          </motion.span>
+
+          {/* heading */}
+          <motion.h1
+            variants={fadeUp}
+            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-[1.04] tracking-tight"
+          >
+            <span className="text-gradient">Professional Crypto</span>
+            <br />
+            <span className="text-gradient">Trading Academy</span>
+          </motion.h1>
+
+          {/* description */}
+          <motion.p
+            variants={fadeUp}
+            className="mt-7 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed"
+          >
+            AAA Crypto Trading Academy — kripto valyuta bozorida professional
+            savdo qilishni o&apos;rganish uchun eng yaxshi platforma. Nazariy
+            bilimlar, amaliy mashg&apos;ulotlar, aniq signallar va faol
+            hamjamiyat bilan muvaffaqiyatga erishish osonroq.
+          </motion.p>
+
+          {/* CTA buttons */}
+          <motion.div
+            variants={fadeUp}
+            className="mt-9 flex flex-wrap items-center justify-center gap-3"
+          >
+            <Button
+              size="lg"
+              onClick={() => navigate('course')}
+              className="group rounded-xl px-7 text-sm font-semibold bg-emerald text-emerald-foreground shadow-[0_0_28px_var(--accent-glow-25)] hover:bg-emerald/90 hover:shadow-[0_0_40px_var(--accent-glow-40)]"
+            >
+              Trading Haqiqati
+              <ArrowRight className="size-4 ml-1 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+
+            <a
+              href={TELEGRAM.BOT}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-xl px-7 text-sm font-semibold border-glass-border text-silver hover:text-foreground hover:bg-muted/40"
+              >
+                Telegram Bot
+              </Button>
+            </a>
+
+            <a
+              href={TELEGRAM.MARKETING_CHANNEL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                size="lg"
+                variant="ghost"
+                className="rounded-xl px-6 text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Kanalga Qo&apos;shiling
+              </Button>
+            </a>
+          </motion.div>
+        </motion.div>
+      </div>
     </section>
   );
 
-  /* ────────── PRICE TICKER ────────── */
-  const priceTicker = (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <PriceTicker />
-    </motion.div>
-  );
-
-  {/* ────────── ORIENTAL DIVIDER ────────── */}
-  const divider = <OrientalDivider />;
-
-  {/* ────────── FEATURES ────────── */}
+  /* ────────── FEATURES ────────── */
   const features = (
-    <section className="relative px-4 py-20 sm:py-28 overflow-hidden">
-      <GeometricPattern opacity={0.06} className="-z-[1]" />
-      <div className="mx-auto max-w-6xl relative">
+    <section className="relative px-4 py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl">
         <SectionHeading
           title="Nima Uchun AAA?"
           subtitle="Professional ta'lim, ishonchli signallar, premium hamjamiyat"
@@ -267,9 +341,9 @@ export default function HomePage() {
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
-              <GlassCard key={f.title} hover glowGold index={i} className="p-6 flex flex-col gap-4">
-                <div className="flex size-12 items-center justify-center rounded-xl bg-gold/10 border border-gold/15">
-                  <Icon className="size-6 text-gold" />
+              <GlassCard key={f.title} hover index={i} className="p-6 flex flex-col gap-4">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-emerald/10 border border-emerald/15">
+                  <Icon className="size-6 text-emerald" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
@@ -286,7 +360,7 @@ export default function HomePage() {
     <section className="relative px-4 py-16">
       <div className="mx-auto max-w-4xl">
         <AnimatedSection>
-          <div className="glass-card-gold p-8 sm:p-10">
+          <div className="glass-card p-8 sm:p-10 border-glow-emerald">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-4 text-center">
               {STATS.map((s) => (
                 <div key={s.label} className="flex flex-col items-center gap-2">
@@ -298,6 +372,14 @@ export default function HomePage() {
                   </span>
                 </div>
               ))}
+            </div>
+
+            {/* jonli bozor kayfiyati */}
+            <div className="mt-8 border-t border-glass-border pt-6 flex flex-col gap-5">
+              <FearGreedIndex compact />
+              <div className="border-t border-glass-border pt-5">
+                <MarketPulse compact />
+              </div>
             </div>
           </div>
         </AnimatedSection>
@@ -326,10 +408,10 @@ export default function HomePage() {
                   className="pointer-events-none absolute inset-0 -z-10"
                   style={{
                     background:
-                      'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(45,212,160,0.06) 0%, transparent 70%)',
+                      'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(46,230,168,0.07) 0%, transparent 70%)',
                   }}
                 />
-                <h3 className="text-2xl sm:text-3xl font-bold text-gradient-oriental">
+                <h3 className="text-2xl sm:text-3xl font-bold text-gradient">
                   Trading Haqiqati kursini boshlang
                 </h3>
                 <p className="max-w-lg text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -339,7 +421,7 @@ export default function HomePage() {
                 <a href={TELEGRAM.BOT} target="_blank" rel="noopener noreferrer">
                   <Button
                     size="lg"
-                    className="rounded-xl px-8 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
+                    className="rounded-xl px-8 text-sm font-semibold bg-emerald text-emerald-foreground hover:bg-emerald/90"
                   >
                     Telegram Bot orqali boshlang
                     <ArrowRight className="size-4 ml-1.5" />
@@ -389,7 +471,7 @@ export default function HomePage() {
                       >
                         <Button
                           size="lg"
-                          className="rounded-xl px-8 text-sm font-semibold bg-gradient-to-r from-gold to-amber text-[#040303] hover:from-gold-dark hover:to-gold shadow-lg shadow-gold/20"
+                          className="rounded-xl px-8 text-sm font-semibold bg-emerald text-emerald-foreground hover:bg-emerald/90"
                         >
                           Batafsil
                           <ArrowRight className="size-4 ml-1.5" />
@@ -406,7 +488,7 @@ export default function HomePage() {
                   type="button"
                   onClick={prev}
                   aria-label="Oldingi banner"
-                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-gold transition-colors rounded-lg"
+                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-silver transition-colors rounded-lg"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -420,7 +502,7 @@ export default function HomePage() {
                       className={cn(
                         'h-2 rounded-full transition-all duration-300',
                         i === activeBanner
-                          ? 'w-6 bg-gold'
+                          ? 'w-6 bg-silver'
                           : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
                       )}
                     />
@@ -430,7 +512,7 @@ export default function HomePage() {
                   type="button"
                   onClick={next}
                   aria-label="Keyingi banner"
-                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-gold transition-colors rounded-lg"
+                  className="glass-card flex size-9 items-center justify-center text-muted-foreground hover:text-silver transition-colors rounded-lg"
                 >
                   <ChevronRight className="size-4" />
                 </button>
@@ -456,17 +538,16 @@ export default function HomePage() {
     <section className="relative px-4 py-20 sm:py-28">
       <div className="mx-auto max-w-3xl">
         <AnimatedSection>
-          <GlassCard glowGold className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
-            <GeometricPattern opacity={0.09} />
+          <GlassCard glow className="relative overflow-hidden p-8 sm:p-12 flex flex-col items-center text-center gap-6">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 -z-10"
               style={{
                 background:
-                  'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(212,167,44,0.04) 0%, transparent 60%)',
+                  'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(46,230,168,0.05) 0%, transparent 60%)',
               }}
             />
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-oriental">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient">
               Telegram Kanalga Qo&apos;shiling
             </h2>
             <p className="max-w-xl text-muted-foreground text-sm sm:text-base leading-relaxed">
@@ -481,7 +562,8 @@ export default function HomePage() {
                 href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gold hover:underline underline-offset-2"              >
+                className="text-emerald hover:underline underline-offset-2"
+              >
                 {TELEGRAM.HELP}
               </a>
             </p>
@@ -497,11 +579,8 @@ export default function HomePage() {
   return (
     <main className="flex flex-col">
       {hero}
-      {priceTicker}
       {features}
-      {divider}
       {stats}
-      {divider}
       {bannerSection}
       {telegramCta}
     </main>

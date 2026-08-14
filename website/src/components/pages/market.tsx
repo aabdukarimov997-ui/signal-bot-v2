@@ -12,10 +12,14 @@ import {
   Sun,
   TrendingUp,
   TrendingDown,
+  Activity,
 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
+import { FearGreedIndex } from '@/components/shared/fear-greed';
+import { MarketPulse } from '@/components/shared/market-pulse';
 import { CRYPTO_TICKERS } from '@/lib/constants';
 
 interface CryptoPrice {
@@ -116,7 +120,7 @@ export default function MarketPage() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative pt-32 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 bg-glow pointer-events-none" />
+        <TradingHeroDecor variant="heatmap" className="-z-10" />
         <div className="max-w-7xl mx-auto text-center relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -260,6 +264,29 @@ export default function MarketPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Bozor Kayfiyati — Qo'rquv va Ochko'zlik Indeksi */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="max-w-7xl mx-auto">
+          <AnimatedSection delay={0.05}>
+            <h3 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-silver" />
+              Bozor Kayfiyati
+            </h3>
+          </AnimatedSection>
+
+          <AnimatedSection delay={0.1}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GlassCard className="p-5 sm:p-7">
+                <FearGreedIndex />
+              </GlassCard>
+              <GlassCard className="p-5 sm:p-7">
+                <MarketPulse />
+              </GlassCard>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 

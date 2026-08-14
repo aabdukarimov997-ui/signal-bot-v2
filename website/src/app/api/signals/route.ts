@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 const DEFAULT_SIGNAL = {
   id: "",
@@ -49,10 +50,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
-    const adminSecret = request.headers.get("x-admin-secret");
-    // For now, allow all requests. In production, check against ADMIN_SECRET env var.
-
     const body = await request.json();
     const { id, ...fields } = body;
 

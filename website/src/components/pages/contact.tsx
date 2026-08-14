@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { TELEGRAM } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,8 @@ interface ContactMethod {
   icon: typeof Send;
   href: string;
   external?: boolean;
+  iconClass: string;
+  chipClass: string;
 }
 
 const contactMethods: ContactMethod[] = [
@@ -28,6 +31,8 @@ const contactMethods: ContactMethod[] = [
     icon: Send,
     href: TELEGRAM.BOT,
     external: true,
+    iconClass: 'text-[#229ED9]',
+    chipClass: 'bg-[#229ED9]/10 group-hover:bg-[#229ED9]/20',
   },
   {
     title: 'Kanal',
@@ -35,6 +40,8 @@ const contactMethods: ContactMethod[] = [
     icon: MessageSquare,
     href: TELEGRAM.MARKETING_CHANNEL,
     external: true,
+    iconClass: 'text-[#229ED9]',
+    chipClass: 'bg-[#229ED9]/10 group-hover:bg-[#229ED9]/20',
   },
   {
     title: 'Yordam',
@@ -42,6 +49,8 @@ const contactMethods: ContactMethod[] = [
     icon: HelpCircle,
     href: `https://t.me/${TELEGRAM.HELP.replace('@', '')}`,
     external: true,
+    iconClass: 'text-emerald',
+    chipClass: 'bg-emerald/10 group-hover:bg-emerald/20',
   },
 ];
 
@@ -143,16 +152,14 @@ export default function ContactPage() {
     <main className="min-h-screen">
       {/* ── Hero ── */}
       <section className="relative pt-32 pb-16 px-4">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(192,192,192,0.04)_0%,transparent_70%)]" />
-        </div>
+        <TradingHeroDecor variant="chat" className="-z-10" />
 
         <AnimatedSection className="relative max-w-4xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient"
+            className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient"
           >
             Aloqa
           </motion.h1>
@@ -186,8 +193,8 @@ export default function ContactPage() {
                     rel="noopener noreferrer"
                     className="block"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-gold/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-gold/15 transition-colors duration-300">
-                      <Icon className="w-6 h-6 text-gold" />
+                    <div className={`w-14 h-14 rounded-xl ${method.chipClass} flex items-center justify-center mx-auto mb-4 transition-colors duration-300`}>
+                      <Icon className={`w-6 h-6 ${method.iconClass}`} />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">
                       {method.title}
@@ -195,7 +202,7 @@ export default function ContactPage() {
                     <p className="text-sm text-muted-foreground">
                       {method.description}
                     </p>
-                    <span className="inline-flex items-center gap-1 mt-3 text-xs text-gold/60 group-hover:text-gold transition-colors">
+                    <span className="inline-flex items-center gap-1 mt-3 text-xs text-silver/60 group-hover:text-silver transition-colors">
                       Ochish
                       <ExternalLink className="w-3 h-3" />
                     </span>
@@ -361,31 +368,31 @@ export default function ContactPage() {
                   href={TELEGRAM.MARKETING_CHANNEL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-[#229ED9]/10 transition-colors duration-200"
                 >
-                  <MessageSquare className="w-4 h-4 text-gold" />
+                  <MessageSquare className="w-4 h-4 text-[#229ED9]" />
                   Telegram Kanal
-                  <ExternalLink className="w-3 h-3 text-gold/50" />
+                  <ExternalLink className="w-3 h-3 text-[#229ED9]/60" />
                 </a>
                 <a
                   href={TELEGRAM.BOT}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-[#229ED9]/10 transition-colors duration-200"
                 >
-                  <Send className="w-4 h-4 text-gold" />
+                  <Send className="w-4 h-4 text-[#229ED9]" />
                   Telegram Bot
-                  <ExternalLink className="w-3 h-3 text-gold/50" />
+                  <ExternalLink className="w-3 h-3 text-[#229ED9]/60" />
                 </a>
                 <a
                   href={`https://t.me/${TELEGRAM.HELP.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-glass-strong transition-colors duration-200"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-glass border border-glass-border text-sm text-foreground/80 hover:text-foreground hover:bg-emerald/10 transition-colors duration-200"
                 >
-                  <HelpCircle className="w-4 h-4 text-gold" />
+                  <HelpCircle className="w-4 h-4 text-emerald" />
                   Yordam
-                  <ExternalLink className="w-3 h-3 text-gold/50" />
+                  <ExternalLink className="w-3 h-3 text-emerald/60" />
                 </a>
               </div>
             </GlassCard>

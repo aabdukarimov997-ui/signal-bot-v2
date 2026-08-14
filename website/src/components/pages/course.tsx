@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Check,
   ArrowRight,
@@ -10,24 +10,23 @@ import {
   MonitorSmartphone,
   Send,
 } from 'lucide-react';
+import { TELEGRAM } from '@/lib/constants';
 import type { Course } from '@/lib/types';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { GeometricPattern, ArabesquePattern, CornerOrnament, OrientalDivider } from '@/components/shared/oriental-pattern';
-import { TELEGRAM } from '@/lib/constants';
-import { useNavigationStore } from '@/store';
 
 /* ──────────────── animation helpers ──────────────── */
-const stagger: Variants = {
+const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 };
-const fadeUp: Variants = {
+const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
@@ -76,7 +75,6 @@ interface PricingCardProps {
   glow?: boolean;
   highlightBorder?: boolean;
   index: number;
-  onBuy: () => void;
 }
 
 function PricingCard({
@@ -87,7 +85,6 @@ function PricingCard({
   glow = false,
   highlightBorder = false,
   index,
-  onBuy,
 }: PricingCardProps) {
   const hasPrice = price > 0;
 
@@ -98,12 +95,12 @@ function PricingCard({
       index={index}
       className={cn(
         'relative flex flex-col p-6 sm:p-8',
-        highlightBorder && 'border-gold/40'
+        highlightBorder && 'border-silver/40'
       )}
     >
       {/* badge */}
       {badge && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold text-gold-foreground px-4 py-1 text-xs font-semibold tracking-wide">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-silver text-silver-foreground px-4 py-1 text-xs font-semibold tracking-wide">
           {badge}
         </span>
       )}
@@ -130,48 +127,39 @@ function PricingCard({
       <ul className="flex-1 space-y-3 mb-8">
         {features.map((f, i) => (
           <li key={i} className="flex items-start gap-2.5 text-sm">
-            <Check className="size-4 text-gold shrink-0 mt-0.5" />
+            <Check className="size-4 text-silver shrink-0 mt-0.5" />
             <span className="text-muted-foreground leading-snug">{f}</span>
           </li>
         ))}
       </ul>
 
       {/* CTA button */}
-      {hasPrice ? (
+      <a
+        href={TELEGRAM.BOT}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full"
+      >
         <Button
-          onClick={onBuy}
           size="lg"
           className={cn(
             'w-full rounded-xl text-sm font-semibold',
             glow
-              ? 'bg-gold text-gold-foreground hover:bg-gold/90'
-              : 'border border-glass-border text-gold hover:text-white hover:bg-white/5'
+              ? 'bg-silver text-silver-foreground hover:bg-silver/90'
+              : 'border border-glass-border text-silver hover:text-foreground hover:bg-muted/40'
           )}
           variant={glow ? 'default' : 'outline'}
         >
-          Sotib olish
+          {hasPrice ? 'Sotib olish' : "Botga murojaat qiling"}
           <ArrowRight className="size-4 ml-1.5" />
         </Button>
-      ) : (
-        <Button
-          asChild
-          size="lg"
-          className="w-full rounded-xl text-sm font-semibold border border-glass-border text-gold hover:text-white hover:bg-white/5"
-          variant="outline"
-        >
-          <a href={TELEGRAM.BOT} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2">
-            Botga murojaat qiling
-            <ArrowRight className="size-4 ml-1.5" />
-          </a>
-        </Button>
-      )}
+      </a>
     </GlassCard>
   );
 }
 
 /* ──────────────── main component ──────────────── */
 export default function CoursePage() {
-  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -205,23 +193,8 @@ export default function CoursePage() {
 
   /* ────────── HERO ────────── */
   const hero = (
-    <section className="relative px-4 pt-28 pb-16 sm:pt-32 sm:pb-20 overflow-hidden">
-      {/* Sharqona naqshli fon */}
-      <GeometricPattern opacity={0.07} className="-z-[2]" />
-      <ArabesquePattern opacity={0.045} className="-z-[3]" />
-      {/* Burchak ornamentlari */}
-      <CornerOrnament position="top-left" className="z-10" />
-      <CornerOrnament position="top-right" className="z-10" />
-      <CornerOrnament position="bottom-left" className="z-10" />
-      <CornerOrnament position="bottom-right" className="z-10" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(192,192,192,0.05) 0%, transparent 70%)',
-        }}
-      />
+    <section className="relative px-4 pt-28 pb-16 sm:pt-32 sm:pb-20">
+      <TradingHeroDecor variant="candles" className="-z-10" />
 
       <motion.div
         variants={stagger}
@@ -231,7 +204,7 @@ export default function CoursePage() {
       >
         <motion.h1
           variants={fadeUp}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gradient"
+          className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-gradient"
         >
           Trading Haqiqati
         </motion.h1>
@@ -299,7 +272,6 @@ export default function CoursePage() {
                     ]
               }
               index={0}
-              onBuy={() => navigateToPay('course')}
             />
             <PricingCard
               tier="Professional"
@@ -319,7 +291,6 @@ export default function CoursePage() {
               }
               highlightBorder
               index={1}
-              onBuy={() => navigateToPay('course')}
             />
             <PricingCard
               tier="Master"
@@ -340,7 +311,6 @@ export default function CoursePage() {
               }
               glow
               index={2}
-              onBuy={() => navigateToPay('course')}
             />
           </div>
         )}
@@ -356,8 +326,8 @@ export default function CoursePage() {
         <AnimatedSection>
           <GlassCard className="p-6 sm:p-8 h-full">
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                <BookOpen className="size-5 text-gold" />
+              <div className="flex size-10 items-center justify-center rounded-xl bg-muted/40 border border-glass-border">
+                <BookOpen className="size-5 text-silver" />
               </div>
               <h3 className="text-xl font-bold text-foreground">
                 Nimalarni O&apos;rganasiz?
@@ -367,7 +337,7 @@ export default function CoursePage() {
             <ul className="space-y-3">
               {MODULES.map((mod, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-white/[0.04] text-xs text-gold font-medium mt-0.5">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-muted/40 text-xs text-silver font-medium mt-0.5">
                     {i + 1}
                   </span>
                   <span className="text-muted-foreground leading-snug">{mod}</span>
@@ -383,8 +353,8 @@ export default function CoursePage() {
           <AnimatedSection delay={0.1}>
             <GlassCard className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                  <Users className="size-5 text-gold" />
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted/40 border border-glass-border">
+                  <Users className="size-5 text-silver" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">
                   Bu Kurs Kimlar Uchun?
@@ -394,7 +364,7 @@ export default function CoursePage() {
               <ul className="space-y-3">
                 {TARGET_AUDIENCE.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm">
-                    <Check className="size-4 text-gold shrink-0 mt-0.5" />
+                    <Check className="size-4 text-silver shrink-0 mt-0.5" />
                     <span className="text-muted-foreground leading-snug">{item}</span>
                   </li>
                 ))}
@@ -406,8 +376,8 @@ export default function CoursePage() {
           <AnimatedSection delay={0.2}>
             <GlassCard className="p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] border border-glass-border">
-                  <MonitorSmartphone className="size-5 text-gold" />
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted/40 border border-glass-border">
+                  <MonitorSmartphone className="size-5 text-silver" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Talablar</h3>
               </div>
@@ -415,7 +385,7 @@ export default function CoursePage() {
               <ul className="space-y-3">
                 {REQUIREMENTS.map((req, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm">
-                    <Check className="size-4 text-gold shrink-0 mt-0.5" />
+                    <Check className="size-4 text-silver shrink-0 mt-0.5" />
                     <span className="text-muted-foreground leading-snug">{req}</span>
                   </li>
                 ))}
@@ -441,8 +411,8 @@ export default function CoursePage() {
                   'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(192,192,192,0.04) 0%, transparent 60%)',
               }}
             />
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-white/[0.04] border border-glass-border">
-              <Send className="size-7 text-gold" />
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/40 border border-glass-border">
+              <Send className="size-7 text-silver" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gradient">
               Kursni sotib olish uchun Telegram Botga murojaat qiling
@@ -463,11 +433,8 @@ export default function CoursePage() {
     <main className="flex flex-col">
       {hero}
       {pricing}
-      <OrientalDivider />
       {details}
-      <OrientalDivider />
       {telegramCta}
-
     </main>
   );
 }

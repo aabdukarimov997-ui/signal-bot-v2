@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 const DEFAULT_COURSE = {
   id: "",
@@ -49,13 +50,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
-    const adminSecret = request.headers.get("x-admin-secret");
-    // For now, allow all requests. In production, check against ADMIN_SECRET env var.
-    // if (adminSecret !== process.env.ADMIN_SECRET) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    // }
-
     const body = await request.json();
     const { id, ...fields } = body;
 

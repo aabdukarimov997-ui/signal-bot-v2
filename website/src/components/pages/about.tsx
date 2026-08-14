@@ -11,9 +11,11 @@ import {
   Send,
   UserPlus,
 } from 'lucide-react';
+import Image from 'next/image';
 import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
+import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { TELEGRAM, SITE } from '@/lib/constants';
 
 const missions = [
@@ -58,16 +60,14 @@ export default function AboutPage() {
     <main className="min-h-screen">
       {/* ── Hero ── */}
       <section className="relative pt-32 pb-20 px-4">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(192,192,192,0.04)_0%,transparent_70%)]" />
-        </div>
+        <TradingHeroDecor variant="profile" className="-z-10" />
 
         <AnimatedSection className="relative max-w-4xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient"
+            className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gradient"
           >
             Biz Haqimizda
           </motion.h1>
@@ -90,28 +90,32 @@ export default function AboutPage() {
           <AnimatedSection delay={0.1}>
             <GlassCard glow className="p-8 sm:p-10">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
-                {/* Avatar */}
+                {/* Avatar — asoschi rasmi */}
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   whileInView={{ scale: 1, opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#e0e0e0] via-[#c0c0c0] to-[#7c7b7b] flex items-center justify-center shadow-lg shadow-gold/10"
+                  className="shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden ring-2 ring-emerald/40 shadow-lg shadow-emerald/10"
                 >
-                  <span className="text-4xl sm:text-5xl font-bold text-[#040303] select-none">
-                    A
-                  </span>
+                  <Image
+                    src="/founder.jpg"
+                    alt={SITE.FOUNDER}
+                    width={112}
+                    height={112}
+                    className="h-full w-full object-cover"
+                  />
                 </motion.div>
 
                 {/* Info */}
                 <div className="text-center sm:text-left flex-1">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-gradient-gold">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gradient-silver">
                     {SITE.FOUNDER}
                   </h3>
-                  <p className="mt-2 text-sm font-medium tracking-wider uppercase text-gold/70">
+                  <p className="mt-2 text-sm font-medium tracking-wider uppercase text-silver/70">
                     5 yillik Mutaxassis &amp; Spot Treyder
                   </p>
-                  <div className="mt-1 w-12 h-0.5 bg-gradient-to-r from-gold/60 to-transparent mx-auto sm:mx-0" />
+                  <div className="mt-1 w-12 h-0.5 bg-gradient-to-r from-silver/60 to-transparent mx-auto sm:mx-0" />
                   <p className="mt-4 text-muted-foreground leading-relaxed">
                     Kripto savdo bo&apos;yicha 5 yillik tajriba va mutaxassislik.
                     Spot treyding va professional ta&apos;lim orqali savdogarlarga
@@ -139,8 +143,8 @@ export default function AboutPage() {
               const Icon = mission.icon;
               return (
                 <GlassCard key={mission.title} hover index={i} className="p-6 h-full">
-                  <div className="w-12 h-12 rounded-lg bg-gold/10 flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-gold" />
+                  <div className="w-12 h-12 rounded-lg bg-silver/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-silver" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">
                     {mission.title}
@@ -180,8 +184,8 @@ export default function AboutPage() {
                     }}
                     className="flex flex-col items-center text-center gap-3 p-4 rounded-xl bg-glass hover:bg-glass-strong transition-colors duration-300"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-gold" />
+                    <div className="w-12 h-12 rounded-full bg-silver/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-silver" />
                     </div>
                     <span className="text-sm font-medium text-foreground/90">
                       {value.label}
@@ -211,7 +215,7 @@ export default function AboutPage() {
                       type: 'spring',
                       stiffness: 200,
                     }}
-                    className="text-3xl sm:text-4xl font-bold text-gradient-gold"
+                    className="text-3xl sm:text-4xl font-bold text-gradient-silver"
                   >
                     {stat.value}
                   </motion.p>
@@ -262,9 +266,9 @@ export default function AboutPage() {
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center gap-2.5 h-11 px-6 rounded-lg border border-gold/20 bg-glass text-foreground font-medium text-sm hover:bg-glass-strong transition-colors"
+                  className="inline-flex items-center gap-2.5 h-11 px-6 rounded-lg border border-silver/20 bg-glass text-foreground font-medium text-sm hover:bg-glass-strong transition-colors"
                 >
-                  <UserPlus className="w-4 h-4 text-gold" />
+                  <UserPlus className="w-4 h-4 text-silver" />
                   Bot orqali Boshlash
                 </motion.a>
               </div>

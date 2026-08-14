@@ -19,8 +19,10 @@ import {
   Mail,
   type LucideIcon,
 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/shared/logo';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -30,9 +32,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { GeometricPattern, CornerOrnament } from '@/components/shared/oriental-pattern';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { useNavigationStore, useAuthStore, useUIStore, pageToHash } from '@/store';
+import { useNavigationStore, useAuthStore, useUIStore } from '@/store';
 import { NAV_ITEMS, TELEGRAM } from '@/lib/constants';
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -52,7 +52,7 @@ interface LoadingScreenProps {
 }
 
 export function Navbar({ className }: LoadingScreenProps) {
-  const { currentPage } = useNavigationStore();
+  const { currentPage, navigate } = useNavigationStore();
   const { user } = useAuthStore();
   const { isMobileMenuOpen, setMobileMenuOpen } = useUIStore();
   const [scrolled, setScrolled] = useState(false);
@@ -75,21 +75,10 @@ export function Navbar({ className }: LoadingScreenProps) {
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled
-          ? 'glass-strong shadow-lg shadow-black/20'
-          : 'glass border-b border-gold/5',
+        scrolled ? 'glass-strong shadow-lg shadow-black/20' : 'glass',
         className
       )}
     >
-      {/* Decorative gold top border line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-      {/* Sharqona geometric pattern background */}
-      <div className="absolute inset-0 opacity-100 pointer-events-none">
-        <GeometricPattern opacity={0.09} />
-      </div>
-      {/* Corner ornaments */}
-      <CornerOrnament position="top-left" className="size-14 sm:size-20" />
-      <CornerOrnament position="top-right" className="size-14 sm:size-20" />
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Logo size="sm" />
@@ -101,14 +90,15 @@ export function Navbar({ className }: LoadingScreenProps) {
             const isActive = currentPage === item.id;
 
             return (
-              <a
+              <button
                 key={item.id}
-                href={pageToHash(item.id)}
+                type="button"
+                onClick={() => navigate(item.id)}
                 className={cn(
-                  'relative px-3 py-2 text-sm font-medium transition-colors rounded-md group',
+                  'relative px-3 py-2 text-sm font-medium transition-colors rounded-md',
                   isActive
-                    ? 'text-gold'
-                    : 'text-muted-foreground hover:text-gold-light'
+                    ? 'text-emerald'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
@@ -118,57 +108,81 @@ export function Navbar({ className }: LoadingScreenProps) {
                 {isActive && (
                   <motion.div
                     layoutId="navbar-active"
-                    className="absolute inset-0 rounded-md bg-gold/8 border border-gold/20"
+                    className="absolute inset-0 rounded-md bg-gradient-to-r from-emerald/15 via-emerald/10 to-gold/10 border border-emerald/25"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                {/* Gold underline on hover */}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-gradient-to-r from-gold/0 via-gold/60 to-gold/0 group-hover:w-3/4 transition-all duration-300 rounded-full" />
-              </a>
+              </button>
             );
           })}
         </div>
 
         {/* Right Side */}
         <div className="flex items-center gap-2">
+          {/* Tungi/kunduzgi rejim tugmasi */}
+          <ThemeToggle />
+
           {user ? (
             <>
-              <a
-                href="#dashboard"
-                className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('dashboard')}
+                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
               >
                 <LayoutDashboard className="size-4 mr-1.5" />
                 Dashboard
-              </a>
+              </Button>
               {isAdmin && (
-                <a
-                  href="#admin-users"
-                  className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('admin-users')}
+                  className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
                 >
                   <Shield className="size-4 mr-1.5" />
                   Admin
-                </a>
+                </Button>
               )}
             </>
           ) : (
-            <a
-              href="#login"
-              className="hidden sm:inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('login')}
+              className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
             >
               <LogIn className="size-4 mr-1.5" />
               Login
-            </a>
+            </Button>
           )}
 
-          {/* Theme Toggle */}
-          <ThemeToggle />
+          {/* Founder avatar — sayt egasi */}
+          <button
+            type="button"
+            onClick={() => navigate('about')}
+            className="group relative hidden sm:block"
+            aria-label="ABDULLOH — sayt asoschisi"
+          >
+            <Image
+              src="/founder.jpg"
+              alt="ABDULLOH — AAA asoschisi"
+              width={36}
+              height={36}
+              priority
+              className="size-9 rounded-full object-cover ring-2 ring-emerald/60 shadow-[0_0_14px_rgba(46,230,168,0.25)] transition-transform duration-300 group-hover:scale-110"
+            />
+            <span className="pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-lg border border-glass-border bg-card px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+              ABDULLOH <span className="text-emerald">• Asoschi</span>
+            </span>
+          </button>
 
           {/* Telegram Button */}
           <a
             href={TELEGRAM.BOT}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-gold transition-colors hover:bg-white/5"
+            className="hidden sm:inline-flex items-center justify-center size-9 rounded-lg text-[#229ED9] hover:bg-[#229ED9]/10 transition-colors"
             aria-label="Telegram Bot"
           >
             <Send className="size-4" />
@@ -188,13 +202,27 @@ export function Navbar({ className }: LoadingScreenProps) {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-80 bg-[#0a0a09]/95 backdrop-blur-xl border-glass-border p-0"
+              className="w-80 bg-card/95 backdrop-blur-xl border-glass-border p-0"
             >
               <SheetHeader className="p-6 pb-4">
                 <SheetTitle className="flex items-center gap-3 text-foreground">
                   <Logo size="sm" />
                   <span className="text-gradient text-lg font-bold">AAA</span>
                 </SheetTitle>
+                <div className="flex items-center gap-3 pt-3">
+                  <Image
+                    src="/founder.jpg"
+                    alt="ABDULLOH — AAA asoschisi"
+                    width={44}
+                    height={44}
+                    priority
+                    className="size-11 rounded-full object-cover ring-2 ring-emerald/60"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">ABDULLOH</p>
+                    <p className="text-xs font-medium text-emerald">Sayt Asoschisi</p>
+                  </div>
+                </div>
               </SheetHeader>
 
               <Separator className="bg-glass-border" />
@@ -205,20 +233,23 @@ export function Navbar({ className }: LoadingScreenProps) {
                   const isActive = currentPage === item.id;
 
                   return (
-                    <a
+                    <button
                       key={item.id}
-                      href={pageToHash(item.id)}
-                      onClick={() => setMobileMenuOpen(false)}
+                      type="button"
+                      onClick={() => {
+                        navigate(item.id);
+                        setMobileMenuOpen(false);
+                      }}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         isActive
-                          ? 'bg-white/5 text-gold'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.03]'
+                          ? 'bg-muted/40 text-silver'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
                       )}
                     >
                       {Icon && <Icon className="size-4 shrink-0" />}
                       {item.label}
-                    </a>
+                    </button>
                   );
                 })}
               </div>
@@ -226,45 +257,61 @@ export function Navbar({ className }: LoadingScreenProps) {
               <Separator className="bg-glass-border" />
 
               <div className="p-4 space-y-2">
+                <div className="flex items-center gap-2 rounded-lg px-3 py-2.5">
+                  <ThemeToggle className="size-9" />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Tungi / Kunduzgi rejim
+                  </span>
+                </div>
+
                 {user ? (
                   <>
-                    <a
-                      href="#dashboard"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        navigate('dashboard');
+                        setMobileMenuOpen(false);
+                      }}
                     >
                       <LayoutDashboard className="size-4 mr-2" />
                       Dashboard
-                    </a>
+                    </Button>
                     {isAdmin && (
-                      <a
-                        href="#admin-users"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          navigate('admin-users');
+                          setMobileMenuOpen(false);
+                        }}
                       >
                         <Shield className="size-4 mr-2" />
                         Admin Panel
-                      </a>
+                      </Button>
                     )}
                   </>
                 ) : (
-                  <a
-                    href="#login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      navigate('login');
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     <LogIn className="size-4 mr-2" />
                     Login
-                  </a>
+                  </Button>
                 )}
 
                 <a
                   href={TELEGRAM.BOT}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-[#229ED9]/10 transition-colors"
                 >
-                  <Send className="size-4 shrink-0" />
+                  <Send className="size-4 shrink-0 text-[#229ED9]" />
                   Telegram Bot
                 </a>
               </div>

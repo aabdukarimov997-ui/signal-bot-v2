@@ -25,10 +25,9 @@ export function LoadingScreen({ onComplete, className }: LoadingScreenProps) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        'fixed inset-0 z-[100] flex flex-col items-center justify-center',
+        'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background',
         className
       )}
-      style={{ backgroundColor: '#040303' }}
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -55,7 +54,7 @@ export function LoadingScreen({ onComplete, className }: LoadingScreenProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="mt-6 text-2xl font-bold tracking-[0.3em] text-gradient-gold"
+        className="mt-6 text-2xl font-bold tracking-[0.3em] text-gradient-silver"
       >
         AAA
       </motion.p>
@@ -64,7 +63,7 @@ export function LoadingScreen({ onComplete, className }: LoadingScreenProps) {
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 0.6, duration: 1.2, ease: 'easeInOut' }}
-        className="mt-6 h-[1px] w-24 origin-left bg-gradient-to-r from-gold/60 to-transparent"
+        className="mt-6 h-[1px] w-24 origin-left bg-gradient-to-r from-silver/60 to-transparent"
       />
     </motion.div>
   );

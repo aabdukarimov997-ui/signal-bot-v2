@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
     const all = searchParams.get("all") === "true";
+    // Chop etilmagan postlar faqat adminga ko'rinadi
+    if (all) {
+      const denied = requireAdmin(request);
+      if (denied) return denied;
+    }
 
     if (slug) {
       const post = await db.blogPost.findUnique({
@@ -37,6 +43,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { title, slug, content, excerpt, coverImage, published, authorId } =
@@ -72,6 +80,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { id, ...fields } = body;
@@ -102,6 +112,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = requireAdmin(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { id } = body;

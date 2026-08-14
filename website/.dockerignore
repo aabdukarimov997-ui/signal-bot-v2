@@ -1,0 +1,33 @@
+# Dependencies & build output
+node_modules
+.next
+out
+dist
+.git
+
+# Secrets — never copy into the image!
+.env
+.env.backup
+.env.local
+.env.*.local
+
+# Thread/debug artifacts
+.freebuff
+*.log
+dev.log
+server.log
+
+# Local DB
+prisma/dev.db
+prisma/*.db
+*.sqlite
+
+# Debug screenshots & scripts at repo root
+/admin_*.png
+/bg_*.png
+/check-*.js
+/check_deploy.py
+/create-*.js
+/deploy.js
+/set-vars.js
+/seed_website.sql
