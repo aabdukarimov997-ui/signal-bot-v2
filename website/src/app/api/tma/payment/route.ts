@@ -16,8 +16,8 @@ export async function POST(request: Request) {
 
     const result = await query(
       `INSERT INTO ${TABLES.payments} 
-       (id, user_id, product_type, product_id, amount, currency, payment_method, status, photo_file_id, created_at)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       (id, user_id, product_type, product_id, amount, currency, payment_method, status, discount, photo_file_id, created_at)
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, 0, $8, NOW())
        RETURNING *`,
       [userId, productType, productId, amount, 'USD', paymentMethod, status, photoFileId || null]
     );
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
 
           await query(
             `INSERT INTO ${TABLES.subscriptions} 
-             (id, user_id, tariff_id, status, start_date, end_date, reminder_7_sent, reminder_3_sent, reminder_1_sent)
-             VALUES (gen_random_uuid()::text, $1, $2, 'active', $3, $4, false, false, false)`,
+             (id, user_id, tariff_id, status, start_date, end_date, auto_renew, reminder_7_sent, reminder_3_sent, reminder_1_sent)
+             VALUES (gen_random_uuid()::text, $1, $2, 'active', $3, $4, false, false, false, false)`,
             [userId, productId, startDate, endDate]
           );
         }
