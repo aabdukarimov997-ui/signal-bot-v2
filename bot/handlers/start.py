@@ -1,4 +1,10 @@
+import base64
+import hashlib
+import hmac
+import json
 import logging
+import os
+import time
 
 from aiogram import Router, Bot, F
 from aiogram.filters import Command, CommandObject
@@ -17,6 +23,46 @@ from bot.utils.states import AdminSettingsStates
 start_router = Router()
 
 
+# ─── Admin panelga sayt orqali kirish ─────────────────────────────────
+# Bot admin'ga bir martalik imzolangan kirish havolasini yuboradi —
+# foydalanuvchi uni bossa, sayt avtomatik admin sifatida tizimga kiradi.
+
+def _make_admin_login_token(admin_id: int) -> str:
+    """HMAC-SHA256 bilan imzolangan, 10 daqiqa amal qiladigan kirish tokeni."""
+    secret = os.environ.get("ADMIN_LOGIN_SECRET", "")
+    if not secret:
+        raise ValueError("ADMIN_LOGIN_SECRET env o'rnatilmagan")
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"id": str(admin_id), "exp": int(time.time()) + 600}).encode()
+    ).decode()
+    sig = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+
+async def _handle_admin_login(message: Message, user: User) -> None:
+    """Admin panelga kirish havolasini yuboradi (faqat adminlar uchun)."""
+    if user.telegram_id not in await get_admin_ids():
+        await message.answer("⛔ Bu havola faqat adminlar uchun.")
+        return
+    try:
+        token = _make_admin_login_token(user.telegram_id)
+    except ValueError as e:
+        logging.getLogger(__name__).error(f"admin_login: {e}")
+        await message.answer("❌ ADMIN_LOGIN_SECRET sozlanmagan. Admin bilan bog'laning.")
+        return
+
+    site = os.environ.get("SITE_URL") or settings.SOCIAL_WEBSITE or "https://aaa-abdulloh-8ecf.up.railway.app"
+    link = f"{site}/api/auth/bot?token={token}"
+    bot_username = settings.BOT_USERNAME or "AT_analysis_bot"
+    await message.answer(
+        "🔐 <b>Sayt admin paneliga kirish</b>\n\n"
+        "Quyidagi havolani bosing — sayt avtomatik admin sifatida tizimga kiritadi:\n\n"
+        f"<a href=\"{link}\">🔓 Admin panelga kirish</a>\n\n"
+        f"⚠️ Havola <b>10 daqiqa</b> amal qiladi.\n"
+        f"Yangi havola olish: <code>https://t.me/{bot_username}?start=admin_login</code>"
+    )
+
+
 async def _send_welcome(bot: Bot, chat_id: int, text: str, reply_markup, video_file_id: str | None) -> None:
     if video_file_id:
         try:
@@ -33,6 +79,9 @@ async def start_handler(message: Message, command: CommandObject, user: User, bo
 
     # TMA (Mini App) to'lov hand-off: /start pay_stars_{tariff_id} va /start pay_card_{tariff_id}
     if command.args:
+        if command.args == "admin_login":
+            await _handle_admin_login(message, user)
+            return
         if command.args.startswith("pay_stars_"):
             await _handle_pay_stars(message, user, bot, command.args.replace("pay_stars_", ""))
             return

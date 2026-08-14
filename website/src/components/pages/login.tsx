@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Send, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Send, Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Logo } from '@/components/shared/logo';
 import { GlassCard } from '@/components/shared/glass-card';
@@ -22,6 +22,42 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [botLink, setBotLink] = useState('');
+  const [botLoading, setBotLoading] = useState(false);
+
+  async function handleBotLogin() {
+    setError(null);
+    let token = botLink.trim();
+    if (!token) {
+      setError('Bot havolasini kiriting');
+      return;
+    }
+    // To'liq link yopishtirilgan bo'lsa — token'ni ajratib olamiz
+    try {
+      const u = new URL(token, window.location.origin);
+      token = u.searchParams.get('token') || token;
+    } catch {
+      // token to'g'ridan-to'g'ri yopishtirilgan
+    }
+    setBotLoading(true);
+    try {
+      const res = await fetch(
+        `/api/auth/bot?token=${encodeURIComponent(token)}`
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Kirishda xatolik yuz berdi');
+      }
+      // Sessiya cookie o'rnatildi — admin panelga o'tamiz
+      window.location.href = '/#/admin-users';
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Noma'lum xatolik yuz berdi";
+      setError(message);
+    } finally {
+      setBotLoading(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -184,6 +220,60 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          {/* ── Bot orqali kirish ── */}
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-px flex-1 bg-glass-border" />
+              <span className="text-xs text-muted-foreground">yoki</span>
+              <div className="h-px flex-1 bg-glass-border" />
+            </div>
+
+            <a
+              href={`${TELEGRAM.BOT}?start=admin_login`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#229ED9]/30 bg-[#229ED9]/10 px-4 py-3 text-sm font-medium text-[#229ED9] transition-colors hover:bg-[#229ED9]/20"
+            >
+              <Send className="w-4 h-4" />
+              Telegram orqali kirish
+            </a>
+            <p className="mt-2 text-center text-[11px] text-muted-foreground/70">
+              Botda admin bo'lsangiz — <code className="text-foreground/60">?start=admin_login</code>{' '}
+              havolasi orqali kirish havolasini olasiz
+            </p>
+
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="login-bot-link" className="text-xs text-muted-foreground">
+                Yoki bot havolasini shu yerga joylashtiring
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="login-bot-link"
+                  placeholder="https://.../api/auth/bot?token=..."
+                  value={botLink}
+                  onChange={(e) => {
+                    setBotLink(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  className="bg-glass border-glass-border h-11 flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleBotLogin}
+                  disabled={botLoading || !botLink.trim()}
+                  variant="outline"
+                  className="h-11 px-4"
+                >
+                  {botLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </GlassCard>
       </motion.div>
     </main>
