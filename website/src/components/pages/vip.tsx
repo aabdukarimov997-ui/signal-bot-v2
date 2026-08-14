@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import PaymentModal from '@/components/shared/payment-modal';
+import { useNavigationStore } from '@/store';
 import {
   Crown,
   Zap,
@@ -78,7 +78,7 @@ const TESTIMONIALS = [
 ];
 
 export default function VipPage() {
-  const [payOpen, setPayOpen] = useState(false);
+  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
@@ -220,7 +220,7 @@ export default function VipPage() {
               </p>
 
               <Button
-                onClick={() => setPayOpen(true)}
+                onClick={() => navigateToPay('signal')}
                 className="w-full bg-silver text-silver-foreground hover:bg-silver/90"
                 size="lg"
               >
@@ -357,7 +357,7 @@ export default function VipPage() {
               </p>
               <div className="flex flex-col items-center gap-4">
                 <Button
-                  onClick={() => setPayOpen(true)}
+                  onClick={() => navigateToPay('signal')}
                   className="bg-silver text-silver-foreground hover:bg-silver/90 min-w-[240px]"
                   size="lg"
                 >
@@ -373,7 +373,7 @@ export default function VipPage() {
         </div>      </section>
 
       {/* Sayt ichida to'lov modal */}
-      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="signal" />
+
     </main>
   );
 }

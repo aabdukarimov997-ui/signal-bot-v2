@@ -2,26 +2,89 @@ import { create } from 'zustand';
 
 export type PageId = string;
 
+export type PayProductType = 'signal' | 'course';
+
 interface NavigationState {
   currentPage: PageId;
   previousPage: PageId | null;
+  /** #/pay/signal yoki #/pay/course — alohida to'lov sahifasi parametrlari */
+  payProductType: PayProductType;
+  payTariffId: string | null;
   navigate: (page: PageId) => void;
   goBack: () => void;
+  navigateToPay: (productType: PayProductType, tariffId?: string | null) => void;
+  /** Hash'ni parslab sahifani o'rnatadi (#/vip, #/pay/signal/{id}, ...) */
+  applyHash: (hash: string) => void;
+}
+
+function setHash(hash: string) {
+  if (typeof window === 'undefined') return;
+  if (window.location.hash !== hash) {
+    try {
+      window.history.pushState(null, '', hash);
+    } catch {
+      // noop
+    }
+  }
 }
 
 export const useNavigationStore = create<NavigationState>((set) => ({
   currentPage: 'home',
   previousPage: null,
-  navigate: (page) =>
+  payProductType: 'signal',
+  payTariffId: null,
+
+  navigate: (page) => {
+    // Har bir sahifa o'z URL'iga ega: #/vip, #/course, #/blog, ...
+    setHash(`#/${page}`);
     set((state) => ({
       currentPage: page,
       previousPage: state.currentPage,
-    })),
+      // Menyudan "To'lov" bosilsa — toza signal to'lov sahifasi ochiladi
+      ...(page === 'pay'
+        ? { payProductType: 'signal' as PayProductType, payTariffId: null }
+        : {}),
+    }));
+  },
+
   goBack: () =>
     set((state) => ({
       currentPage: state.previousPage || 'home',
       previousPage: null,
     })),
+
+  navigateToPay: (productType, tariffId = null) => {
+    const base = `#/pay/${productType}`;
+    setHash(tariffId ? `${base}/${tariffId}` : base);
+    set((state) => ({
+      currentPage: 'pay',
+      previousPage: state.currentPage,
+      payProductType: productType,
+      payTariffId: tariffId,
+    }));
+  },
+
+  applyHash: (hash) => {
+    if (!hash || hash === '#' || hash === '#/') {
+      set({ currentPage: 'home', payTariffId: null });
+      return;
+    }
+    const raw = hash.replace(/^#\/?/, '');
+    const parts = raw.split('/').filter(Boolean);
+    const first = parts[0] || 'home';
+    // #/pay/signal/{tarifId} yoki #/pay/course/{tarifId}
+    if (first === 'pay' && parts.length >= 2) {
+      const productType: PayProductType =
+        parts[1] === 'course' ? 'course' : 'signal';
+      set({
+        currentPage: 'pay',
+        payProductType: productType,
+        payTariffId: parts[2] || null,
+      });
+      return;
+    }
+    set({ currentPage: first, payTariffId: null });
+  },
 }));
 
 interface AuthState {

@@ -17,8 +17,8 @@ import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
-import PaymentModal from '@/components/shared/payment-modal';
 import { TELEGRAM } from '@/lib/constants';
+import { useNavigationStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -234,8 +234,7 @@ export default function SignalsPage() {
   const [loading, setLoading] = useState(true);
   // In-site to'lov uchun tariflar (oylar -> tarif ID)
   const [tariffByMonths, setTariffByMonths] = useState<Record<number, string>>({});
-  const [payOpen, setPayOpen] = useState(false);
-  const [payTariffId, setPayTariffId] = useState<string | null>(null);
+  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
 
   useEffect(() => {
     async function fetchSignalData() {
@@ -266,8 +265,8 @@ export default function SignalsPage() {
   }, []);
 
   const openPay = (months: number) => {
-    setPayTariffId(tariffByMonths[months] ?? null);
-    setPayOpen(true);
+    // Alohida to'lov sahifasiga o'tamiz: #/pay/signal/{tarifId}
+    navigateToPay('signal', tariffByMonths[months] ?? null);
   };
 
   const monthlyPrice = signalData?.monthlyPrice ?? 0;
@@ -589,13 +588,6 @@ export default function SignalsPage() {
         </div>
       </section>
 
-      {/* In-site to'lov modali — saytdan chiqmasdan xarid */}
-      <PaymentModal
-        open={payOpen}
-        onOpenChange={setPayOpen}
-        productType="signal"
-        initialTariffId={payTariffId}
-      />
     </main>
   );
 }

@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Info,
   Mail,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -45,6 +46,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   HelpCircle,
   Info,
   Mail,
+  CreditCard,
 };
 
 interface LoadingScreenProps {

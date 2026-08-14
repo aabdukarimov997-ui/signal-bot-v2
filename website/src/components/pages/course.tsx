@@ -16,8 +16,8 @@ import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
-import PaymentModal from '@/components/shared/payment-modal';
 import { TradingHeroDecor } from '@/components/shared/trading-decor';
+import { useNavigationStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -159,7 +159,7 @@ function PricingCard({
 export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [payOpen, setPayOpen] = useState(false);
+  const navigateToPay = useNavigationStore((s) => s.navigateToPay);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,7 +258,7 @@ export default function CoursePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-start">
             <PricingCard
               tier="Starter"
-              onPay={() => setPayOpen(true)}
+              onPay={() => navigateToPay('course')}
               price={course?.starterPrice ?? 0}
               features={
                 starterFeatures.length > 0
@@ -274,7 +274,7 @@ export default function CoursePage() {
             />
             <PricingCard
               tier="Professional"
-              onPay={() => setPayOpen(true)}
+              onPay={() => navigateToPay('course')}
               badge="Mashhur"
               price={course?.professionalPrice ?? 0}
               features={
@@ -294,7 +294,7 @@ export default function CoursePage() {
             />
             <PricingCard
               tier="Master"
-              onPay={() => setPayOpen(true)}
+              onPay={() => navigateToPay('course')}
               badge="Premium"
               price={course?.masterPrice ?? 0}
               features={
@@ -448,7 +448,7 @@ export default function CoursePage() {
       {telegramCta}
 
       {/* Sayt ichida to'lov modal */}
-      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="course" />
+
     </main>
   );
 }

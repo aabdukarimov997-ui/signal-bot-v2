@@ -28,6 +28,7 @@ export const NAV_ITEMS = [
   { id: 'faq', label: 'FAQ', icon: 'HelpCircle' },
   { id: 'about', label: 'Biz haqimizda', icon: 'Info' },
   { id: 'contact', label: "Aloqa", icon: 'Mail' },
+  { id: 'pay', label: "To'lov", icon: 'CreditCard' },
 ] as const;
 
 export const ADMIN_NAV_ITEMS = [

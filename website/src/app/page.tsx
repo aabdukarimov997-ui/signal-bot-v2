@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigationStore } from '@/store';
 import HomePage from '@/components/pages/home';
@@ -14,6 +15,7 @@ import ContactPage from '@/components/pages/contact';
 import LoginPage from '@/components/pages/login';
 import DashboardPage from '@/components/pages/dashboard';
 import AdminPanel from '@/components/pages/admin';
+import PayPage from '@/components/pages/pay';
 
 const pageTransition = {
   initial: { opacity: 0, y: 12 },
@@ -23,6 +25,17 @@ const pageTransition = {
 
 function PageRouter() {
   const currentPage = useNavigationStore((s) => s.currentPage);
+
+  // Hash-routing: #/vip, #/course, #/pay/signal, ... — har bir sahifa o'z linkiga ega
+  useEffect(() => {
+    const applyHash = useNavigationStore.getState().applyHash;
+    applyHash(window.location.hash);
+    const onHashChange = () => {
+      useNavigationStore.getState().applyHash(window.location.hash);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   if (currentPage.startsWith('admin-')) {
     return <AdminPanel />;
@@ -40,6 +53,7 @@ function PageRouter() {
     contact: ContactPage,
     login: LoginPage,
     dashboard: DashboardPage,
+    pay: PayPage,
   };
 
   const PageComponent = pages[currentPage] || HomePage;
