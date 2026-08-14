@@ -33,8 +33,9 @@ export async function POST(request: Request) {
     if (!dbUser) {
       const refCode = `ref_${telegramId}`;
       result = await query(
-        `INSERT INTO ${TABLES.users} (telegram_id, full_name, username, language, referral_code, is_banned, referral_bonus_days, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, false, 0, NOW(), NOW())
+        `INSERT INTO ${TABLES.users}
+         (telegram_id, full_name, username, language, is_banned, is_admin, referral_code, referral_bonus_days, phone_number, bio, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, false, false, $5, 0, NULL, NULL, NOW(), NOW())
          RETURNING *`,
         [telegramId, fullName, username, language, refCode]
       );
