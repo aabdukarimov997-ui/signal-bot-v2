@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import PaymentModal from '@/components/shared/payment-modal';
 import {
   Crown,
   Zap,
@@ -76,6 +78,7 @@ const TESTIMONIALS = [
 ];
 
 export default function VipPage() {
+  const [payOpen, setPayOpen] = useState(false);
   return (
     <main className="min-h-screen">
       {/* Hero Section */}
@@ -169,6 +172,7 @@ export default function VipPage() {
             subtitle="O'zingizga mos VIP paketni tanlang"
           />
 
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* VIP Course + Signals */}
             <GlassCard hover className="relative flex flex-col">
@@ -212,22 +216,16 @@ export default function VipPage() {
               </div>
 
               <p className="text-xs text-muted-foreground/70 mb-4">
-                Telegram Bot orqali narxini biling
+                To'lov sayt orqali amalga oshiriladi — tasdiqlangach obuna faollashadi
               </p>
 
               <Button
-                asChild
+                onClick={() => setPayOpen(true)}
                 className="w-full bg-silver text-silver-foreground hover:bg-silver/90"
                 size="lg"
               >
-                <a
-                  href={TELEGRAM.BOT}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Send className="size-4" />
-                  Narxini bilish
-                </a>
+                <Send className="size-4" />
+                To'lov qilish
               </Button>
             </GlassCard>
 
@@ -354,16 +352,28 @@ export default function VipPage() {
                 VIP ga qo&apos;shiling
               </h2>
               <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                VIP ga qo&apos;shilish uchun Telegram Botga murojaat qiling.
-                Batafsil ma&apos;lumot va narxlar haqida bilib oling.
+                Tarifni tanlang va to&apos;lovni sayt orqali amalga oshiring.
+                Tasdiqlangach obunangiz faollashtiriladi.
               </p>
-              <div className="flex justify-center">
-                <TelegramButtons variant="full" />
+              <div className="flex flex-col items-center gap-4">
+                <Button
+                  onClick={() => setPayOpen(true)}
+                  className="bg-silver text-silver-foreground hover:bg-silver/90 min-w-[240px]"
+                  size="lg"
+                >
+                  <Send className="size-4" />
+                  To'lov qilish
+                </Button>
+                <div className="flex justify-center">
+                  <TelegramButtons variant="full" />
+                </div>
               </div>
             </div>
           </AnimatedSection>
-        </div>
-      </section>
+        </div>      </section>
+
+      {/* Sayt ichida to'lov modal */}
+      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="signal" />
     </main>
   );
 }

@@ -16,6 +16,7 @@ import { GlassCard } from '@/components/shared/glass-card';
 import { AnimatedSection } from '@/components/shared/animated-section';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { TelegramButtons } from '@/components/shared/telegram-buttons';
+import PaymentModal from '@/components/shared/payment-modal';
 import { TradingHeroDecor } from '@/components/shared/trading-decor';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,6 +76,7 @@ interface PricingCardProps {
   glow?: boolean;
   highlightBorder?: boolean;
   index: number;
+  onPay?: () => void;
 }
 
 function PricingCard({
@@ -85,6 +87,7 @@ function PricingCard({
   glow = false,
   highlightBorder = false,
   index,
+  onPay,
 }: PricingCardProps) {
   const hasPrice = price > 0;
 
@@ -118,7 +121,7 @@ function PricingCard({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Narxni bilish uchun Telegram Botga murojaat qiling
+            To'lov sayt orqali amalga oshiriladi — admin tasdiqlagach obuna faollashadi
           </p>
         )}
       </div>
@@ -133,27 +136,21 @@ function PricingCard({
         ))}
       </ul>
 
-      {/* CTA button */}
-      <a
-        href={TELEGRAM.BOT}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full"
+      {/* CTA button — sayt ichida to'lov */}
+      <Button
+        onClick={onPay}
+        size="lg"
+        className={cn(
+          'w-full rounded-xl text-sm font-semibold',
+          glow
+            ? 'bg-silver text-silver-foreground hover:bg-silver/90'
+            : 'border border-glass-border text-silver hover:text-foreground hover:bg-muted/40'
+        )}
+        variant={glow ? 'default' : 'outline'}
       >
-        <Button
-          size="lg"
-          className={cn(
-            'w-full rounded-xl text-sm font-semibold',
-            glow
-              ? 'bg-silver text-silver-foreground hover:bg-silver/90'
-              : 'border border-glass-border text-silver hover:text-foreground hover:bg-muted/40'
-          )}
-          variant={glow ? 'default' : 'outline'}
-        >
-          {hasPrice ? 'Sotib olish' : "Botga murojaat qiling"}
-          <ArrowRight className="size-4 ml-1.5" />
-        </Button>
-      </a>
+        {hasPrice ? 'Sotib olish' : 'To\'lov qilish'}
+        <ArrowRight className="size-4 ml-1.5" />
+      </Button>
     </GlassCard>
   );
 }
@@ -162,6 +159,7 @@ function PricingCard({
 export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [payOpen, setPayOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -260,6 +258,7 @@ export default function CoursePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-start">
             <PricingCard
               tier="Starter"
+              onPay={() => setPayOpen(true)}
               price={course?.starterPrice ?? 0}
               features={
                 starterFeatures.length > 0
@@ -275,6 +274,7 @@ export default function CoursePage() {
             />
             <PricingCard
               tier="Professional"
+              onPay={() => setPayOpen(true)}
               badge="Mashhur"
               price={course?.professionalPrice ?? 0}
               features={
@@ -294,6 +294,7 @@ export default function CoursePage() {
             />
             <PricingCard
               tier="Master"
+              onPay={() => setPayOpen(true)}
               badge="Premium"
               price={course?.masterPrice ?? 0}
               features={
@@ -415,13 +416,23 @@ export default function CoursePage() {
               <Send className="size-7 text-silver" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gradient">
-              Kursni sotib olish uchun Telegram Botga murojaat qiling
+              Kursni sotib oling
             </h2>
             <p className="max-w-lg text-muted-foreground text-sm sm:text-base leading-relaxed">
-              Bot orqali kursni sotib oling, to&apos;lov qiling va darhol
-              barcha materiallarga kirish oling. Tez va qulay!
+              To&apos;lovni sayt orqali amalga oshiring — tasdiqlangach barcha
+              materiallarga kirish olasiz. Savollaringiz bo&apos;lsa, Telegram&apos;da yozing.
             </p>
-            <TelegramButtons variant="full" />
+            <div className="flex flex-col items-center gap-3">
+              <Button
+                onClick={() => setPayOpen(true)}
+                size="lg"
+                className="bg-silver text-silver-foreground hover:bg-silver/90 min-w-[240px]"
+              >
+                <Send className="size-4" />
+                To'lov qilish
+              </Button>
+              <TelegramButtons variant="full" />
+            </div>
           </GlassCard>
         </AnimatedSection>
       </div>
@@ -435,6 +446,9 @@ export default function CoursePage() {
       {pricing}
       {details}
       {telegramCta}
+
+      {/* Sayt ichida to'lov modal */}
+      <PaymentModal open={payOpen} onOpenChange={setPayOpen} productType="course" />
     </main>
   );
 }
