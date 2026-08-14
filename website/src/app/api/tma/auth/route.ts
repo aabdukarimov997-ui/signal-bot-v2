@@ -34,8 +34,8 @@ export async function POST(request: Request) {
       const refCode = `ref_${telegramId}`;
       result = await query(
         `INSERT INTO ${TABLES.users}
-         (telegram_id, full_name, username, language, is_banned, is_admin, referral_code, referral_bonus_days, phone_number, bio, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, false, false, $5, 0, NULL, NULL, NOW(), NOW())
+         (id, telegram_id, full_name, username, language, is_banned, is_admin, referral_code, referral_bonus_days, phone_number, bio, created_at, updated_at)
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, false, false, $5, 0, NULL, NULL, NOW(), NOW())
          RETURNING *`,
         [telegramId, fullName, username, language, refCode]
       );

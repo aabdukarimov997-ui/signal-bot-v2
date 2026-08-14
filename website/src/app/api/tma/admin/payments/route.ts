@@ -114,8 +114,8 @@ export async function PUT(request: Request) {
             Date.now() + totalDays * 24 * 60 * 60 * 1000
           ).toISOString();
           await query(
-            `INSERT INTO ${TABLES.subscriptions} (user_id, tariff_id, status, start_date, end_date, reminder_7_sent, reminder_3_sent, reminder_1_sent)
-             VALUES ($1, $2, 'active', $3, $4, false, false, false)`,
+            `INSERT INTO ${TABLES.subscriptions} (id, user_id, tariff_id, status, start_date, end_date, reminder_7_sent, reminder_3_sent, reminder_1_sent)
+             VALUES (gen_random_uuid()::text, $1, $2, 'active', $3, $4, false, false, false)`,
             [payment.user_id, payment.product_id, startDate, endDate]
           );
         }
