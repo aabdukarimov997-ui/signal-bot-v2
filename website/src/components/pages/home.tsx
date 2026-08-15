@@ -266,6 +266,17 @@ export default function HomePage() {
           animate="visible"
           className="flex max-w-4xl flex-col items-center text-center mx-auto"
         >
+          {/* asoschi rasmi — shaxsiy brend */}
+          <motion.div variants={fadeUp} className="mb-5">
+            <div className="mx-auto w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-emerald via-silver to-gold p-[2.5px] shadow-[0_0_30px_rgba(46,230,168,0.22)]">
+              <img
+                src="/founder.jpg"
+                alt="AAA Asoschisi — Abdulloh Abdukarim"
+                className="w-full h-full rounded-full object-cover"
+              />
+            </div>
+          </motion.div>
+
           {/* large logo with background */}
           <motion.div variants={fadeUp} className="mb-6">
             <Logo size="hero" showBackground />
