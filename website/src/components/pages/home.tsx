@@ -77,7 +77,7 @@ const FEATURES = [
 ] as const;
 
 const STATS = [
-  { value: '130+', label: 'O\'quvchilar' },
+  { value: '230+', label: 'O\'quvchilar' },
   { value: '5 yillik', label: 'Tajriba' },
   { value: '5000+', label: 'Signallar' },
 ] as const;
