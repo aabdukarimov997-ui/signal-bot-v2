@@ -2224,8 +2224,6 @@ function AdminContent() {
    ACCESS DENIED
    ═══════════════════════════════════════════════════════════════ */
 function AccessDenied() {
-  const navigate = useNavigationStore((s) => s.navigate);
-
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="glass-card p-10 max-w-md w-full text-center">
@@ -2237,7 +2235,7 @@ function AccessDenied() {
           Bu sahifaga kirish uchun admin huquqlari talab etiladi. Iltimos, tizimga kiring.
         </p>
         <Button
-          onClick={() => navigate('login')}
+          onClick={() => (window.location.href = '/admin')}
           className="bg-silver/20 text-silver hover:bg-silver/30"
         >
           Tizimga kirish

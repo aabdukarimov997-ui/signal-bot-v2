@@ -127,10 +127,10 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigationStore((s) => s.navigate);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated — login faqat /admin manzilida
   useEffect(() => {
     if (!user) {
-      navigate('login');
+      navigate('home');
     }
   }, [user, navigate]);
 

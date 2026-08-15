@@ -48,8 +48,8 @@ export default function LoginPage() {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error || 'Kirishda xatolik yuz berdi');
       }
-      // Sessiya cookie o'rnatildi — admin panelga o'tamiz
-      window.location.href = '/#/admin-users';
+      // Sessiya cookie o'rnatildi — admin panelga o'tamiz (/admin)
+      window.location.href = '/admin';
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Noma'lum xatolik yuz berdi";

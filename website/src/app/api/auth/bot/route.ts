@@ -108,7 +108,7 @@ export async function GET(request: Request) {
       "https://aaa-abdulloh-8ecf.up.railway.app";
     const baseUrl = /^https?:\/\//.test(base) ? base : `https://${base}`;
     const response = NextResponse.redirect(
-      new URL("/#/admin-users", baseUrl.replace(/\/$/, ""))
+      new URL("/admin", baseUrl.replace(/\/$/, ""))
     );
     response.cookies.set(COOKIE_NAME, sessionToken, authCookieOptions());
     return response;

@@ -12,9 +12,7 @@ import BlogPage from '@/components/pages/blog';
 import FAQPage from '@/components/pages/faq';
 import AboutPage from '@/components/pages/about';
 import ContactPage from '@/components/pages/contact';
-import LoginPage from '@/components/pages/login';
 import DashboardPage from '@/components/pages/dashboard';
-import AdminPanel from '@/components/pages/admin';
 import PayPage from '@/components/pages/pay';
 
 const pageTransition = {
@@ -37,9 +35,12 @@ function PageRouter() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  if (currentPage.startsWith('admin-')) {
-    return <AdminPanel />;
-  }
+  // Admin panel va login faqat /admin manzilida — asosiy saytda ularni /admin'ga yo'naltiramiz
+  useEffect(() => {
+    if (currentPage === 'login' || currentPage.startsWith('admin-')) {
+      window.location.href = '/admin';
+    }
+  }, [currentPage]);
 
   const pages: Record<string, React.ComponentType> = {
     home: HomePage,
@@ -51,7 +52,6 @@ function PageRouter() {
     faq: FAQPage,
     about: AboutPage,
     contact: ContactPage,
-    login: LoginPage,
     dashboard: DashboardPage,
     pay: PayPage,
   };
