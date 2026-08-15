@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
   Send,
-  LogIn,
   LayoutDashboard,
   Shield,
   Home,
@@ -125,7 +124,7 @@ export function Navbar({ className }: LoadingScreenProps) {
           {/* Tungi/kunduzgi rejim tugmasi */}
           <ThemeToggle />
 
-          {user ? (
+          {user && (
             <>
               <Button
                 variant="ghost"
@@ -148,16 +147,6 @@ export function Navbar({ className }: LoadingScreenProps) {
                 </Button>
               )}
             </>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('login')}
-              className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
-            >
-              <LogIn className="size-4 mr-1.5" />
-              Login
-            </Button>
           )}
 
           {/* Founder avatar — sayt egasi (mobil va desktop) */}
@@ -291,7 +280,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                   </span>
                 </div>
 
-                {user ? (
+                {user && (
                   <>
                     <Button
                       variant="ghost"
@@ -318,18 +307,6 @@ export function Navbar({ className }: LoadingScreenProps) {
                       </Button>
                     )}
                   </>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      navigate('login');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <LogIn className="size-4 mr-2" />
-                    Login
-                  </Button>
                 )}
 
                 <a
