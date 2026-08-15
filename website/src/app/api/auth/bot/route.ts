@@ -102,9 +102,12 @@ export async function GET(request: Request) {
     // Sessiya cookie yaratamiz va admin panelga yo'naltiramiz.
     // Muhim: ichki Railway hostiga emas, jamoat URL'iga yo'naltiramiz.
     const sessionToken = createSessionToken();
+    // Jamoat URL'iga yo'naltiramiz. NEXT_PUBLIC_SITE_URL boshqariladigan
+    // sozlamadir (RAILWAY_PUBLIC_DOMAIN esa Railway tomonidan qo'yiladi va
+    // eskirgan domen'ga ishora qilishi mumkin — masalan, is-a.dev o'chirilgan).
     const base =
-      process.env.RAILWAY_PUBLIC_DOMAIN ||
       process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.RAILWAY_PUBLIC_DOMAIN ||
       "https://aaa-abdulloh-8ecf.up.railway.app";
     const baseUrl = /^https?:\/\//.test(base) ? base : `https://${base}`;
     const response = NextResponse.redirect(
