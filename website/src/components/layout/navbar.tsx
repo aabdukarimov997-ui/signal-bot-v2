@@ -18,6 +18,7 @@ import {
   Info,
   Mail,
   CreditCard,
+  Award,
   type LucideIcon,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -159,11 +160,11 @@ export function Navbar({ className }: LoadingScreenProps) {
             </Button>
           )}
 
-          {/* Founder avatar — sayt egasi */}
+          {/* Founder avatar — sayt egasi (mobil va desktop) */}
           <button
             type="button"
             onClick={() => navigate('about')}
-            className="group relative hidden sm:block"
+            className="group relative block"
             aria-label="ABDULLOH — sayt asoschisi"
           >
             <Image
@@ -211,7 +212,14 @@ export function Navbar({ className }: LoadingScreenProps) {
                   <Logo size="sm" />
                   <span className="text-gradient text-lg font-bold">AAA</span>
                 </SheetTitle>
-                <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('about');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="mt-3 flex w-full items-center gap-3 rounded-xl p-2 -m-2 text-left transition-colors hover:bg-muted/30"
+                >
                   <Image
                     src="/founder.jpg"
                     alt="ABDULLOH — AAA asoschisi"
@@ -221,15 +229,32 @@ export function Navbar({ className }: LoadingScreenProps) {
                     className="size-11 rounded-full object-cover ring-2 ring-emerald/60"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-foreground">ABDULLOH</p>
-                    <p className="text-xs font-medium text-emerald">Sayt Asoschisi</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      ABDULLOH ABDUKARIMOV
+                    </p>
+                    <p className="text-xs font-medium text-emerald">
+                      AAA Asoschisi — Bosing
+                    </p>
                   </div>
-                </div>
+                </button>
               </SheetHeader>
 
               <Separator className="bg-glass-border" />
 
               <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-1">
+                {/* Asoschi — alohida ko'rinadigan tugma */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('about');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-emerald bg-emerald/10 border border-emerald/25 mb-2 transition-colors hover:bg-emerald/15"
+                >
+                  <Award className="size-4 shrink-0" />
+                  Asoschi — Abdulloh Abdukarimov
+                </button>
+
                 {NAV_ITEMS.map((item) => {
                   const Icon = ICON_MAP[item.icon];
                   const isActive = currentPage === item.id;

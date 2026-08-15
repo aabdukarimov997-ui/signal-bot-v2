@@ -10,6 +10,8 @@ import {
   Heart,
   Send,
   UserPlus,
+  Activity,
+  GraduationCap,
 } from 'lucide-react';
 import Image from 'next/image';
 import { GlassCard } from '@/components/shared/glass-card';
@@ -49,10 +51,34 @@ const values = [
 ];
 
 const stats = [
-  { value: '250+', label: "O'quvchilar" },
+  { value: '230+', label: "O'quvchilar" },
   { value: '5 yillik', label: 'Tajriba' },
-  { value: '5000+', label: 'Signallar' },
+  { value: '$1M+', label: 'Kapital boshqaruvi' },
   { value: '24/7', label: "Qo'llab-quvvatlash" },
+];
+
+const projects = [
+  {
+    title: 'AT_ANALYSIS',
+    badge: '📊',
+    icon: Activity,
+    description:
+      'AT_ANALYSIS — AAA loyihasi tarkibidagi trading tahlil va signal yo\'nalishi. Unda asosan Spot Trading imkoniyatlari, bozor tahlillari va savdo g\'oyalari taqdim etiladi. AT_ANALYSIS AAA ekotizimining amaliy trading yo\'nalishlaridan biridir.',
+  },
+  {
+    title: '«Trading Haqiqati»',
+    badge: '📚',
+    icon: GraduationCap,
+    description:
+      '«Trading Haqiqati» — AAA loyihasining asosiy ta\'limiy yo\'nalishlaridan biri. Kursda tradingning real tomonlari, halol trading tamoyillari, Spot Trading, bozor psixologiyasi, texnik tahlil, risk boshqaruvi, strategiya va treyder intizomi kabi muhim mavzular yoritiladi.',
+  },
+  {
+    title: 'KITLAR JAMOSI',
+    badge: '👥',
+    icon: Users,
+    description:
+      'KITLAR JAMOSI — AAA tarkibidagi treyderlar va o\'quvchilar hamjamiyati. Jamoada ishtirokchilar tajriba almashadi, bozorni tahlil qiladi va halol trading tamoyillari asosida o\'z bilim va ko\'nikmalarini rivojlantiradi.',
+  },
 ];
 
 export default function AboutPage() {
@@ -84,7 +110,7 @@ export default function AboutPage() {
         </AnimatedSection>
       </section>
 
-      {/* ── Founder Section ── */}
+      {/* ── Asoschi (Founder) Section ── */}
       <section className="py-16 px-4">
         <div className="max-w-3xl mx-auto">
           <AnimatedSection delay={0.1}>
@@ -96,13 +122,13 @@ export default function AboutPage() {
                   whileInView={{ scale: 1, opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden ring-2 ring-emerald/40 shadow-lg shadow-emerald/10"
+                  className="shrink-0 w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-2 ring-emerald/40 shadow-lg shadow-emerald/10"
                 >
                   <Image
                     src="/founder.jpg"
                     alt={SITE.FOUNDER}
-                    width={112}
-                    height={112}
+                    width={128}
+                    height={128}
                     className="h-full w-full object-cover"
                   />
                 </motion.div>
@@ -110,23 +136,88 @@ export default function AboutPage() {
                 {/* Info */}
                 <div className="text-center sm:text-left flex-1">
                   <h3 className="text-2xl sm:text-3xl font-bold text-gradient-silver">
-                    {SITE.FOUNDER}
+                    Abdulloh Abdukarimov
                   </h3>
-                  <p className="mt-2 text-sm font-medium tracking-wider uppercase text-silver/70">
-                    5 yillik Mutaxassis &amp; Spot Treyder
+                  <p className="mt-2 text-sm font-medium tracking-wider uppercase text-emerald">
+                    AAA Asoschisi
                   </p>
-                  <div className="mt-1 w-12 h-0.5 bg-gradient-to-r from-silver/60 to-transparent mx-auto sm:mx-0" />
+                  <div className="mt-1 w-12 h-0.5 bg-gradient-to-r from-emerald/60 to-transparent mx-auto sm:mx-0" />
                   <p className="mt-4 text-muted-foreground leading-relaxed">
-                    Kripto savdo bo&apos;yicha 5 yillik tajriba va mutaxassislik.
-                    Spot treyding va professional ta&apos;lim orqali savdogarlarga
-                    yordam berish missiyasi. Trading Haqiqati kursi va AT_analysis
-                    signal xizmati asoschisi. 250 dan ortiq o&apos;quvchiga
-                    sifatli ta&apos;lim bergan.
+                    Abdulloh Abdukarimov — 5 yillik trading tajribasiga ega
+                    mutaxassis, AAA loyihasi asoschisi va O&apos;zbekistonda
+                    halol trading, xususan Spot Trading yo&apos;nalishini
+                    rivojlantirishga katta e&apos;tibor qaratib kelayotgan
+                    treyder.
+                  </p>
+                  <p className="mt-3 text-muted-foreground leading-relaxed">
+                    U trading faoliyati davomida $1 milliondan ziyod kapital
+                    boshqaruvi bilan ishlagan. Uning asosiy yo&apos;nalishi —
+                    halol Spot Trading, bozor tahlili, risk boshqaruvi va
+                    intizomli savdo.
+                  </p>
+                  <p className="mt-3 text-muted-foreground leading-relaxed">
+                    Abdullohning asosiy maqsadi — O&apos;zbekistonda tradingga
+                    halol, mas&apos;uliyatli va bilimga asoslangan yondashuvni
+                    rivojlantirish. U tradingni shunchaki tez daromad topish
+                    vositasi emas, balki bilim, mehnat, sabr, tahlil va
+                    riskni to&apos;g&apos;ri boshqarish talab qiladigan soha
+                    sifatida targ&apos;ib qiladi.
                   </p>
                 </div>
               </div>
             </GlassCard>
           </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── AAA Loyihasi ── */}
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <SectionHeading
+            title="AAA Loyihasi"
+            subtitle="Halol trading, ta'lim, bozor tahlili va treyderlar hamjamiyatini birlashtiruvchi loyiha."
+          />
+          <AnimatedSection delay={0.1}>
+            <GlassCard className="p-6 sm:p-8">
+              <p className="text-muted-foreground leading-relaxed">
+                AAA — Abdulloh Abdukarimov tomonidan asos solingan, halol
+                trading, ta&apos;lim, bozor tahlili va treyderlar hamjamiyatini
+                birlashtiruvchi loyiha. AAA&apos;ning asosiy yo&apos;nalishi —
+                halol trading madaniyatini O&apos;zbekistonda rivojlantirish va
+                Spot Trading asosida ongli treyderlarni shakllantirish.
+              </p>
+            </GlassCard>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── Loyiha Yo'nalishlari ── */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <SectionHeading
+            title="Loyiha Yo'nalishlari"
+            subtitle="AAA ekotizimining asosiy yo'nalishlari — signal, ta'lim va hamjamiyat."
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {projects.map((project, i) => {
+              const Icon = project.icon;
+              return (
+                <GlassCard key={project.title} hover index={i} className="p-6 h-full">
+                  <div className="w-12 h-12 rounded-lg bg-silver/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-silver" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    <span className="mr-2">{project.badge}</span>
+                    {project.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {project.description}
+                  </p>
+                </GlassCard>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -223,6 +314,36 @@ export default function AboutPage() {
                 </GlassCard>
               ))}
             </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── 230+ O'quvchi ── */}
+      <section className="py-10 px-4">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedSection delay={0.1}>
+            <GlassCard className="p-6 sm:p-8 flex items-center gap-4 sm:gap-6">
+              <span className="text-3xl sm:text-4xl shrink-0">🎓</span>
+              <p className="text-muted-foreground leading-relaxed">
+                AAA loyihasi orqali bugungi kungacha{' '}
+                <span className="font-semibold text-foreground">230 dan ziyod o&apos;quvchi</span>{' '}
+                trading bo&apos;yicha ta&apos;lim olib, amaliy rivojlanish
+                yo&apos;lidan o&apos;tgan.
+              </p>
+            </GlassCard>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ── Tagline ── */}
+      <section className="py-10 px-4">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedSection>
+            <GlassCard glow className="p-8 sm:p-10 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-gradient leading-relaxed">
+                AAA — Halol Trading. Haqiqiy Bilim. Professional Rivojlanish.
+              </p>
+            </GlassCard>
           </AnimatedSection>
         </div>
       </section>
