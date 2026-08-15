@@ -26,20 +26,22 @@ export function BackgroundSwitcher() {
 
   return (
     <>
-      {/* tugma */}
+      {/* tugma — katta, pastda, doim ko'rinib turadi */}
       <motion.button
         type="button"
         onClick={() => setPickerOpen(!isPickerOpen)}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.2, type: 'spring', stiffness: 260, damping: 20 }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="glass-card fixed bottom-24 left-5 z-50 flex size-12 items-center justify-center rounded-full border-glass-border"
+        className="glass-card fixed bottom-6 left-5 z-50 flex h-14 items-center gap-2 rounded-full border-glass-border px-5 shadow-lg shadow-black/10"
+        style={{ marginBottom: 'max(0px, env(safe-area-inset-bottom, 0px))' }}
         aria-label="Fon tanlash"
         title="Fon tanlash"
       >
-        <Palette className="size-5 text-silver" />
+        <Palette className="size-6 text-silver" />
+        <span className="text-sm font-semibold text-silver">Fon</span>
       </motion.button>
 
       {/* panel */}
