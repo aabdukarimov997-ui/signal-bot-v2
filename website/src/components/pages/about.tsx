@@ -136,14 +136,14 @@ export default function AboutPage() {
                 {/* Info */}
                 <div className="text-center sm:text-left flex-1">
                   <h3 className="text-2xl sm:text-3xl font-bold text-gradient-silver">
-                    Abdulloh Abdukarimov
+                    Abdulloh Abdukarim
                   </h3>
                   <p className="mt-2 text-sm font-medium tracking-wider uppercase text-emerald">
                     AAA Asoschisi
                   </p>
                   <div className="mt-1 w-12 h-0.5 bg-gradient-to-r from-emerald/60 to-transparent mx-auto sm:mx-0" />
                   <p className="mt-4 text-muted-foreground leading-relaxed">
-                    Abdulloh Abdukarimov — 5 yillik trading tajribasiga ega
+                    Abdulloh Abdukarim — 5 yillik trading tajribasiga ega
                     mutaxassis, AAA loyihasi asoschisi va O&apos;zbekistonda
                     halol trading, xususan Spot Trading yo&apos;nalishini
                     rivojlantirishga katta e&apos;tibor qaratib kelayotgan
@@ -180,7 +180,7 @@ export default function AboutPage() {
           <AnimatedSection delay={0.1}>
             <GlassCard className="p-6 sm:p-8">
               <p className="text-muted-foreground leading-relaxed">
-                AAA — Abdulloh Abdukarimov tomonidan asos solingan, halol
+                AAA — Abdulloh Abdukarim tomonidan asos solingan, halol
                 trading, ta&apos;lim, bozor tahlili va treyderlar hamjamiyatini
                 birlashtiruvchi loyiha. AAA&apos;ning asosiy yo&apos;nalishi —
                 halol trading madaniyatini O&apos;zbekistonda rivojlantirish va

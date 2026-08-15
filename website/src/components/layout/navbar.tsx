@@ -221,7 +221,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                   />
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      ABDULLOH ABDUKARIMOV
+                      ABDULLOH ABDUKARIM
                     </p>
                     <p className="text-xs font-medium text-emerald">
                       AAA Asoschisi — Bosing
@@ -243,7 +243,7 @@ export function Navbar({ className }: LoadingScreenProps) {
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-emerald bg-emerald/10 border border-emerald/25 mb-2 transition-colors hover:bg-emerald/15"
                 >
                   <Award className="size-4 shrink-0" />
-                  Asoschi — Abdulloh Abdukarimov
+                  Asoschi — Abdulloh Abdukarim
                 </button>
 
                 {NAV_ITEMS.map((item) => {
