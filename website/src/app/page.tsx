@@ -9,6 +9,7 @@ import SignalsPage from '@/components/pages/signals';
 import VipPage from '@/components/pages/vip';
 import MarketPage from '@/components/pages/market';
 import BlogPage from '@/components/pages/blog';
+import VideosPage from '@/components/pages/videos';
 import FAQPage from '@/components/pages/faq';
 import AboutPage from '@/components/pages/about';
 import ContactPage from '@/components/pages/contact';
@@ -48,6 +49,7 @@ function PageRouter() {
     signals: SignalsPage,
     vip: VipPage,
     market: MarketPage,
+    videos: VideosPage,
     blog: BlogPage,
     faq: FAQPage,
     about: AboutPage,

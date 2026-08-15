@@ -24,6 +24,7 @@ export const NAV_ITEMS = [
   { id: 'signals', label: 'AT_analysis', icon: 'Activity' },
   { id: 'vip', label: 'VIP', icon: 'Crown' },
   { id: 'market', label: 'Market Analysis', icon: 'BarChart3' },
+  { id: 'videos', label: 'Videolar', icon: 'Video' },
   { id: 'blog', label: 'Blog', icon: 'Newspaper' },
   { id: 'faq', label: 'FAQ', icon: 'HelpCircle' },
   { id: 'about', label: 'Biz haqimizda', icon: 'Info' },
