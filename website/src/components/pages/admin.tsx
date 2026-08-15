@@ -33,6 +33,7 @@ import {
   ArrowLeft,
   Upload,
   ExternalLink,
+  TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -104,6 +105,7 @@ const iconMap: Record<string, LucideIcon> = {
   Ticket,
   Send,
   Shield,
+  TrendingUp,
 };
 
 /* ─── Helpers ──────────────────────────────────────────────── */
@@ -1013,6 +1015,109 @@ function AdminBlog() {
 /* ═══════════════════════════════════════════════════════════════
    SECTION 5 — SEO
    ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   SECTION — BOSH SAHIFA STATISTIKASI
+   Bosh sahifa reklamasidagi raqamlar (O'quvchilar, Tajriba, Signallar)
+   ═══════════════════════════════════════════════════════════════ */
+function AdminStats() {
+  const [settings, setSettings] = useState({
+    stat_students: '',
+    stat_experience: '',
+    stat_signals: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        setSettings({
+          stat_students: data.stat_students ?? '',
+          stat_experience: data.stat_experience ?? '',
+          stat_signals: data.stat_signals ?? '',
+        });
+      } catch {
+        toast.error('Sozlamalarni yuklashda xatolik');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
+      });
+      if (!res.ok) throw new Error('save failed');
+      toast.success('Statistika muvaffaqiyatli saqlandi');
+    } catch {
+      toast.error('Statistikani saqlashda xatolik');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <LoadingState />;
+
+  return (
+    <>
+      <h2 className="text-xl font-bold text-foreground mb-4">Statistika</h2>
+      <AdminGlassCard>
+        <p className="text-sm text-muted-foreground mb-5">
+          Bosh sahifadagi reklama raqamlari — bu yerda o&apos;zgartirsangiz,
+          saytda darhol ko&apos;rinadi. Bo&apos;sh qoldirilsa default qiymatlar
+          ishlatiladi (230+, 5 yillik, 5000+).
+        </p>
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">O&apos;quvchilar soni</Label>
+            <Input
+              value={settings.stat_students}
+              onChange={(e) => setSettings((p) => ({ ...p, stat_students: e.target.value }))}
+              placeholder="230+"
+              className="bg-muted/30 border-glass-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Tajriba</Label>
+            <Input
+              value={settings.stat_experience}
+              onChange={(e) => setSettings((p) => ({ ...p, stat_experience: e.target.value }))}
+              placeholder="5 yillik"
+              className="bg-muted/30 border-glass-border"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Signallar soni</Label>
+            <Input
+              value={settings.stat_signals}
+              onChange={(e) => setSettings((p) => ({ ...p, stat_signals: e.target.value }))}
+              placeholder="5000+"
+              className="bg-muted/30 border-glass-border"
+            />
+          </div>
+          <div className="pt-2">
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="bg-silver/20 text-silver hover:bg-silver/30"
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Saqlash
+            </Button>
+          </div>
+        </div>
+      </AdminGlassCard>
+    </>
+  );
+}
+
 function AdminSEO() {
   const [settings, setSettings] = useState({
     site_title: '',
@@ -2203,6 +2308,8 @@ function AdminContent() {
       return <AdminMedia />;
     case 'admin-analytics':
       return <AdminAnalytics />;
+    case 'admin-stats':
+      return <AdminStats />;
     case 'admin-payments':
       return <AdminPayments />;
     case 'admin-referrals':

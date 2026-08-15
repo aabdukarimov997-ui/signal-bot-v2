@@ -76,10 +76,11 @@ const FEATURES = [
   },
 ] as const;
 
-const STATS = [
-  { value: '230+', label: 'O\'quvchilar' },
-  { value: '5 yillik', label: 'Tajriba' },
-  { value: '5000+', label: 'Signallar' },
+/* Bosh sahifa reklamasidagi raqamlar — admin panel orqali o'zgartiriladi (/api/stats) */
+const DEFAULT_STATS = [
+  { key: 'stat_students', value: '230+', label: 'O\'quvchilar' },
+  { key: 'stat_experience', value: '5 yillik', label: 'Tajriba' },
+  { key: 'stat_signals', value: '5000+', label: 'Signallar' },
 ] as const;
 
 /* ──────────────── component ──────────────── */
@@ -88,6 +89,24 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannersReady, setBannersReady] = useState(false);
+  const [statItems, setStatItems] = useState(DEFAULT_STATS);
+
+  /* Statistika raqamlarini admin paneldan o'rnatilgan qiymatlar bilan yuklash */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          setStatItems((prev) =>
+            prev.map((s) => ({ ...s, value: data[s.key] || s.value }))
+          );
+        }
+      } catch {
+        /* default qiymatlar qoladi */
+      }
+    })();
+  }, []);
 
   /* force-start the hero bull/bear animations after mount (some browsers
      defer CSS animation start-times; this guarantees they run) */
@@ -362,7 +381,7 @@ export default function HomePage() {
         <AnimatedSection>
           <div className="glass-card p-8 sm:p-10 border-glow-emerald">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-4 text-center">
-              {STATS.map((s) => (
+              {statItems.map((s) => (
                 <div key={s.label} className="flex flex-col items-center gap-2">
                   <span className="text-4xl sm:text-5xl font-extrabold text-gradient">
                     {s.value}

@@ -40,6 +40,7 @@ export const ADMIN_NAV_ITEMS = [
   { id: 'admin-seo', label: 'SEO', icon: 'Search' },
   { id: 'admin-media', label: 'Media', icon: 'Image' },
   { id: 'admin-analytics', label: 'Analytics', icon: 'BarChart3' },
+  { id: 'admin-stats', label: 'Statistika', icon: 'TrendingUp' },
   { id: 'admin-payments', label: "To'lovlar", icon: 'CreditCard' },
   { id: 'admin-referrals', label: 'Referral', icon: 'Share2' },
   { id: 'admin-banners', label: 'Bannerlar', icon: 'Layout' },
