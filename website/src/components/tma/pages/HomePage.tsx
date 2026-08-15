@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useTmaStore } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
@@ -34,13 +33,9 @@ export function HomePage() {
       >
         <div className="relative inline-block mb-4">
           <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#d4a72c] to-[#8b5e3c] p-[2px]">
-            <Image
-              src="/founder.jpg"
-              alt="AAA Asoschisi — Abdulloh Abdukarim"
-              width={80}
-              height={80}
-              className="w-full h-full rounded-full object-cover"
-            />
+            <div className="w-full h-full rounded-full bg-[#040303] flex items-center justify-center">
+              <span className="text-3xl">🕌</span>
+            </div>
           </div>
         </div>
         
