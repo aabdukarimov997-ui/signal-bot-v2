@@ -21,6 +21,8 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https:",
+      // Sayt ichidagi iframe playerlar (YouTube videolar + TradingView grafiklar)
+      "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://s.tradingview.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
