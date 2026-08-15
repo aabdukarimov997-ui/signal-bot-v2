@@ -159,7 +159,12 @@ function Coin({ coin, scrollY }: { coin: CoinDef; scrollY: number }) {
   return (
     <div
       aria-hidden
-      className={cn('pointer-events-none absolute z-0 opacity-80', coin.pos, coin.hide)}
+      className={cn(
+        // Kunduzgi (light) rejimda tangalar xiralashadi — faqat tungi rejimda to'liq ko'rinadi
+        'pointer-events-none absolute z-0 opacity-30 blur-[2px] saturate-50 dark:opacity-80 dark:blur-0 dark:saturate-100',
+        coin.pos,
+        coin.hide
+      )}
       style={{ transform: `translate3d(0, ${(scrollY * coin.depth).toFixed(1)}px, 0)` }}
     >
       <div
