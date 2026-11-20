@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const auth = await getAuthenticatedUser(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
+    const userId = auth.user.id;
 
     const result = await query(
       `SELECT s.*, t.name as tariff_name, t.product_type as tariff_product_type

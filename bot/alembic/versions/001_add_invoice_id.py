@@ -5,16 +5,16 @@ Revises:
 Create Date: 2026-04-26
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
-
+from alembic import op
 
 revision: str = "001"
-down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -22,6 +22,7 @@ def upgrade() -> None:
     # includes invoice_id in the model), so guard against re-adding the column.
     bind = op.get_bind()
     from sqlalchemy import inspect
+
     inspector = inspect(bind)
     columns = [c["name"] for c in inspector.get_columns("payments")]
     if "invoice_id" not in columns:

@@ -1,7 +1,6 @@
 import json
-from typing import Optional
 
-from sqlalchemy import select, delete
+from sqlalchemy import select
 
 from bot.database.session import get_session
 from bot.models.project_settings import ProjectSettings
@@ -32,9 +31,10 @@ SETTINGS_KEYS = {
     "visa_card_number": "Visa karta raqami",
     "visa_card_holder": "Visa karta egasi",
     "invite_link_url": "Signal kanal invite link",
-    "ton_wallet_address": "TRON TRC20 wallet address",
-    "tron_qr_code": "TRON TRC20 wallet QR code (rasm yuboring)",
+    "ton_wallet_address": "TRON TRC20 wallet address (eski nom, endi tron_wallet_address)",
+    "tron_wallet_address": "TRON TRC20 (USDT) wallet address",
     "bnb_wallet_address": "BNB BEP20 wallet address",
+    "tron_qr_code": "TRON TRC20 wallet QR code (rasm yuboring)",
     "bnb_qr_code": "BNB BEP20 wallet QR code (rasm yuboring)",
     "toncoin_wallet_address": "TON wallet address",
     "toncoin_qr_code": "TON wallet QR code (rasm yuboring)",
@@ -70,7 +70,6 @@ SETTINGS_KEYS = {
     "setup_completed": "Setup completed (true/false)",
     # Marketing
     "marketing_enabled": "Marketing xabarlar (yoqilgan/o'chirilgan)",
-
     "marketing_message": "Marketing xabar matni",
     "marketing_image": "Marketing rasm (Telegram file_id)",
     # Payment method toggles
@@ -80,6 +79,13 @@ SETTINGS_KEYS = {
     "payment_bnb_enabled": "BNB BEP20 to'lov (yoqilgan/o'chirilgan)",
     "payment_ton_enabled": "TON to'lov (yoqilgan/o'chirilgan)",
     "payment_stars_enabled": "Telegram Stars to'lov (yoqilgan/o'chirilgan)",
+    # Kripto avtomatik to'lov (blokcheyndan tekshirish)
+    "crypto_auto_enabled": "Kripto avtomatik to'lov (blokcheyndan tekshirish)",
+    "crypto_poll_seconds": "Kripto tekshirish oralig'i (sekund)",
+    "tron_usdt_contract": "TRON USDT (TRC20) kontrakt adresi",
+    "bnb_usdt_contract": "BNB USDT (BEP20) kontrakt adresi",
+    "bsc_rpc_url": "BNB Smart Chain RPC URL",
+    "trongrid_api_key": "TronGrid API kaliti (ixtiyoriy)",
 }
 
 # Keys required for setup wizard (in order)
@@ -118,20 +124,16 @@ WIZARD_KEYS = [
 ]
 
 
-async def get_setting(key: str) -> Optional[str]:
+async def get_setting(key: str) -> str | None:
     async with get_session() as session:
-        result = await session.execute(
-            select(ProjectSettings).where(ProjectSettings.key == key)
-        )
+        result = await session.execute(select(ProjectSettings).where(ProjectSettings.key == key))
         row = result.scalar_one_or_none()
         return row.value if row else None
 
 
 async def set_setting(key: str, value: str) -> None:
     async with get_session() as session:
-        result = await session.execute(
-            select(ProjectSettings).where(ProjectSettings.key == key)
-        )
+        result = await session.execute(select(ProjectSettings).where(ProjectSettings.key == key))
         row = result.scalar_one_or_none()
         if row:
             row.value = value
@@ -171,6 +173,7 @@ async def get_admin_ids() -> list[int]:
         except (json.JSONDecodeError, ValueError):
             pass
     from bot.config import settings as env_settings
+
     return env_settings.admin_ids
 
 
@@ -211,12 +214,29 @@ async def is_payment_enabled(method: str) -> bool:
     return val != "false"
 
 
+async def is_crypto_auto_enabled() -> bool:
+    """Blokcheyn orqali avtomatik tekshirish yoqilganmi."""
+    val = await get_setting("crypto_auto_enabled")
+    return val != "false"
+
+
 async def get_enabled_payment_methods() -> set[str]:
-    """Return set of enabled payment method names."""
+    """Return set of enabled payment method names.
+
+    Agar avtomatik kripto tekshirish o'chirilgan bo'lsa, TRON/BNB umuman
+    taklif qilinmaydi — chunki ular faqat avtomatik rejimda ishlaydi.
+    """
     enabled = set()
-    for method, key in PAYMENT_METHOD_KEYS.items():
+    for method, _key in PAYMENT_METHOD_KEYS.items():
         if await is_payment_enabled(method):
             enabled.add(method)
+    if not await is_crypto_auto_enabled():
+        enabled.discard("tron")
+        enabled.discard("bnb")
+    from bot.config import settings
+
+    if settings.PROJECT_CRYPTO_PAY_TOKEN:
+        enabled.add("crypto_pay")
     return enabled
 
 
@@ -236,6 +256,7 @@ async def seed_defaults_from_env() -> None:
         "visa_card_holder": "",
         "invite_link_url": env_settings.INVITE_LINK_URL or "https://t.me/+89m3dCxpmOFmN2E6",
         "ton_wallet_address": env_settings.TON_WALLET_ADDRESS,
+        "tron_wallet_address": "",
         "tron_qr_code": "",
         "bnb_wallet_address": "",
         "bnb_qr_code": "",
@@ -277,10 +298,10 @@ async def seed_defaults_from_env() -> None:
         "marketing_enabled": "true",
         "marketing_interval_hours": "3",
         "marketing_message": "🚀 <b>Professional signal kanaliga qo'shiling!</b>\n\n"
-            "Hali obuna sotib olmadingizmi? Endi eng qulay tariflardan birini tanlang "
-            "va professional signallarni olishni boshlang!\n\n"
-            "📈 Aniq signallar • Risk boshqaruvi • 24/7 yordam\n\n"
-            "<b>Quyidagi tugmalar orqali obuna bo'ling:</b>",
+        "Hali obuna sotib olmadingizmi? Endi eng qulay tariflardan birini tanlang "
+        "va professional signallarni olishni boshlang!\n\n"
+        "📈 Aniq signallar • Risk boshqaruvi • 24/7 yordam\n\n"
+        "<b>Quyidagi tugmalar orqali obuna bo'ling:</b>",
         "marketing_image": "",
         "payment_visa_enabled": "true",
         "payment_card_enabled": "true",
@@ -288,6 +309,12 @@ async def seed_defaults_from_env() -> None:
         "payment_bnb_enabled": "true",
         "payment_ton_enabled": "true",
         "payment_stars_enabled": "true",
+        "crypto_auto_enabled": "true",
+        "crypto_poll_seconds": "60",
+        "tron_usdt_contract": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+        "bnb_usdt_contract": "0x55d398326f99059fF775485246999027B3197955",
+        "bsc_rpc_url": "https://bsc-dataseed.binance.org",
+        "trongrid_api_key": "",
     }
     for key, value in defaults.items():
         existing = await get_setting(key)

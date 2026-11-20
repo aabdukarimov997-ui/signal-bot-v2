@@ -1,5 +1,5 @@
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram import F, Router
+from aiogram.types import Message
 
 from bot.config import settings
 from bot.services.settings_service import get_setting

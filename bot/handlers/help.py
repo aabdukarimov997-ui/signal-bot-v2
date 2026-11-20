@@ -1,16 +1,17 @@
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 
 from bot.config import settings
-from bot.services.settings_service import get_setting, get_admin_ids
-from bot.utils.texts import HELP_TEXT, CONTACT_START_TEXT, CONTACT_RECEIVED_TEXT
+from bot.services.contact_service import create_contact_message
+from bot.services.settings_service import get_admin_ids, get_setting
 from bot.utils.keyboards import (
-    InlineKeyboardMarkup, InlineKeyboardButton,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     help_kb,
 )
-from bot.services.contact_service import create_contact_message
 from bot.utils.states import ContactState
+from bot.utils.texts import CONTACT_RECEIVED_TEXT, CONTACT_START_TEXT, HELP_TEXT
 
 help_router = Router()
 
@@ -30,9 +31,11 @@ async def contact_send_handler(callback: CallbackQuery, state: FSMContext) -> No
     await state.set_state(ContactState.waiting_message)
     await callback.message.edit_text(
         CONTACT_START_TEXT,
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="contact_cancel")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="contact_cancel")],
+            ]
+        ),
     )
     await callback.answer()
 
@@ -72,6 +75,7 @@ async def contact_receive_message(message: Message, state: FSMContext, user) -> 
     for admin_id in admin_ids:
         try:
             from bot.services.contact_service import get_unread_count
+
             unread = await get_unread_count()
             notification = (
                 f"💬 <b>Yangi xabar!</b>\n\n"
@@ -85,17 +89,21 @@ async def contact_receive_message(message: Message, state: FSMContext, user) -> 
                     chat_id=admin_id,
                     photo=photo,
                     caption=notification,
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text="📋 Xabarlarni ko'rish", callback_data="admin_contacts")],
-                    ]),
+                    reply_markup=InlineKeyboardMarkup(
+                        inline_keyboard=[
+                            [InlineKeyboardButton(text="📋 Xabarlarni ko'rish", callback_data="admin_contacts")],
+                        ]
+                    ),
                 )
             else:
                 await message.bot.send_message(
                     chat_id=admin_id,
                     text=notification,
-                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                        [InlineKeyboardButton(text="📋 Xabarlarni ko'rish", callback_data="admin_contacts")],
-                    ]),
+                    reply_markup=InlineKeyboardMarkup(
+                        inline_keyboard=[
+                            [InlineKeyboardButton(text="📋 Xabarlarni ko'rish", callback_data="admin_contacts")],
+                        ]
+                    ),
                 )
         except Exception:
             pass

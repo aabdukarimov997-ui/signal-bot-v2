@@ -19,10 +19,7 @@ SIGNAL_TEXT = (
     "<b>Hoziroq VIP kanalga qo'shiling!</b>"
 )
 
-ALREADY_SUBSCRIBED_TEXT = (
-    "✅ <b>Sizda faol obuna bor!</b>\n\n"
-    "Signal kanali sizda mavjud. Kanalga kirishingiz mumkin."
-)
+ALREADY_SUBSCRIBED_TEXT = "✅ <b>Sizda faol obuna bor!</b>\n\nSignal kanali sizda mavjud. Kanalga kirishingiz mumkin."
 
 # Course
 COURSE_TEXT = "📚 <b>Darslar</b>\n\nO'zingizga mos tarifni tanlang:"
@@ -55,8 +52,7 @@ PAYMENT_APPROVED_COURSE_TEXT = (
 )
 
 COURSE_ALREADY_SUBSCRIBED_TEXT = (
-    "✅ <b>Sizda darslar obunasi bor!</b>\n\n"
-    "Darslar kanallari sizda mavjud. Kanallarga kirishingiz mumkin."
+    "✅ <b>Sizda darslar obunasi bor!</b>\n\nDarslar kanallari sizda mavjud. Kanallarga kirishingiz mumkin."
 )
 
 # Visa Payment
@@ -72,9 +68,7 @@ VISA_PAYMENT_TEXT = (
 )
 
 VISA_UPLOAD_TEXT = (
-    "📤 <b>Skrinshot yuboring</b>\n\n"
-    "Visa karta to'lov skrinshotini yuboring.\n"
-    "Admin tekshirib, tasdiqlaydi."
+    "📤 <b>Skrinshot yuboring</b>\n\nVisa karta to'lov skrinshotini yuboring.\nAdmin tekshirib, tasdiqlaydi."
 )
 
 VISA_RECEIVED_TEXT = (
@@ -107,13 +101,30 @@ CHECK_RECEIVED_TEXT = (
     "Bu jarayon bir necha daqiqa olishi mumkin."
 )
 
-# TRON TRC20 Payment
+# TRON TRC20 Payment (avtomatik)
 TRON_PAYMENT_TEXT = (
+    "<b>Bevosita USDT: provayder komissiyasiz</b>\n"
+    "Tarmoq haqi saqlanadi. Tezlik blokcheyn tasdig'iga bog'liq.\n\n"
     "🔗 <b>TRON TRC20 (USDT) orqali to'lov</b>\n\n"
-    "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
-    "<code>{wallet_address}</code>\n\n"
-    "⚠️ <b>Muhim:</b> Faqat TRC20 (TRON) network orqali yuboring!\n\n"
-    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+    "Quyidagi wallet addressga <b>aynan shu summani</b> yuboring:\n\n"
+    "💰 Summa: <b>{amount} USDT</b>\n"
+    "👛 Wallet: <code>{wallet_address}</code>\n\n"
+    "⚠️ <b>Muhim:</b> Faqat TRC20 (TRON) network orqali yuboring!\n"
+    "⚠️ Summani o'zgartirmang — to'lov shu summa bo'yicha avtomatik aniqlanadi.\n\n"
+    "<b>To'lov qo'llanmasi:</b>\n"
+    "1. Wallet ilovasida Send/Jo'natish bo'limini oching.\n"
+    "2. Wallet manzilini nusxalab kiriting.\n"
+    "3. Network sifatida faqat TRON/TRC20 ni tanlang.\n"
+    "4. Yuqoridagi summani aynan kiriting va tranzaksiyani tasdiqlang.\n"
+    "5. Tranzaksiya yuborilgach, botdagi «To'lovni tekshirish» tugmasini bosing.\n\n"
+    "Rasmiy walletlar: <a href='https://www.tronlink.org/'>TronLink</a> yoki "
+    "<a href='https://trustwallet.com/'>Trust Wallet</a>.\n"
+    "Tranzaksiyani <a href='https://tronscan.org/'>TronScan</a> orqali tekshirishingiz mumkin.\n\n"
+    "<b>Qonuniylik eslatmasi:</b> O'zbekiston Respublikasidagi amaldagi qonunlar, "
+    "soliq va valyuta qoidalariga rioya qiling. Faqat rasmiy/litsenziyalangan "
+    "xizmatlardan foydalaning va to'lov tasdiqlarini saqlang. Bu yuridik maslahat emas.\n\n"
+    "✅ To'lov blokcheyndagi tranzaksiya orqali avtomatik tasdiqlanadi "
+    "(odatda 1-2 daqiqa)."
 )
 
 TRON_UPLOAD_TEXT = (
@@ -128,13 +139,45 @@ TRON_RECEIVED_TEXT = (
     "Bu jarayon bir necha daqiqa olishi mumkin."
 )
 
-# BNB BEP20 Payment
+# BNB BEP20 Payment (avtomatik)
 BNB_PAYMENT_TEXT = (
+    "<b>Bevosita USDT: provayder komissiyasiz</b>\n"
+    "Tarmoq haqi saqlanadi. Tezlik blokcheyn tasdig'iga bog'liq.\n\n"
     "🟡 <b>BNB BEP20 (USDT) orqali to'lov</b>\n\n"
-    "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
-    "<code>{wallet_address}</code>\n\n"
-    "⚠️ <b>Muhim:</b> Faqat BEP20 (BSC) network orqali yuboring!\n\n"
-    "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
+    "Quyidagi wallet addressga <b>aynan shu summani</b> yuboring:\n\n"
+    "💰 Summa: <b>{amount} USDT</b>\n"
+    "👛 Wallet: <code>{wallet_address}</code>\n\n"
+    "⚠️ <b>Muhim:</b> Faqat BEP20 (BSC) network orqali yuboring!\n"
+    "⚠️ Summani o'zgartirmang — to'lov shu summa bo'yicha avtomatik aniqlanadi.\n\n"
+    "<b>To'lov qo'llanmasi:</b>\n"
+    "1. Wallet ilovasida Send/Jo'natish bo'limini oching.\n"
+    "2. Wallet manzilini nusxalab kiriting.\n"
+    "3. Network sifatida faqat BNB Smart Chain/BEP20 ni tanlang.\n"
+    "4. Yuqoridagi summani aynan kiriting va tranzaksiyani tasdiqlang.\n"
+    "5. Tranzaksiya yuborilgach, botdagi «To'lovni tekshirish» tugmasini bosing.\n\n"
+    "Rasmiy walletlar: <a href='https://trustwallet.com/'>Trust Wallet</a> yoki "
+    "<a href='https://metamask.io/'>MetaMask</a>.\n"
+    "Tranzaksiyani <a href='https://bscscan.com/'>BscScan</a> orqali tekshirishingiz mumkin.\n\n"
+    "<b>Qonuniylik eslatmasi:</b> O'zbekiston Respublikasidagi amaldagi qonunlar, "
+    "soliq va valyuta qoidalariga rioya qiling. Faqat rasmiy/litsenziyalangan "
+    "xizmatlardan foydalaning va to'lov tasdiqlarini saqlang. Bu yuridik maslahat emas.\n\n"
+    "✅ To'lov blokcheyndagi tranzaksiya orqali avtomatik tasdiqlanadi "
+    "(odatda 1-2 daqiqa)."
+)
+
+CRYPTO_PAY_GUIDE_TEXT = (
+    "<b>Crypto Pay to'lov qo'llanmasi</b>\n\n"
+    "1. «Crypto Pay invoice ochish» tugmasini bosing.\n"
+    "2. Faqat ochilgan rasmiy invoice oynasidagi summani tekshiring.\n"
+    "3. CryptoBot ichida USDT va mavjud networkni tanlang.\n"
+    "4. To'lovni tasdiqlang va invoice oynasini yopmang.\n"
+    "5. Obuna faqat server to'lovni «paid» deb tekshirgandan keyin faollashadi.\n\n"
+    "Crypto Pay balansi loyiha uchun alohida provider balansiga tushadi; "
+    "provayderning amaldagi komissiyasi va network haqi invoice tasdiqlanishidan oldin ko'rsatilishi mumkin.\n\n"
+    "Rasmiy xizmat: <a href='https://t.me/CryptoBot'>CryptoBot</a>.\n"
+    "<b>Qonuniylik eslatmasi:</b> O'zbekistondagi amaldagi qonunlar, "
+    "soliq va valyuta qoidalariga rioya qiling. Faqat rasmiy/litsenziyalangan "
+    "xizmatlardan foydalaning. Bu yuridik maslahat emas."
 )
 
 BNB_UPLOAD_TEXT = (
@@ -154,7 +197,13 @@ TON_PAYMENT_TEXT = (
     "💎 <b>TON (The Open Network) orqali to'lov</b>\n\n"
     "USDT o'tkazish uchun quyidagi wallet addressga pul yuboring:\n\n"
     "<code>{wallet_address}</code>\n\n"
-    "⚠️ <b>Muhim:</b> Faqat TON network orqali yuboring!\n\n"
+    "⚠️ <b>Muhim:</b> Faqat TON network orqali yuboring! TON manziliga TRC20/BEP20 yubormang.\n\n"
+    "<b>To'lov qo'llanmasi:</b> TON walletda Send bo'limini oching, manzilni nusxalang, "
+    "faqat TON networkni tanlang va tranzaksiya skrinshotini yuboring.\n"
+    "Rasmiy wallet: <a href='https://tonkeeper.com/'>Tonkeeper</a>. "
+    "Tranzaksiyani <a href='https://tonviewer.com/'>TON Viewer</a> orqali tekshiring.\n\n"
+    "<b>Qonuniylik eslatmasi:</b> O'zbekistondagi amaldagi qonun, soliq va valyuta talablariga rioya qiling; "
+    "faqat rasmiy/litsenziyalangan xizmatlardan foydalaning. Bu yuridik maslahat emas.\n\n"
     "To'lovni amalga oshirgach, pastdagi tugma orqali skrinshot yuboring."
 )
 
@@ -247,9 +296,7 @@ CONTACT_START_TEXT = (
 )
 
 CONTACT_RECEIVED_TEXT = (
-    "✅ <b>Xabaringiz qabul qilindi!</b>\n\n"
-    "Admin tez orada siz bilan bog'lanadi.\n"
-    "Iltimos, kutib turing.⏳"
+    "✅ <b>Xabaringiz qabul qilindi!</b>\n\nAdmin tez orada siz bilan bog'lanadi.\nIltimos, kutib turing.⏳"
 )
 
 # Admin
@@ -268,10 +315,7 @@ ADMIN_STATS_TEXT = (
 
 ADMIN_TARIFFS_TEXT = "📊 <b>Tariflar boshqaruvi</b>\n\nQuyidagi tariflarni tahrirlashingiz mumkin:"
 
-ADMIN_SOCIAL_TEXT = (
-    "🔗 <b>Ijtimoiy tarmoq havolalari</b>\n\n"
-    "Quyidagi havolalarni o'zgartirish uchun tugmani bosing."
-)
+ADMIN_SOCIAL_TEXT = "🔗 <b>Ijtimoiy tarmoq havolalari</b>\n\nQuyidagi havolalarni o'zgartirish uchun tugmani bosing."
 
 # Errors / Generic
 ERROR_OCCURRED = "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
@@ -286,9 +330,7 @@ REMINDER_7_DAYS = (
 )
 
 REMINDER_3_DAYS = (
-    "⏳ <b>Eslatma!</b>\n\n"
-    "Signal kanaliga obunangiz <b>3 kundan</b> keyin tugaydi.\n"
-    "Obunani uzaytirishni unutmang!"
+    "⏳ <b>Eslatma!</b>\n\nSignal kanaliga obunangiz <b>3 kundan</b> keyin tugaydi.\nObunani uzaytirishni unutmang!"
 )
 
 REMINDER_1_DAY = (
@@ -311,9 +353,7 @@ REMINDER_7_DAYS_COURSE = (
 )
 
 REMINDER_3_DAYS_COURSE = (
-    "⏳ <b>Eslatma!</b>\n\n"
-    "Darslar kanaliga obunangiz <b>3 kundan</b> keyin tugaydi.\n"
-    "Obunani uzaytirishni unutmang!"
+    "⏳ <b>Eslatma!</b>\n\nDarslar kanaliga obunangiz <b>3 kundan</b> keyin tugaydi.\nObunani uzaytirishni unutmang!"
 )
 
 REMINDER_1_DAY_COURSE = (

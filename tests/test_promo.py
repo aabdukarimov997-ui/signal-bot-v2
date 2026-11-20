@@ -1,13 +1,14 @@
 import pytest
+from sqlalchemy import select
 
 from bot.database.engine import async_session_factory
-from sqlalchemy import select
 from bot.models.promo_code import PromoCode
 
 
 @pytest.mark.asyncio
 async def test_validate_valid_promo(sample_promo):
     from bot.services.promo_service import validate_promo
+
     promo = await validate_promo("TEST10", "signal")
     assert promo is not None
     assert promo.code == "TEST10"
@@ -17,6 +18,7 @@ async def test_validate_valid_promo(sample_promo):
 @pytest.mark.asyncio
 async def test_validate_invalid_code():
     from bot.services.promo_service import validate_promo
+
     promo = await validate_promo("INVALID", "signal")
     assert promo is None
 
@@ -24,6 +26,7 @@ async def test_validate_invalid_code():
 @pytest.mark.asyncio
 async def test_validate_wrong_product_type(sample_promo):
     from bot.services.promo_service import validate_promo
+
     promo = await validate_promo("TEST10", "course")
     assert promo is None  # sample_promo is signal-only
 
@@ -31,6 +34,7 @@ async def test_validate_wrong_product_type(sample_promo):
 @pytest.mark.asyncio
 async def test_validate_case_insensitive(sample_promo):
     from bot.services.promo_service import validate_promo
+
     promo = await validate_promo("test10", "signal")
     assert promo is not None
     assert promo.code == "TEST10"
@@ -38,24 +42,22 @@ async def test_validate_case_insensitive(sample_promo):
 
 @pytest.mark.asyncio
 async def test_apply_promo_increments_uses(sample_promo):
-    from bot.services.promo_service import apply_promo, validate_promo
+    from bot.services.promo_service import apply_promo
 
     original_uses = sample_promo.current_uses
     await apply_promo(sample_promo)
 
     # Validate again to check current_uses was incremented
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(PromoCode).where(PromoCode.id == sample_promo.id)
-        )
+        result = await session.execute(select(PromoCode).where(PromoCode.id == sample_promo.id))
         updated = result.scalar_one()
         assert updated.current_uses == original_uses + 1
 
 
 @pytest.mark.asyncio
 async def test_promo_max_uses_exhausted():
-    from bot.services.promo_service import validate_promo
     from bot.database.engine import async_session_factory
+    from bot.services.promo_service import validate_promo
 
     # Create a promo with max_uses already reached
     async with async_session_factory() as session:
@@ -77,8 +79,8 @@ async def test_promo_max_uses_exhausted():
 
 @pytest.mark.asyncio
 async def test_promo_inactive():
-    from bot.services.promo_service import validate_promo
     from bot.database.engine import async_session_factory
+    from bot.services.promo_service import validate_promo
 
     async with async_session_factory() as session:
         promo = PromoCode(

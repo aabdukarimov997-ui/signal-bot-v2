@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTmaStore, type TmaTariff } from '@/lib/tma/store';
+import { useTmaStore, formatTmaTariffDuration, type TmaTariff } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
 import { NationalFrame } from '../shared/UzbekPattern';
 import { api } from '@/lib/tma/api';
@@ -76,7 +76,7 @@ export function CoursesPage() {
                       </div>
                       <div className="text-left">
                         <p className="font-medium text-sm">{tariff.name}</p>
-                        <p className="text-xs text-[#7c7b7b]">{tariff.durationMonths} {t('months')}</p>
+                        <p className="text-xs text-[#7c7b7b]">{formatTmaTariffDuration(tariff, t('months'))}</p>
                       </div>
                     </div>
                     <div className="text-right">

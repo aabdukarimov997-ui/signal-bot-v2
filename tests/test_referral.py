@@ -1,14 +1,14 @@
 import pytest
+from sqlalchemy import select
 
 from bot.database.engine import async_session_factory
-from sqlalchemy import select
-from bot.models.referral_stat import ReferralStat
 from bot.models.user import User
 
 
 @pytest.mark.asyncio
 async def test_referral_link_generation():
     from bot.services.referral_service import get_referral_link
+
     link = await get_referral_link("test_bot", 12345)
     assert "test_bot" in link
     assert "12345" in link
@@ -25,6 +25,7 @@ async def test_add_referral_bonus(sample_user):
         await session.refresh(referred)
 
     from bot.services.referral_service import add_referral_bonus
+
     stat = await add_referral_bonus(sample_user.id, referred.id, "signal_days", 3)
     assert stat.referrer_id == sample_user.id
     assert stat.referred_id == referred.id
@@ -42,12 +43,11 @@ async def test_referral_count(sample_user):
         await session.commit()
 
         # Get their IDs
-        result = await session.execute(
-            select(User.id).where(User.telegram_id.in_([111000, 111001, 111002]))
-        )
+        result = await session.execute(select(User.id).where(User.telegram_id.in_([111000, 111001, 111002])))
         ids = result.scalars().all()
 
     from bot.services.referral_service import add_referral_bonus, get_referral_count
+
     for rid in ids:
         await add_referral_bonus(sample_user.id, rid, "signal_days", 3)
 
@@ -60,7 +60,7 @@ async def test_find_referrer_by_code():
     from bot.services.referral_service import get_referrer_by_code
     from bot.services.user_service import get_or_create_user
 
-    user = await get_or_create_user(55555, "Referrer", "referrer_user")
-    found = await get_referrer_by_code(f"ref_55555")
+    await get_or_create_user(55555, "Referrer", "referrer_user")
+    found = await get_referrer_by_code("ref_55555")
     assert found is not None
     assert found.telegram_id == 55555

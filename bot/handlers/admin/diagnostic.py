@@ -1,15 +1,14 @@
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import CallbackQuery
+from sqlalchemy import func, select
 
-from bot.models.user import User
 from bot.database.session import get_session
+from bot.models.subscription import Subscription
+from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
 from bot.utils.keyboards import admin_back_kb
-from sqlalchemy import select, func
-
-from bot.models.subscription import Subscription
 
 admin_diagnostic_router = Router()
 
@@ -21,9 +20,7 @@ async def get_reminder_stats() -> dict:
     stats = {}
     async with get_session() as session:
         # Total active subscriptions
-        result = await session.execute(
-            select(func.count(Subscription.id)).where(Subscription.status == "active")
-        )
+        result = await session.execute(select(func.count(Subscription.id)).where(Subscription.status == "active"))
         stats["total_active"] = result.scalar() or 0
 
         # Count with flags = True
@@ -31,13 +28,13 @@ async def get_reminder_stats() -> dict:
             result = await session.execute(
                 select(func.count(Subscription.id)).where(
                     Subscription.status == "active",
-                    getattr(Subscription, col) == True,
+                    getattr(Subscription, col),
                 )
             )
             stats[f"{col}_true"] = result.scalar() or 0
 
         # Subscriptions in each reminder range
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ranges = [
             ("7 kun (3-7)", 7, 3),
             ("3 kun (1-3)", 3, 1),
@@ -56,26 +53,25 @@ async def get_reminder_stats() -> dict:
 
         # Detailed list: active subs with end_date and flags
         result = await session.execute(
-            select(Subscription)
-            .where(Subscription.status == "active")
-            .order_by(Subscription.end_date.asc())
+            select(Subscription).where(Subscription.status == "active").order_by(Subscription.end_date.asc())
         )
         subs = result.scalars().all()
         stats["details"] = []
         for sub in subs:
             from bot.models.user import User as UserModel
-            user_result = await session.execute(
-                select(UserModel).where(UserModel.id == sub.user_id)
-            )
+
+            user_result = await session.execute(select(UserModel).where(UserModel.id == sub.user_id))
             user = user_result.scalar_one_or_none()
-            stats["details"].append({
-                "sub_id": sub.id[:8] if sub.id else "?",
-                "user_tg": user.telegram_id if user else "?",
-                "end_date": sub.end_date.strftime("%d.%m.%Y") if sub.end_date else "?",
-                "r7": "✅" if sub.reminder_7_sent else "⬜",
-                "r3": "✅" if sub.reminder_3_sent else "⬜",
-                "r1": "✅" if sub.reminder_1_sent else "⬜",
-            })
+            stats["details"].append(
+                {
+                    "sub_id": sub.id[:8] if sub.id else "?",
+                    "user_tg": user.telegram_id if user else "?",
+                    "end_date": sub.end_date.strftime("%d.%m.%Y") if sub.end_date else "?",
+                    "r7": "✅" if sub.reminder_7_sent else "⬜",
+                    "r3": "✅" if sub.reminder_3_sent else "⬜",
+                    "r1": "✅" if sub.reminder_1_sent else "⬜",
+                }
+            )
 
     return stats
 
@@ -118,6 +114,3 @@ async def admin_diagnostic_handler(callback: CallbackQuery, user: User) -> None:
 
     text = "\n".join(lines)
     await callback.message.edit_text(text, reply_markup=admin_back_kb("admin_back"))
-
-
-

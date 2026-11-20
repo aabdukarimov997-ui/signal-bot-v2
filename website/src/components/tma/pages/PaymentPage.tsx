@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTmaStore } from '@/lib/tma/store';
+import { useTmaStore, formatTmaTariffDuration } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
 import { NationalFrame } from '../shared/UzbekPattern';
 
@@ -15,19 +15,36 @@ const METHODS = [
 ];
 
 export function PaymentPage() {
-  const { selectedTariff, navigate, user } = useTmaStore();
+  const { selectedTariff, navigate, user, initData } = useTmaStore();
   const { t } = useLang();
-  const [method, setMethod] = useState<'stars' | 'card' | null>(null);
+  const [method, setMethod] = useState<'stars' | 'card' | 'crypto_pay' | null>(null);
   const [cardMethod, setCardMethod] = useState('card');
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  // Avtomatik kripto to'lov holati (blokcheyndan tekshiriladi)
+  const [cryptoInvoice, setCryptoInvoice] = useState<{
+    paymentId: string;
+    network: 'tron' | 'bnb';
+    address: string;
+    amount: number;
+  } | null>(null);
+  const [cryptoStatus, setCryptoStatus] = useState<'waiting' | 'paid'>('waiting');
+  const [cryptoPayAvailable, setCryptoPayAvailable] = useState(false);
+  const [cryptoPayInvoice, setCryptoPayInvoice] = useState<{
+    paymentId: string;
+    url: string;
+    expiresAt?: string | null;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/tma/settings')
       .then((r) => r.json())
-      .then((d) => setSettings(d.settings || {}))
+      .then((d) => {
+        setSettings(d.settings || {});
+        setCryptoPayAvailable(Boolean(d.cryptoPayAvailable));
+      })
       .catch(() => {});
   }, []);
 
@@ -39,7 +56,7 @@ export function PaymentPage() {
           holder: settings.visa_card_holder || settings.card_owner || '',
         };
       case 'tron_trc20':
-        return { number: settings.ton_wallet_address || '', holder: 'TRON TRC20 (USDT)' };
+        return { number: settings.tron_wallet_address || settings.ton_wallet_address || '', holder: 'TRON TRC20 (USDT)' };
       case 'bnb':
         return { number: settings.bnb_wallet_address || '', holder: 'BNB BEP20 (USDT)' };
       case 'toncoin':
@@ -54,7 +71,7 @@ export function PaymentPage() {
       case 'visa':
         return Boolean(settings.visa_card_number || settings.card_number);
       case 'tron_trc20':
-        return Boolean(settings.ton_wallet_address);
+        return Boolean(settings.tron_wallet_address || settings.ton_wallet_address);
       case 'bnb':
         return Boolean(settings.bnb_wallet_address);
       case 'toncoin':
@@ -72,7 +89,7 @@ export function PaymentPage() {
     try {
       const res = await fetch('/api/tma/invoice', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-telegram-init-data': initData || '' },
         body: JSON.stringify({ tariffId: selectedTariff.id }),
       });
       const data = await res.json();
@@ -99,7 +116,111 @@ export function PaymentPage() {
     }
   };
 
-  // ── Card: to'lov qildim → pending → admin tasdiqlaydi (bot'ga o'tmaydi) ──
+  const isAutoCrypto = cardMethod === 'tron_trc20' || cardMethod === 'bnb';
+
+  // ── Kripto: invoice yaratamiz → noyob summa → bot blokcheyndan tekshiradi ──
+  const handleCryptoPayment = async () => {
+    if (!selectedTariff || !user) return;
+    setProcessing(true);
+    setError('');
+    try {
+      const res = await fetch('/api/tma/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-telegram-init-data': initData || '' },
+        body: JSON.stringify({
+          productId: selectedTariff.id,
+          paymentMethod: cardMethod,
+          photoFileId: null,
+        }),
+      });
+      const data = await res.json();
+      if (!data.payment) throw new Error(data.error || 'Xatolik yuz berdi');
+      if (!data.payment.autoVerify) throw new Error('Avtomatik tekshirish sozlanmagan');
+      setCryptoInvoice({
+        paymentId: data.payment.id,
+        network: data.payment.cryptoNetwork,
+        address: data.payment.cryptoAddress,
+        amount: Number(data.payment.cryptoAmount),
+      });
+      setCryptoStatus('waiting');
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Xatolik yuz berdi');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCryptoPayPayment = async () => {
+    if (!selectedTariff || !user) return;
+    setProcessing(true);
+    setError('');
+    try {
+      const res = await fetch('/api/tma/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-telegram-init-data': initData || '' },
+        body: JSON.stringify({ productId: selectedTariff.id, paymentMethod: 'crypto_pay' }),
+      });
+      const data = await res.json();
+      if (!data.payment?.providerInvoiceUrl || !data.payment.id) throw new Error(data.error || 'Xatolik yuz berdi');
+      const invoiceUrl = data.payment.providerInvoiceUrl;
+      const parsed = new URL(invoiceUrl);
+      if (parsed.protocol !== 'https:' || (parsed.hostname !== 't.me' && !parsed.hostname.endsWith('.crypt.bot'))) {
+        throw new Error('Invoice havolasi noto\'g\'ri');
+      }
+      setCryptoPayInvoice({
+        paymentId: data.payment.id,
+        url: invoiceUrl,
+        expiresAt: data.payment.cryptoExpiresAt,
+      });
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Xatolik yuz berdi');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // ── Kripto to'lov holatini polling qilish (avtomatik tasdiqlanishi) ──
+  useEffect(() => {
+    const paymentId = cryptoInvoice?.paymentId || cryptoPayInvoice?.paymentId;
+    if (!paymentId || cryptoStatus === 'paid') return;
+    let cancelled = false;
+    let checking = false;
+    const timer = setInterval(async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const res = await fetch(
+          `/api/tma/payment/status?paymentId=${encodeURIComponent(paymentId)}`,
+          { headers: { 'x-telegram-init-data': initData || '' } }
+        );
+        const data = await res.json();
+        if (!cancelled && data?.payment?.status === 'approved') {
+          setCryptoStatus('paid');
+          setDone(true);
+        } else if (!cancelled && ['failed', 'rejected', 'expired'].includes(data?.payment?.status)) {
+          setError('To\'lov amalga oshmadi. Yangi invoice oching.');
+          setCryptoInvoice(null);
+          setCryptoPayInvoice(null);
+        } else if (!cancelled && data?.payment?.cryptoExpiresAt && new Date(data.payment.cryptoExpiresAt).getTime() <= Date.now()) {
+          setError('Invoice muddati tugagan. Yangi invoice oching.');
+          setCryptoInvoice(null);
+          setCryptoPayInvoice(null);
+        }
+      } catch {
+        /* keyingi urinishda qayta tekshiriladi */
+      } finally {
+        checking = false;
+      }
+    }, 7000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [cryptoInvoice, cryptoPayInvoice, cryptoStatus, initData]);
+
+  // ── Karta: to'lov qildim → pending → admin tasdiqlaydi ──
   const handleCardPayment = async () => {
     if (!selectedTariff || !user) return;
     setProcessing(true);
@@ -107,12 +228,9 @@ export function PaymentPage() {
     try {
       const res = await fetch('/api/tma/payment', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-telegram-init-data': initData || '' },
         body: JSON.stringify({
-          userId: user.id,
-          productType: selectedTariff.productType || 'signal',
           productId: selectedTariff.id,
-          amount: selectedTariff.price,
           paymentMethod: cardMethod,
           photoFileId: null,
         }),
@@ -177,7 +295,7 @@ export function PaymentPage() {
             ${selectedTariff.price}
           </p>
           <p className="text-xs text-[#7c7b7b] text-center mb-6">
-            {selectedTariff.durationMonths} {t('months')}
+            {formatTmaTariffDuration(selectedTariff, t('months'))}
           </p>
 
           {method === null && (
@@ -207,12 +325,44 @@ export function PaymentPage() {
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium">{t('pay_card')}</p>
-                  <p className="text-xs text-[#7c7b7b]">Karta / USDT — admin tasdiqlaydi</p>
+                  <p className="text-xs text-[#7c7b7b]">Karta to'lovi — admin tasdiqlaydi</p>
                 </div>
                 <svg className="w-5 h-5 text-[#2dd4a0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+
+              {(isMethodReady('tron_trc20') || isMethodReady('bnb')) && (
+                <button
+                  onClick={() => {
+                    setCardMethod(isMethodReady('tron_trc20') ? 'tron_trc20' : 'bnb');
+                    setCryptoInvoice(null);
+                    setCryptoPayInvoice(null);
+                    setError('');
+                    setMethod('card');
+                  }}
+                  className="w-full p-4 text-left rounded-xl bg-[#0a0a09] border border-[#ffffff08] hover:border-[#2dd4a0]/30"
+                >
+                  <p className="text-sm font-medium">Hamyon orqali bevosita USDT</p>
+                  <p className="text-xs text-[#7c7b7b]">Provayder komissiyasiz. Tarmoq haqi bor. Blokcheyn tasdiqlaydi.</p>
+                </button>
+              )}
+
+              {cryptoPayAvailable && (
+                <button
+                  onClick={() => setMethod('crypto_pay')}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-[#0a0a09] border border-[#ffffff08] hover:border-[#d4a72c]/20 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#d4a72c]/15 flex items-center justify-center text-sm font-bold text-[#d4a72c]">CP</div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium">Crypto Pay</p>
+                    <p className="text-xs text-[#7c7b7b]">USDT — qulay to'lov, server tasdiqlaydi</p>
+                  </div>
+                  <svg className="w-5 h-5 text-[#d4a72c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
             </div>
           )}
 
@@ -254,7 +404,7 @@ export function PaymentPage() {
                 {METHODS.filter((m) => isMethodReady(m.id)).map((m) => (
                   <button
                     key={m.id}
-                    onClick={() => setCardMethod(m.id)}
+                    onClick={() => { setCardMethod(m.id); setCryptoInvoice(null); setCryptoStatus('waiting'); }}
                     className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
                       cardMethod === m.id
                         ? 'bg-[#d4a72c]/20 border-[#d4a72c]/40 text-[#d4a72c]'
@@ -266,23 +416,74 @@ export function PaymentPage() {
                 ))}
               </div>
 
-              <div className="rounded-xl bg-[#0a0a09] border border-[#ffffff08] p-4 space-y-1">
-                <p className="text-[11px] text-[#7c7b7b] uppercase tracking-wide">{cardDetails().holder}</p>
-                <p className="text-sm font-mono break-all">{cardDetails().number}</p>
-                <button
-                  onClick={() => {
-                    if (navigator.clipboard) navigator.clipboard.writeText(cardDetails().number);
-                  }}
-                  className="text-[11px] text-[#d4a72c]"
-                >
-                  📋 Nusxalash
-                </button>
-              </div>
+              {cryptoInvoice ? (
+                <>
+                  <div className="rounded-xl bg-[#0a0a09] border border-[#d4a72c]/30 p-4 space-y-2">
+                    <p className="text-[11px] text-[#7c7b7b] uppercase tracking-wide">
+                      {cryptoInvoice.network === 'tron' ? 'TRON TRC20 (USDT)' : 'BNB BEP20 (USDT)'} — aniq summa
+                    </p>
+                    <p className="text-2xl font-bold text-[#d4a72c] font-mono">{cryptoInvoice.amount.toFixed(4)} USDT</p>
+                    <p className="text-[11px] text-[#7c7b7b] uppercase tracking-wide pt-2">Wallet manzili</p>
+                    <p className="text-sm font-mono break-all">{cryptoInvoice.address}</p>
+                    <button
+                      onClick={() => {
+                        if (navigator.clipboard) navigator.clipboard.writeText(cryptoInvoice.address);
+                      }}
+                      className="text-[11px] text-[#d4a72c]"
+                    >
+                      📋 Manzilni nusxalash
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (navigator.clipboard) navigator.clipboard.writeText(cryptoInvoice.amount.toFixed(4));
+                      }}
+                      className="text-[11px] text-[#d4a72c] ml-3"
+                    >
+                      📋 Summani nusxalash
+                    </button>
+                  </div>
 
-              <p className="text-[11px] text-[#7c7b7b] text-center">
-                To'lovni amalga oshirib, quyidagi tugmani bosing. Admin tekshirib tasdiqlaydi — obuna va kanalga havola
-                shu Telegram akkauntingizga ulanadi.
-              </p>
+                  <p className="text-[11px] text-[#7c7b7b] text-center">
+                    Yuqoridagi <b>aniq summani</b> o'zgartirmasdan yuboring. To'lov blokcheyndagi tranzaksiya orqali
+                    avtomatik tekshiriladi va obuna avtomatik faollashadi (1-2 daqiqa).
+                  </p>
+
+                  {cryptoStatus === 'waiting' && (
+                    <div className="flex items-center justify-center gap-2 py-2 text-xs text-[#d4a72c]">
+                      <span className="w-4 h-4 rounded-full border-2 border-[#d4a72c]/30 border-t-[#d4a72c] animate-spin" />
+                      Blokcheyn tekshirilmoqda...
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="rounded-xl bg-[#0a0a09] border border-[#ffffff08] p-4 space-y-1">
+                    <p className="text-[11px] text-[#7c7b7b] uppercase tracking-wide">{cardDetails().holder}</p>
+                    <p className="text-sm font-mono break-all">{cardDetails().number}</p>
+                    <button
+                      onClick={() => {
+                        if (navigator.clipboard) navigator.clipboard.writeText(cardDetails().number);
+                      }}
+                      className="text-[11px] text-[#d4a72c]"
+                    >
+                      📋 Nusxalash
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-[#7c7b7b] text-center">
+                    {isAutoCrypto
+                    ? "Direct USDT to'lovi avtomatik tekshiriladi — skrinshot yuborish shart emas. Networkni aynan ko'rsatilganidek tanlang."
+                      : "To'lovni amalga oshirib, quyidagi tugmani bosing. Admin tekshirib tasdiqlaydi — obuna va kanalga havola shu Telegram akkauntingizga ulanadi."}
+                  </p>
+                  {isAutoCrypto && (
+                    <div className="rounded-lg border border-[#ffffff08] bg-[#0a0a09] p-3 text-[11px] text-[#7c7b7b] space-y-1">
+                      <p><b>Qo'llanma:</b> Send bo'limini oching, manzilni nusxalang, faqat {cardMethod === 'tron_trc20' ? 'TRON/TRC20' : 'BNB Smart Chain/BEP20'} networkni tanlang va summani o'zgartirmang.</p>
+                      <p>Rasmiy walletlar: <a className="text-[#d4a72c]" href="https://trustwallet.com/" target="_blank" rel="noreferrer">Trust Wallet</a>, <a className="text-[#d4a72c]" href="https://www.tronlink.org/" target="_blank" rel="noreferrer">TronLink</a>.</p>
+                      <p><b>Qonuniylik:</b> O'zbekistondagi amaldagi qonun, soliq va valyuta talablariga rioya qiling; faqat rasmiy/litsenziyalangan xizmatlardan foydalaning. Bu yuridik maslahat emas.</p>
+                    </div>
+                  )}
+                </>
+              )}
 
               {error && (
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
@@ -290,17 +491,66 @@ export function PaymentPage() {
                 </div>
               )}
 
-              <button
-                onClick={handleCardPayment}
-                disabled={processing}
-                className={`w-full py-3 rounded-xl bg-[#2dd4a0] text-black font-semibold transition-all ${
-                  processing ? 'opacity-50' : 'hover:bg-[#3ee6b2]'
-                }`}
-              >
-                {processing ? 'Yuborilmoqda...' : "✅ To'lov qildim"}
-              </button>
+              {!cryptoInvoice && (
+                <button
+                  onClick={isAutoCrypto ? handleCryptoPayment : handleCardPayment}
+                  disabled={processing}
+                  className={`w-full py-3 rounded-xl bg-[#2dd4a0] text-black font-semibold transition-all ${
+                    processing ? 'opacity-50' : 'hover:bg-[#3ee6b2]'
+                  }`}
+                >
+                  {processing
+                    ? 'Yuborilmoqda...'
+                    : isAutoCrypto
+                      ? "🔗 To'lovni boshlash"
+                      : "✅ To'lov qildim"}
+                </button>
+              )}
               <button
                 onClick={() => setMethod(null)}
+                disabled={processing}
+                className="w-full py-2 text-xs text-[#7c7b7b]"
+              >
+                ← {t('back')}
+              </button>
+            </div>
+          )}
+
+          {method === 'crypto_pay' && (
+            <div className="space-y-3">
+              <p className="text-xs text-[#7c7b7b] text-center">
+                Crypto Pay orqali USDT. Provayderning amaldagi komissiyasi qo'llanishi mumkin.
+                To'lashdan oldin invoice shartlarini tekshiring. To'lov tezligi kafolatlanmaydi.
+              </p>
+              <p className="text-[11px] text-[#7c7b7b] text-center">
+                Qo'llanma: invoice'ni oching, USDT va networkni tekshiring, to'lovni faqat rasmiy CryptoBot oynasida tasdiqlang.
+                O'zbekistondagi amaldagi qonun va soliq talablariga rioya qiling; bu yuridik maslahat emas.
+              </p>
+              {cryptoPayInvoice ? (
+                <div className="rounded-xl bg-[#0a0a09] border border-[#d4a72c]/30 p-4 space-y-3 text-center">
+                  <p className="text-sm font-medium">Invoice tayyor</p>
+                  <a
+                    href={cryptoPayInvoice.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block w-full py-3 rounded-xl bg-[#d4a72c] text-black font-semibold hover:bg-[#e8c14a]"
+                  >
+                    Crypto Pay'da to'lash
+                  </a>
+                  <p className="text-[11px] text-[#7c7b7b]">Obuna faqat server to'lovni tasdiqlagandan keyin faollashadi.</p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleCryptoPayPayment}
+                  disabled={processing}
+                  className={`w-full py-3 rounded-xl bg-[#d4a72c] text-black font-semibold transition-all ${processing ? 'opacity-50' : 'hover:bg-[#e8c14a]'}`}
+                >
+                  {processing ? 'Yuborilmoqda...' : 'Invoice ochish'}
+                </button>
+              )}
+              {error && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</div>}
+              <button
+                onClick={() => { setCryptoPayInvoice(null); setError(''); setMethod(null); }}
                 disabled={processing}
                 className="w-full py-2 text-xs text-[#7c7b7b]"
               >

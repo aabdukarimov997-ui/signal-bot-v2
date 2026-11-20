@@ -1,19 +1,16 @@
+import contextlib
 import html
 
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, ContentType, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.fsm.context import FSMContext
-from aiogram import Bot
-
-from bot.services.settings_service import get_setting, set_setting, get_admin_ids
-from bot.services.subscription_service import get_all_tariffs
-from bot.utils.keyboards import admin_course_content_kb, admin_menu_kb
-import html
-
+from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, ContentType, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
+from bot.services.settings_service import get_admin_ids, get_setting, set_setting
+from bot.services.subscription_service import get_all_tariffs
 from bot.utils.helpers import safe_edit
-from bot.utils.states import AdminCourseContentStates, AdminCourseComboStates
+from bot.utils.keyboards import admin_course_content_kb
+from bot.utils.states import AdminCourseComboStates, AdminCourseContentStates
 
 admin_course_content_router = Router()
 
@@ -36,7 +33,7 @@ async def admin_course_content_handler(callback: CallbackQuery, bot: Bot) -> Non
         preview = html.escape(course_msg[:60] + "..." if len(course_msg) > 60 else course_msg)
         status_lines.append(f"📝 Custom xabar: ✅ ({preview})")
     else:
-        status_lines.append(f"📝 Custom xabar: ⚪ (auto-generatsiya)")
+        status_lines.append("📝 Custom xabar: ⚪ (auto-generatsiya)")
 
     status_lines.append(f"📝 Nomi: {html.escape(course_name)}")
 
@@ -79,14 +76,11 @@ async def admin_course_desc_handler(callback: CallbackQuery, state: FSMContext) 
         return
 
     course_name = await get_setting("course_tariff_name") or "Darslar"
-    course_desc = await get_setting("course_description") or ""
 
     await state.set_state(AdminCourseContentStates.waiting_name)
     await safe_edit(
         callback.message,
-        f"📝 <b>1-qadam: Darslar nomi</b>\n\n"
-        f"Joriy: <code>{course_name}</code>\n\n"
-        f"Yangi nom kiriting:",
+        f"📝 <b>1-qadam: Darslar nomi</b>\n\nJoriy: <code>{course_name}</code>\n\nYangi nom kiriting:",
         reply_markup=None,
     )
     await callback.answer()
@@ -129,14 +123,13 @@ async def admin_course_price_save(message: Message, state: FSMContext) -> None:
         return
 
     # Update course tariff price in DB
-    from bot.database.session import get_session
     from sqlalchemy import select
+
+    from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
 
     async with get_session() as session:
-        result = await session.execute(
-            select(SignalTariff).where(SignalTariff.product_type == "course")
-        )
+        result = await session.execute(select(SignalTariff).where(SignalTariff.product_type == "course"))
         tariffs = result.scalars().all()
         for t in tariffs:
             t.price = price
@@ -187,6 +180,7 @@ async def admin_course_desc_save(message: Message, state: FSMContext) -> None:
 
 
 # ─── ✏️ Xabar + Rasm + Video COMBO ──────────────────────────────────
+
 
 @admin_course_content_router.callback_query(F.data == "admin_course_combo")
 async def admin_course_combo_start(callback: CallbackQuery, state: FSMContext) -> None:
@@ -270,15 +264,11 @@ async def _show_combo_preview(target: Message, state: FSMContext, bot: Bot) -> N
 
     # Saqlashdan oldin preview ko'rsat
     if image_file_id:
-        try:
+        with contextlib.suppress(Exception):
             await bot.send_photo(chat_id=target.chat.id, photo=image_file_id, caption=text[:200])
-        except Exception:
-            pass
     if video_file_id:
-        try:
+        with contextlib.suppress(Exception):
             await bot.send_video(chat_id=target.chat.id, video=video_file_id)
-        except Exception:
-            pass
 
     status = f"✅ <b>Xabar</b>: {text[:50]}...\n"
     status += f"{'✅' if image_file_id else '❌'} <b>Rasm</b>\n"
@@ -291,11 +281,13 @@ async def _show_combo_preview(target: Message, state: FSMContext, bot: Bot) -> N
         f"✅ <b>Saqlash</b> — xabar, rasm va videoni saqlaydi\n"
         f"🔄 <b>Qayta</b> — boshidan yozish\n"
         f"❌ <b>Bekor</b> — bekor qilish",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Saqlash", callback_data="combo_save")],
-            [InlineKeyboardButton(text="🔄 Qayta", callback_data="combo_redo")],
-            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="combo_cancel")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="✅ Saqlash", callback_data="combo_save")],
+                [InlineKeyboardButton(text="🔄 Qayta", callback_data="combo_redo")],
+                [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="combo_cancel")],
+            ]
+        ),
     )
 
 
@@ -328,8 +320,7 @@ async def admin_course_combo_redo(callback: CallbackQuery, state: FSMContext) ->
     await state.update_data(image_file_id=None, video_file_id=None)
     await safe_edit(
         callback.message,
-        "✏️ <b>1/3: Xabar matnini yozing</b>\n\n"
-        "Yangi xabar matnini yuboring (HTML formatda).",
+        "✏️ <b>1/3: Xabar matnini yozing</b>\n\nYangi xabar matnini yuboring (HTML formatda).",
         reply_markup=None,
     )
     await callback.answer()
@@ -353,13 +344,15 @@ async def admin_course_combo_cancel_text(message: Message, state: FSMContext) ->
 
 # ─── Admin course media preview ─────────────────────────────────────
 
+
 @admin_course_content_router.callback_query(F.data == "admin_course_preview")
 async def admin_course_preview_handler(callback: CallbackQuery, bot: Bot) -> None:
     if callback.from_user.id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 
-    from bot.handlers.course import _build_course_text, send_course_menu
+    from bot.handlers.course import _build_course_text
+
     course_msg = await get_setting("course_message")
     if course_msg:
         text = course_msg

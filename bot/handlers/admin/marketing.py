@@ -9,15 +9,15 @@ Admin bu yerdan:
   • Sinov xabarini yuboradi
 """
 
-from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, Message, ContentType
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, Message
 
 from bot.models.user import User
-from bot.services.settings_service import get_setting, set_setting, get_admin_ids
+from bot.services.settings_service import get_admin_ids, get_setting, set_setting
 from bot.utils.helpers import safe_edit
-from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton, admin_back_kb
-from aiogram.fsm.state import State, StatesGroup
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup, admin_back_kb
 
 admin_marketing_router = Router()
 
@@ -34,26 +34,36 @@ def admin_marketing_kb(
 ) -> InlineKeyboardMarkup:
     status = "✅ Yoqilgan" if enabled else "❌ O'chirilgan"
     buttons = [
-        [InlineKeyboardButton(
-            text=f"{'🟢' if enabled else '🔴'} {status}",
-            callback_data="admin_mkt_toggle",
-        )],
-        [InlineKeyboardButton(
-            text=f"⏱ Interval: {interval} soat",
-            callback_data="admin_mkt_interval",
-        )],
-        [InlineKeyboardButton(
-            text="📝 Xabarni o'zgartirish",
-            callback_data="admin_mkt_edit_msg",
-        )],
-        [InlineKeyboardButton(
-            text="👁 Xabarni ko'rish (preview)",
-            callback_data="admin_mkt_preview",
-        )],
-        [InlineKeyboardButton(
-            text="📤 Sinov xabarini yuborish",
-            callback_data="admin_mkt_test",
-        )],
+        [
+            InlineKeyboardButton(
+                text=f"{'🟢' if enabled else '🔴'} {status}",
+                callback_data="admin_mkt_toggle",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=f"⏱ Interval: {interval} soat",
+                callback_data="admin_mkt_interval",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📝 Xabarni o'zgartirish",
+                callback_data="admin_mkt_edit_msg",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="👁 Xabarni ko'rish (preview)",
+                callback_data="admin_mkt_preview",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="📤 Sinov xabarini yuborish",
+                callback_data="admin_mkt_test",
+            )
+        ],
         [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -106,7 +116,7 @@ async def admin_mkt_toggle_handler(callback: CallbackQuery) -> None:
     enabled = new_val == "true"
     interval = await get_setting("marketing_interval_hours") or "3"
     msg = await get_setting("marketing_message") or ""
-    holat = "✅ Yoqilgan" if enabled else "❌ O\'chirilgan"
+    holat = "✅ Yoqilgan" if enabled else "❌ O'chirilgan"
     msg_status = "✅ Bor" if msg else "❌ Mavjud emas"
     text = (
         "📢 <b>Marketing boshqaruvi</b>\n\n"
@@ -139,9 +149,11 @@ async def admin_mkt_edit_msg_handler(callback: CallbackQuery, state: FSMContext)
         f"Yangi xabar matnini yuboring (HTML formatda).\n"
         f"<b>bold</b> <i>italic</i> <code>code</code>\n\n"
         f"💡 Bekor qilish: /cancel",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_marketing")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_marketing")],
+            ]
+        ),
     )
     await callback.answer()
 
@@ -179,9 +191,11 @@ async def admin_mkt_interval_handler(callback: CallbackQuery, state: FSMContext)
         f"Masalan: <code>1</code>, <code>3</code>, <code>6</code>, <code>12</code>, <code>24</code>\n\n"
         f"💡 Bot qayta ishga tushganda yangi interval kuchga kiradi.\n"
         f"Bekor qilish: /cancel",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_marketing")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_marketing")],
+            ]
+        ),
     )
     await callback.answer()
 
@@ -211,7 +225,7 @@ async def admin_mkt_interval_save(message: Message, state: FSMContext) -> None:
     enabled_str = await get_setting("marketing_enabled") or "false"
     enabled = enabled_str == "true"
     msg = await get_setting("marketing_message") or ""
-    holat = "✅ Yoqilgan" if enabled else "❌ O\'chirilgan"
+    holat = "✅ Yoqilgan" if enabled else "❌ O'chirilgan"
     msg_status = "✅ Bor" if msg else "❌ Mavjud emas"
     text = (
         "📢 <b>Marketing boshqaruvi</b>\n\n"

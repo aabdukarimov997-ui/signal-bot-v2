@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import func, select
 
 from bot.database.session import get_session
 from bot.models.subscription import Subscription
@@ -9,18 +8,27 @@ from bot.models.tariff import SignalTariff
 from bot.models.user import User
 
 
-async def get_active_subscription(user_id: str) -> Optional[Subscription]:
+def _as_aware(dt: datetime) -> datetime:
+    """SQLite naive datetime qaytaradi — UTC deb belgilaymiz (aware bo'lmasa)."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
+
+
+async def get_active_subscription(user_id: str) -> Subscription | None:
     async with get_session() as session:
         result = await session.execute(
-            select(Subscription).where(
+            select(Subscription)
+            .where(
                 Subscription.user_id == user_id,
                 Subscription.status == "active",
-            ).order_by(Subscription.end_date.desc())
+            )
+            .order_by(Subscription.end_date.desc())
         )
         return result.scalars().first()
 
 
-async def get_active_subscription_by_type(user_id: str, product_type: str = "course") -> Optional[Subscription]:
+async def get_active_subscription_by_type(user_id: str, product_type: str = "course") -> Subscription | None:
     async with get_session() as session:
         result = await session.execute(
             select(Subscription)
@@ -38,11 +46,11 @@ async def get_active_subscription_by_type(user_id: str, product_type: str = "cou
 async def create_subscription(
     user_id: str,
     tariff: SignalTariff,
-    invite_link: Optional[str] = None,
+    invite_link: str | None = None,
     bonus_days: int = 0,
 ) -> Subscription:
     async with get_session() as session:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if tariff.duration_days is not None:
             duration_days = tariff.duration_days + bonus_days
         else:
@@ -67,7 +75,7 @@ async def create_subscription(
             # eslatmalar qayta hisoblansin (7/3/1 kun qolganda 1 martadan)
             # Bazani max(now, end_date) qilamiz — end_date o'tib ketgan bo'lsa
             # (eski aktiv qator, hali expire bo'lmagan) kunlardan yutqazmaslik uchun
-            base = max(now, existing_sub.end_date)
+            base = max(now, _as_aware(existing_sub.end_date))
             existing_sub.end_date = base + timedelta(days=duration_days)
             existing_sub.reminder_7_sent = False
             existing_sub.reminder_3_sent = False
@@ -88,19 +96,21 @@ async def create_subscription(
         return sub
 
 
-async def extend_subscription(user_id: str, extra_days: int) -> Optional[Subscription]:
+async def extend_subscription(user_id: str, extra_days: int) -> Subscription | None:
     async with get_session() as session:
         result = await session.execute(
-            select(Subscription).where(
+            select(Subscription)
+            .where(
                 Subscription.user_id == user_id,
                 Subscription.status == "active",
-            ).order_by(Subscription.end_date.desc())
+            )
+            .order_by(Subscription.end_date.desc())
         )
         sub = result.scalars().first()
         if sub:
             # Bazani max(now, end_date) qilamiz — end_date o'tib ketgan bo'lsa
             # foydalanuvchi kunlardan yutqazmasligi uchun
-            base = max(datetime.now(timezone.utc), sub.end_date)
+            base = max(datetime.now(UTC), _as_aware(sub.end_date))
             sub.end_date = base + timedelta(days=extra_days)
             # Eslatma flaglarini reset qilamiz — yangi muddat bo'yicha hisoblansin
             sub.reminder_7_sent = False
@@ -119,7 +129,7 @@ async def expire_subscription(sub_id: str) -> None:
 
 async def expire_all_expired_subscriptions() -> list[Subscription]:
     async with get_session() as session:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await session.execute(
             select(Subscription).where(
                 Subscription.status == "active",
@@ -134,7 +144,7 @@ async def expire_all_expired_subscriptions() -> list[Subscription]:
 
 async def get_expiring_soon(days_left: int, days_min: int = 0) -> list[Subscription]:
     async with get_session() as session:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         target_max = now + timedelta(days=days_left)
         target_min = now + timedelta(days=days_min)
         result = await session.execute(
@@ -158,13 +168,13 @@ async def get_all_tariffs(product_type: str = "signal") -> list[SignalTariff]:
     async with get_session() as session:
         result = await session.execute(
             select(SignalTariff)
-            .where(SignalTariff.is_active == True, SignalTariff.product_type == product_type)
+            .where(SignalTariff.is_active, SignalTariff.product_type == product_type)
             .order_by(SignalTariff.sort_order, SignalTariff.price)
         )
         return list(result.scalars().all())
 
 
-async def get_tariff_by_id(tariff_id: str) -> Optional[SignalTariff]:
+async def get_tariff_by_id(tariff_id: str) -> SignalTariff | None:
     async with get_session() as session:
         result = await session.execute(select(SignalTariff).where(SignalTariff.id == tariff_id))
         return result.scalar_one_or_none()
@@ -172,17 +182,13 @@ async def get_tariff_by_id(tariff_id: str) -> Optional[SignalTariff]:
 
 async def get_active_subscription_count() -> int:
     async with get_session() as session:
-        result = await session.execute(
-            select(func.count(Subscription.id)).where(Subscription.status == "active")
-        )
+        result = await session.execute(select(func.count(Subscription.id)).where(Subscription.status == "active"))
         return result.scalar() or 0
 
 
 async def get_all_subscriptions(status: str = "active") -> list[Subscription]:
     async with get_session() as session:
-        result = await session.execute(
-            select(Subscription).where(Subscription.status == status)
-        )
+        result = await session.execute(select(Subscription).where(Subscription.status == status))
         return list(result.scalars().all())
 
 

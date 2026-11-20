@@ -1,60 +1,53 @@
-import html
+import contextlib
 
-from aiogram import Router, F, Bot
-from aiogram.exceptions import TelegramBadRequest
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, PreCheckoutQuery, LabeledPrice, ContentType
+from aiogram.types import CallbackQuery, LabeledPrice, Message
 
 from bot.config import settings
-from bot.models.user import User
 from bot.models.tariff import SignalTariff
+from bot.models.user import User
+from bot.services.exchange_service import format_payment_with_uzs
+from bot.services.payment_service import create_crypto_invoice, create_payment
+from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting
 from bot.services.subscription_service import (
+    get_active_subscription_by_type,
     get_all_tariffs,
     get_tariff_by_id,
-    create_subscription,
-    get_active_subscription_by_type,
 )
-from bot.services.payment_service import create_payment, get_payment_by_id
-from bot.services.channel_service import create_invite_link
-from bot.services.settings_service import get_setting, get_admin_ids, get_enabled_payment_methods
+from bot.utils.helpers import format_date, safe_edit, safe_send
 from bot.utils.keyboards import (
-    course_tariff_selection_kb,
-    course_payment_method_kb,
-    course_card_payment_kb,
-    course_tron_payment_kb,
-    course_bnb_payment_kb,
-    course_toncoin_payment_kb,
-    check_uploaded_kb,
     admin_approval_kb,
-)
-from bot.utils.texts import (
-    PAYMENT_METHOD_TEXT,
-    STARS_SUCCESS_COURSE_TEXT,
-    CARD_PAYMENT_TEXT,
-    CHECK_UPLOAD_TEXT,
-    CHECK_RECEIVED_TEXT,
-    TRON_PAYMENT_TEXT,
-    TRON_UPLOAD_TEXT,
-    TRON_RECEIVED_TEXT,
-    BNB_PAYMENT_TEXT,
-    BNB_UPLOAD_TEXT,
-    BNB_RECEIVED_TEXT,
-    TON_PAYMENT_TEXT,
-    TON_UPLOAD_TEXT,
-    TON_RECEIVED_TEXT,
-    PAYMENT_APPROVED_COURSE_TEXT,
-    PAYMENT_REJECTED_TEXT,
-    ADMIN_PAYMENT_NOTIFICATION,
-    COURSE_ALREADY_SUBSCRIBED_TEXT,
+    check_uploaded_kb,
+    course_bnb_payment_kb,
+    course_card_payment_kb,
+    course_payment_method_kb,
+    course_tariff_selection_kb,
+    course_toncoin_payment_kb,
+    course_tron_payment_kb,
 )
 from bot.utils.states import CoursePaymentStates
-from bot.utils.helpers import safe_edit, safe_send, format_date
-from bot.services.exchange_service import format_payment_with_uzs
+from bot.utils.texts import (
+    ADMIN_PAYMENT_NOTIFICATION,
+    BNB_PAYMENT_TEXT,
+    BNB_RECEIVED_TEXT,
+    CARD_PAYMENT_TEXT,
+    CHECK_RECEIVED_TEXT,
+    CHECK_UPLOAD_TEXT,
+    COURSE_ALREADY_SUBSCRIBED_TEXT,
+    PAYMENT_METHOD_TEXT,
+    TON_PAYMENT_TEXT,
+    TON_RECEIVED_TEXT,
+    TON_UPLOAD_TEXT,
+    TRON_PAYMENT_TEXT,
+    TRON_RECEIVED_TEXT,
+)
 
 course_router = Router()
 
 
 # ─── Helper: Build Course Menu Text ────────────────────────────────
+
 
 def _build_course_text(course_name: str, course_description: str, tariffs: list[SignalTariff]) -> str:
     """Build course menu text with name, description, and tariff prices."""
@@ -69,6 +62,7 @@ def _build_course_text(course_name: str, course_description: str, tariffs: list[
 
 # ─── Helper: Send Course Menu Message ──────────────────────────────
 
+
 async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
     """Send the Darslar subscription message with optional photo/video from DB settings."""
     course_name = await get_setting("course_tariff_name") or "Darslar"
@@ -76,10 +70,7 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
     course_msg = await get_setting("course_message")
 
     # If custom message exists, show ONLY the custom message (no auto-generated text)
-    if course_msg:
-        text = course_msg
-    else:
-        text = _build_course_text(course_name, course_description, tariffs)
+    text = course_msg or _build_course_text(course_name, course_description, tariffs)
 
     course_img = await get_setting("course_image")
     course_vid = await get_setting("course_video")
@@ -94,10 +85,8 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             await bot.send_photo(chat_id=message.chat.id, photo=course_img, caption=text, reply_markup=kb)
             sent_any = True
             if is_edit:
-                try:
+                with contextlib.suppress(Exception):
                     await message.delete()
-                except Exception:
-                    pass
         except Exception:
             pass
 
@@ -116,6 +105,7 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
 
 
 # ─── Darslar Menu: Show Tariffs ─────────────────────────────────────
+
 
 @course_router.message(F.text == "📚 Darslar")
 async def course_menu_handler(message: Message, user: User, bot: Bot) -> None:
@@ -139,6 +129,7 @@ async def back_course_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None
 
 
 # ─── Select Course Tariff → Payment Method ──────────────────────────
+
 
 @course_router.callback_query(F.data.startswith("course_tariff_"))
 async def course_tariff_selected_handler(callback: CallbackQuery) -> None:
@@ -167,16 +158,13 @@ async def course_pay_method_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
     enabled_methods = await get_enabled_payment_methods()
-    text = (
-        f"📚 <b>{tariff.name}</b>\n\n"
-        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n"
-        f"{PAYMENT_METHOD_TEXT}"
-    )
+    text = f"📚 <b>{tariff.name}</b>\n\n💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n{PAYMENT_METHOD_TEXT}"
     await safe_edit(callback.message, text, reply_markup=course_payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
 
 # ─── Telegram Stars Payment (Course) ────────────────────────────────
+
 
 @course_router.callback_query(F.data.startswith("course_stars_"))
 async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
@@ -207,6 +195,7 @@ async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> Non
 # ─── Card Payment (Course) ───────────────────────────────────────────
 
 # ─── Refresh Exchange Rate (Course) ───────────────────────────────────
+
 
 @course_router.callback_query(F.data.startswith("refresh_course_card_"))
 async def refresh_course_card_rate_handler(callback: CallbackQuery) -> None:
@@ -262,87 +251,86 @@ async def course_upload_check_handler(callback: CallbackQuery, state: FSMContext
 
 # ─── TRON TRC20 Payment (Course) ──────────────────────────────────────
 
+
 @course_router.callback_query(F.data.startswith("course_tron_"))
-async def course_tron_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def course_tron_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariff_id = callback.data.replace("course_tron_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    wallet_addr = await get_setting("ton_wallet_address") or settings.TON_WALLET_ADDRESS
-    qr_code = await get_setting("tron_qr_code")
-    if not wallet_addr:
+    try:
+        payment = await create_crypto_invoice(
+            user_id=user.id,
+            product_type="course",
+            product_id=tariff.id,
+            network="tron",
+            amount=float(tariff.price),
+        )
+    except ValueError:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
         return
 
-    text = TRON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    qr_code = await get_setting("tron_qr_code")
+    text = TRON_PAYMENT_TEXT.format(
+        wallet_address=payment.crypto_address,
+        amount=f"{float(payment.crypto_amount):.4f}",
+    )
+    kb = course_tron_payment_kb(tariff.id, payment.id)
     if qr_code:
         try:
-            await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=course_tron_payment_kb(tariff.id)
-            )
+            await callback.message.answer_photo(photo=qr_code, caption=text, reply_markup=kb)
             await callback.message.delete()
         except Exception:
-            await safe_edit(callback.message, text, reply_markup=course_tron_payment_kb(tariff.id))
+            await safe_edit(callback.message, text, reply_markup=kb)
     else:
-        await safe_edit(callback.message, text, reply_markup=course_tron_payment_kb(tariff.id))
-    await callback.answer()
-
-
-@course_router.callback_query(F.data.startswith("course_upload_tron_"))
-async def course_upload_tron_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    tariff_id = callback.data.replace("course_upload_tron_", "")
-    await state.set_state(CoursePaymentStates.upload_receipt)
-    await state.update_data(tariff_id=tariff_id, payment_method="tron_trc20")
-    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=None)
+        await safe_edit(callback.message, text, reply_markup=kb)
     await callback.answer()
 
 
 # ─── BNB BEP20 Payment (Course) ───────────────────────────────────────
 
+
 @course_router.callback_query(F.data.startswith("course_bnb_"))
-async def course_bnb_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def course_bnb_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariff_id = callback.data.replace("course_bnb_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    wallet_addr = await get_setting("bnb_wallet_address")
-    qr_code = await get_setting("bnb_qr_code")
-    if not wallet_addr:
+    try:
+        payment = await create_crypto_invoice(
+            user_id=user.id,
+            product_type="course",
+            product_id=tariff.id,
+            network="bnb",
+            amount=float(tariff.price),
+        )
+    except ValueError:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
         return
 
-    text = BNB_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    qr_code = await get_setting("bnb_qr_code")
+    text = BNB_PAYMENT_TEXT.format(
+        wallet_address=payment.crypto_address,
+        amount=f"{float(payment.crypto_amount):.4f}",
+    )
+    kb = course_bnb_payment_kb(tariff.id, payment.id)
     if qr_code:
         try:
-            await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=course_bnb_payment_kb(tariff.id)
-            )
+            await callback.message.answer_photo(photo=qr_code, caption=text, reply_markup=kb)
             await callback.message.delete()
         except Exception:
-            await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
+            await safe_edit(callback.message, text, reply_markup=kb)
     else:
-        await safe_edit(callback.message, text, reply_markup=course_bnb_payment_kb(tariff.id))
-    await callback.answer()
-
-
-@course_router.callback_query(F.data.startswith("course_upload_bnb_"))
-async def course_upload_bnb_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    tariff_id = callback.data.replace("course_upload_bnb_", "")
-    await state.set_state(CoursePaymentStates.upload_receipt)
-    await state.update_data(tariff_id=tariff_id, payment_method="bnb")
-    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=None)
+        await safe_edit(callback.message, text, reply_markup=kb)
     await callback.answer()
 
 
 # ─── TON Payment (Course) ────────────────────────────────────────────
+
 
 @course_router.callback_query(F.data.startswith("course_toncoin_"))
 async def course_toncoin_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
@@ -362,9 +350,7 @@ async def course_toncoin_payment_handler(callback: CallbackQuery, bot: Bot) -> N
     if qr_code:
         try:
             await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=course_toncoin_payment_kb(tariff.id)
+                photo=qr_code, caption=text, reply_markup=course_toncoin_payment_kb(tariff.id)
             )
             await callback.message.delete()
         except Exception:
@@ -432,9 +418,11 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
                 caption=admin_text,
                 reply_markup=admin_approval_kb(payment.id),
             )
+            from sqlalchemy import update
+
             from bot.database.session import get_session
-            from sqlalchemy import select, update
             from bot.models.payment import Payment
+
             async with get_session() as session:
                 await session.execute(
                     update(Payment).where(Payment.id == payment.id).values(admin_message_id=msg.message_id)
@@ -448,11 +436,7 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         else (
             TRON_RECEIVED_TEXT
             if payment_method == "tron_trc20"
-            else (
-                TON_RECEIVED_TEXT
-                if payment_method == "toncoin"
-                else CHECK_RECEIVED_TEXT
-            )
+            else (TON_RECEIVED_TEXT if payment_method == "toncoin" else CHECK_RECEIVED_TEXT)
         )
     )
     await message.answer(receipt_text, reply_markup=check_uploaded_kb())

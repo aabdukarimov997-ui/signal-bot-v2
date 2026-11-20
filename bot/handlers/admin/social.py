@@ -1,13 +1,13 @@
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids, get_setting, set_setting
-from bot.utils.keyboards import admin_social_kb
-from bot.utils.texts import ADMIN_SOCIAL_TEXT
-from bot.utils.states import AdminSocialStates
 from bot.utils.helpers import safe_edit
+from bot.utils.keyboards import admin_social_kb
+from bot.utils.states import AdminSocialStates
+from bot.utils.texts import ADMIN_SOCIAL_TEXT
 
 admin_social_router = Router()
 
@@ -40,9 +40,7 @@ async def _ask_link(callback: CallbackQuery, state: FSMContext, target_state: st
     await state.update_data(db_key=db_key, label=label)
     await safe_edit(
         callback.message,
-        f"🔗 <b>{label} havolasini kiriting:</b>\n\n"
-        f"Joriy: <code>{current}</code>\n\n"
-        f"Bekor qilish uchun /cancel",
+        f"🔗 <b>{label} havolasini kiriting:</b>\n\nJoriy: <code>{current}</code>\n\nBekor qilish uchun /cancel",
         reply_markup=None,
     )
     await callback.answer()
@@ -93,17 +91,21 @@ async def _save_link(message: Message, state: FSMContext) -> None:
 async def save_instagram(message: Message, state: FSMContext) -> None:
     await _save_link(message, state)
 
+
 @admin_social_router.message(AdminSocialStates.waiting_twitter)
 async def save_twitter(message: Message, state: FSMContext) -> None:
     await _save_link(message, state)
+
 
 @admin_social_router.message(AdminSocialStates.waiting_youtube)
 async def save_youtube(message: Message, state: FSMContext) -> None:
     await _save_link(message, state)
 
+
 @admin_social_router.message(AdminSocialStates.waiting_website)
 async def save_website(message: Message, state: FSMContext) -> None:
     await _save_link(message, state)
+
 
 @admin_social_router.message(AdminSocialStates.waiting_free_channel)
 async def save_free_channel(message: Message, state: FSMContext) -> None:

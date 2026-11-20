@@ -1,10 +1,10 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
-from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.helpers import safe_edit
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
 
 admin_help_router = Router()
 
@@ -51,12 +51,17 @@ ADMIN_HELP_TEXT = """
 • Railway loglarini ko'ring: railway logs
 """
 
+
 @admin_help_router.callback_query(F.data == "admin_help")
 async def admin_help_callback(callback: CallbackQuery, user: User) -> None:
     if user.telegram_id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
-    await safe_edit(callback.message, ADMIN_HELP_TEXT, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")]
-    ]))
+    await safe_edit(
+        callback.message,
+        ADMIN_HELP_TEXT,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")]]
+        ),
+    )
     await callback.answer()

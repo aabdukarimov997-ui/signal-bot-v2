@@ -12,6 +12,8 @@ build/
 .venv/
 venv/
 test_db.sqlite
+*.sqlite
+*.sqlite3
 .pytest_cache/
 
 # ═══════════════════════════════════════════

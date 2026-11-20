@@ -1,9 +1,5 @@
 import pytest
 
-from bot.database.engine import async_session_factory
-from sqlalchemy import select
-from bot.models.payment import Payment
-
 
 @pytest.mark.asyncio
 async def test_create_stars_payment(sample_user, sample_tariff):
@@ -40,7 +36,7 @@ async def test_create_card_payment(sample_user, sample_tariff):
 
 @pytest.mark.asyncio
 async def test_approve_payment(sample_user, sample_tariff):
-    from bot.services.payment_service import create_payment, approve_payment
+    from bot.services.payment_service import approve_payment, create_payment
 
     payment = await create_payment(
         user_id=sample_user.id,
@@ -76,10 +72,12 @@ async def test_reject_payment(sample_user, sample_tariff):
 async def test_get_pending_payments(sample_user, sample_tariff):
     from bot.services.payment_service import create_payment, get_pending_payments
 
-    await create_payment(user_id=sample_user.id, product_type="signal",
-                         product_id=sample_tariff.id, amount=25.0, payment_method="check")
-    await create_payment(user_id=sample_user.id, product_type="signal",
-                         product_id=sample_tariff.id, amount=25.0, payment_method="check")
+    await create_payment(
+        user_id=sample_user.id, product_type="signal", product_id=sample_tariff.id, amount=25.0, payment_method="check"
+    )
+    await create_payment(
+        user_id=sample_user.id, product_type="signal", product_id=sample_tariff.id, amount=25.0, payment_method="check"
+    )
 
     pending = await get_pending_payments()
     assert len(pending) >= 2
@@ -106,17 +104,21 @@ async def test_payment_with_promo(sample_user, sample_tariff, sample_promo):
 
 @pytest.mark.asyncio
 async def test_revenue_calculation(sample_user, sample_tariff):
-    from bot.services.payment_service import (
-        create_payment, approve_payment, get_total_revenue
-    )
+    from bot.services.payment_service import approve_payment, create_payment, get_total_revenue
 
     p1 = await create_payment(
-        user_id=sample_user.id, product_type="signal",
-        product_id=sample_tariff.id, amount=25.0, payment_method="check",
+        user_id=sample_user.id,
+        product_type="signal",
+        product_id=sample_tariff.id,
+        amount=25.0,
+        payment_method="check",
     )
     p2 = await create_payment(
-        user_id=sample_user.id, product_type="signal",
-        product_id=sample_tariff.id, amount=50.0, payment_method="check",
+        user_id=sample_user.id,
+        product_type="signal",
+        product_id=sample_tariff.id,
+        amount=50.0,
+        payment_method="check",
     )
 
     await approve_payment(p1.id, 99999)

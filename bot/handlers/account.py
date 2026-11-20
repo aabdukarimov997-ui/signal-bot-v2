@@ -1,12 +1,11 @@
-from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram import Bot, F, Router
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from bot.models.user import User
-from bot.services.subscription_service import get_active_subscription
 from bot.services.referral_service import get_referral_count
-from bot.utils.keyboards import main_menu_kb
-from bot.utils.texts import ACCOUNT_TEXT, NO_SUBSCRIPTION
+from bot.services.subscription_service import get_active_subscription
 from bot.utils.helpers import format_date
+from bot.utils.texts import ACCOUNT_TEXT, NO_SUBSCRIPTION
 
 account_router = Router()
 
@@ -17,7 +16,7 @@ async def account_handler(message: Message, user: User) -> None:
     if sub:
         sub_status = f"✅ {sub.tariff_id}"  # Simple status
         expiry = format_date(sub.end_date)
-        
+
         text = ACCOUNT_TEXT.format(
             telegram_id=user.telegram_id,
             full_name=user.full_name,
@@ -26,9 +25,9 @@ async def account_handler(message: Message, user: User) -> None:
             referral_count=await get_referral_count(user.id),
         )
         # Obuna uzaytirish tugmasi
-        reply_markup = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔄 Obuna uzaytirish", callback_data="extend_subscription")]
-        ])
+        reply_markup = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="🔄 Obuna uzaytirish", callback_data="extend_subscription")]]
+        )
         await message.answer(text, reply_markup=reply_markup)
     else:
         sub_status = NO_SUBSCRIPTION

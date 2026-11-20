@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { requireAdmin, getInitDataFromRequest } from '@/lib/tma/verify';
 
-export async function GET() {
+export const runtime = 'nodejs';
+
+export async function GET(request: Request) {
   try {
+    const auth = await requireAdmin(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     // Total users
     const usersResult = await query(`SELECT COUNT(*) as count FROM ${TABLES.users}`);
     const totalUsers = parseInt(usersResult.rows[0]?.count || '0');

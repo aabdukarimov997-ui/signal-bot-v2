@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const auth = await getAuthenticatedUser(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    const userResult = await query(
-      `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
-      [userId]
-    );
-    const user = userResult.rows[0];
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const user = auth.user;
+    const userId = user.id;
 
     // Get referral stats
     const refCountResult = await query(

@@ -9,7 +9,6 @@ Bir nechta API manbalari:
 
 import logging
 import time
-from typing import Optional
 
 import aiohttp
 
@@ -32,43 +31,41 @@ def _format_uzs(amount: float) -> str:
     return f"{amount:,.0f}".replace(",", " ") + " so'm"
 
 
-async def _fetch_cbu() -> Optional[float]:
+async def _fetch_cbu() -> float | None:
     """Markaziy Bank API dan USD/UZS kursini oladi."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(CBU_API_URL, timeout=8) as resp:
-                if resp.status != 200:
-                    logger.warning("CBU API %d", resp.status)
-                    return None
-                data = await resp.json()
-                if isinstance(data, list) and len(data) > 0:
-                    rate_str = data[0].get("Rate")
-                    if rate_str:
-                        return float(rate_str)
+        async with aiohttp.ClientSession() as session, session.get(CBU_API_URL, timeout=8) as resp:
+            if resp.status != 200:
+                logger.warning("CBU API %d", resp.status)
+                return None
+            data = await resp.json()
+            if isinstance(data, list) and len(data) > 0:
+                rate_str = data[0].get("Rate")
+                if rate_str:
+                    return float(rate_str)
     except Exception as e:
         logger.warning("CBU API xatolik: %s", e)
     return None
 
 
-async def _fetch_er_api() -> Optional[float]:
+async def _fetch_er_api() -> float | None:
     """open.er-api.com dan USD/UZS kursini oladi (fallback)."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(ER_API_URL, timeout=8) as resp:
-                if resp.status != 200:
-                    logger.warning("ER API %d", resp.status)
-                    return None
-                data = await resp.json()
-                if data.get("result") == "success":
-                    rate = data.get("rates", {}).get("UZS")
-                    if rate:
-                        return float(rate)
+        async with aiohttp.ClientSession() as session, session.get(ER_API_URL, timeout=8) as resp:
+            if resp.status != 200:
+                logger.warning("ER API %d", resp.status)
+                return None
+            data = await resp.json()
+            if data.get("result") == "success":
+                rate = data.get("rates", {}).get("UZS")
+                if rate:
+                    return float(rate)
     except Exception as e:
         logger.warning("ER API xatolik: %s", e)
     return None
 
 
-async def get_usd_uzs_rate(*, force_refresh: bool = False) -> Optional[float]:
+async def get_usd_uzs_rate(*, force_refresh: bool = False) -> float | None:
     """
     USD/UZS jonli kursini qaytaradi.
     1 USD = ? UZS

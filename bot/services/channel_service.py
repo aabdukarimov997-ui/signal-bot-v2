@@ -1,24 +1,22 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-
 from aiogram import Bot
 from aiogram.types import ChatInviteLink
 
 
-async def get_signal_channel_id(tariff=None, subscription=None, tariff_id=None) -> Optional[str]:
+async def get_signal_channel_id(tariff=None, subscription=None, tariff_id=None) -> str | None:
     """Get the channel ID for a signal subscription.
     Priority: tariff.channel_id → DB setting 'private_channel_id' → config PRIVATE_CHANNEL_ID.
     """
-    from bot.services.settings_service import get_setting
     from bot.config import settings
+    from bot.services.settings_service import get_setting
 
     # If tariff has a specific channel, use it
-    if tariff and getattr(tariff, 'channel_id', None):
+    if tariff and getattr(tariff, "channel_id", None):
         return tariff.channel_id
 
     # If tariff_id provided, fetch tariff from DB
     if tariff_id:
         from bot.services.subscription_service import get_tariff_by_id
+
         t = await get_tariff_by_id(tariff_id)
         if t and t.channel_id:
             return t.channel_id
@@ -26,6 +24,7 @@ async def get_signal_channel_id(tariff=None, subscription=None, tariff_id=None) 
     # If subscription has tariff_id, fetch tariff from DB
     if subscription and subscription.tariff_id:
         from bot.services.subscription_service import get_tariff_by_id
+
         t = await get_tariff_by_id(subscription.tariff_id)
         if t and t.channel_id:
             return t.channel_id
@@ -34,7 +33,7 @@ async def get_signal_channel_id(tariff=None, subscription=None, tariff_id=None) 
     return await get_setting("private_channel_id") or settings.PRIVATE_CHANNEL_ID
 
 
-async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> Optional[str]:
+async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> str | None:
     """Create a one-time invite link (no expiry, usable only once)."""
     try:
         link: ChatInviteLink = await bot.create_chat_invite_link(
@@ -46,7 +45,7 @@ async def create_invite_link(bot: Bot, chat_id: str, member_limit: int = 1) -> O
         return None
 
 
-async def get_invite_link(bot: Bot, chat_id: str, fallback_key: str = "invite_link_url") -> Optional[str]:
+async def get_invite_link(bot: Bot, chat_id: str, fallback_key: str = "invite_link_url") -> str | None:
     """Get invite link — try dynamic first, fall back to DB setting."""
     # Try creating a fresh one-time link
     link = await create_invite_link(bot, chat_id)
@@ -55,6 +54,7 @@ async def get_invite_link(bot: Bot, chat_id: str, fallback_key: str = "invite_li
 
     # Fallback: static link from DB settings
     from bot.services.settings_service import get_setting
+
     invite_url = await get_setting(fallback_key)
     if invite_url:
         return invite_url
@@ -77,7 +77,9 @@ async def get_course_invite_links(bot: Bot) -> list[dict]:
         channel_id = await get_setting(channel_id_key)
         if not channel_id:
             continue
-        channel_name = await get_setting(name_key) or channel_id_key.replace("course_", "").replace("_id", "").replace("_", " ")
+        channel_name = await get_setting(name_key) or channel_id_key.replace("course_", "").replace("_id", "").replace(
+            "_", " "
+        )
         link = await get_invite_link(bot, channel_id, fallback_key=fallback_key)
         if link:
             channels.append({"name": channel_name, "link": link, "channel_id": channel_id})

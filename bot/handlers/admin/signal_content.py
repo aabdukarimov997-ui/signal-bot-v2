@@ -1,17 +1,16 @@
 import html
 
-from aiogram import Router, F
+from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, Message, ContentType
 from aiogram.fsm.context import FSMContext
-from aiogram import Bot
+from aiogram.types import CallbackQuery, ContentType, Message
 
-from bot.services.settings_service import get_setting, set_setting, get_admin_ids
+from bot.services.settings_service import get_admin_ids, get_setting, set_setting
 from bot.services.subscription_service import get_all_tariffs
-from bot.utils.keyboards import admin_signal_content_kb, admin_menu_kb
 from bot.utils.helpers import safe_edit
-from bot.utils.texts import SIGNAL_TEXT
+from bot.utils.keyboards import admin_signal_content_kb
 from bot.utils.states import AdminSignalContentStates
+from bot.utils.texts import SIGNAL_TEXT
 
 admin_signal_content_router = Router()
 
@@ -28,10 +27,9 @@ async def admin_signal_content_handler(callback: CallbackQuery, bot: Bot) -> Non
 
     status_lines = []
     if signal_msg and signal_msg != SIGNAL_TEXT:
-        preview = html.escape(signal_msg[:80] + "..." if len(signal_msg) > 80 else signal_msg)
-        status_lines.append(f"📝 Xabar: ✅ (custom)")
+        status_lines.append("📝 Xabar: ✅ (custom)")
     else:
-        status_lines.append(f"📝 Xabar: ⚪ (default)")
+        status_lines.append("📝 Xabar: ⚪ (default)")
 
     # Show current signal tariff prices
     tariffs_list = await get_all_tariffs("signal")
@@ -51,7 +49,11 @@ async def admin_signal_content_handler(callback: CallbackQuery, bot: Bot) -> Non
     else:
         status_lines.append("🎬 Video: ⚪ (yo'q)")
 
-    text = "🚀 <b>VIP Signal obuna xabari</b>\n\n" + "\n".join(status_lines) + "\n\nQuyidagi tugmalar orqali xabar, rasm yoki videoni o'zgartiring:"
+    text = (
+        "🚀 <b>VIP Signal obuna xabari</b>\n\n"
+        + "\n".join(status_lines)
+        + "\n\nQuyidagi tugmalar orqali xabar, rasm yoki videoni o'zgartiring:"
+    )
     await safe_edit(callback.message, text, reply_markup=admin_signal_content_kb())
     await callback.answer()
 
@@ -135,15 +137,19 @@ async def admin_signal_price_save(message: Message, state: FSMContext) -> None:
         await message.answer("❌ Format noto'g'ri. Masalan: <code>tarif_id narx</code>")
         return
 
-    from bot.database.session import get_session
     from sqlalchemy import select
+
+    from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
 
     async with get_session() as session:
         result = await session.execute(select(SignalTariff).where(SignalTariff.id == tariff_id))
         tariff = result.scalar_one_or_none()
         if not tariff:
-            await message.answer(f"❌ Tarif ID '{tariff_id}' topilmadi.\n\nJoriy tarif ID'larni ko'rish uchun «💰 Narx o'zgartirish» tugmasini qayta bosing.")
+            await message.answer(
+                f"❌ Tarif ID '{tariff_id}' topilmadi.\n\n"
+                "Joriy tarif ID'larni ko'rish uchun «💰 Narx o'zgartirish» tugmasini qayta bosing."
+            )
             return
         tariff.price = price
 
@@ -163,7 +169,10 @@ async def admin_signal_img_handler(callback: CallbackQuery, state: FSMContext) -
     await state.set_state(AdminSignalContentStates.waiting_image)
     await safe_edit(
         callback.message,
-        "🖼 <b>VIP Signal rasmini o'zgartirish</b>\n\nRasmni yuboring — bot uni signal obuna xabariga biriktiradi.\n\n⚠️ Rasm botga to'g'ridan-to'g'ri yuborilishi kerak (file_id boshqa botdan olingan bo'lishi mumkin emas).",
+        "🖼 <b>VIP Signal rasmini o'zgartirish</b>\n\n"
+        "Rasmni yuboring — bot uni signal obuna xabariga biriktiradi.\n\n"
+        "⚠️ Rasm botga to'g'ridan-to'g'ri yuborilishi kerak "
+        "(file_id boshqa botdan olingan bo'lishi mumkin emas).",
         reply_markup=None,
     )
     await callback.answer()
@@ -191,7 +200,9 @@ async def admin_signal_vid_handler(callback: CallbackQuery, state: FSMContext) -
     await state.set_state(AdminSignalContentStates.waiting_video)
     await safe_edit(
         callback.message,
-        "🎬 <b>VIP Signal videoni o'zgartirish</b>\n\nVideo yuboring — bot uni signal obuna xabariga biriktiradi.\n\n⚠️ Video botga to'g'ridan-to'g'ri yuborilishi kerak.",
+        "🎬 <b>VIP Signal videoni o'zgartirish</b>\n\n"
+        "Video yuboring — bot uni signal obuna xabariga biriktiradi.\n\n"
+        "⚠️ Video botga to'g'ridan-to'g'ri yuborilishi kerak.",
         reply_markup=None,
     )
     await callback.answer()
@@ -218,7 +229,11 @@ async def admin_signal_media_del_handler(callback: CallbackQuery) -> None:
 
     await set_setting("signal_image", "")
     await set_setting("signal_video", "")
-    await safe_edit(callback.message, "✅ <b>Rasm va video o'chirildi!</b>\n\nEndi signal obuna xabari faqat matn ko'rinishida chiqadi.", reply_markup=admin_signal_content_kb())
+    await safe_edit(
+        callback.message,
+        "✅ <b>Rasm va video o'chirildi!</b>\n\nEndi signal obuna xabari faqat matn ko'rinishida chiqadi.",
+        reply_markup=admin_signal_content_kb(),
+    )
     await callback.answer()
 
 

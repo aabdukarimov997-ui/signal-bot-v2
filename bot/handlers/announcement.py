@@ -1,8 +1,8 @@
-from aiogram import Router, F, Bot
+from aiogram import Bot, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
@@ -66,10 +66,12 @@ async def announcement_preview_handler(message: Message, user: User, state: FSMC
         f"📢 <b>E'lonni tasdiqlang</b>\n\n"
         f"👥 Jami obunachilar: <b>{count}</b> ta\n\n"
         f"⏬ <b>Quyidagi xabar barcha {count} ta obunachiga yuboriladi:</b>",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Ha, yuborish", callback_data="confirm_announcement")],
-            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_announcement")],
-        ])
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="✅ Ha, yuborish", callback_data="confirm_announcement")],
+                [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="cancel_announcement")],
+            ]
+        ),
     )
 
 

@@ -1,19 +1,14 @@
+from aiogram import Router
 from aiogram.filters import Command
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message
 
-from bot.config import settings
 from bot.services.settings_service import (
-    is_setup_completed,
     set_setting,
-    get_setting,
 )
 
 setup_router = Router()
-
-
-from aiogram.fsm.state import State, StatesGroup
 
 
 class SetupWizardStates(StatesGroup):
@@ -43,7 +38,10 @@ WIZARD_QUESTIONS = {
     "project_name": "📝 <b>1/20 — Loyiha nomi:</b>\nMasalan: Alpha Signal Pro",
     "admin_username": "👤 <b>2/20 — Admin username:</b>\nMasalan: @treder7090",
     "support_username": "📞 <b>3/20 — Support username:</b>\nMasalan: @treder7090",
-    "private_channel_id": "📈 <b>4/20 — Private Signal kanal ID:</b>\nMasalan: -1002271613164\n(Kanal ID @username_infobot'dan oling)",
+    "private_channel_id": (
+        "📈 <b>4/20 — Private Signal kanal ID:</b>\nMasalan: -1002271613164\n"
+        "(Kanal ID @username_infobot'dan oling)"
+    ),
     "card_number": "💳 <b>5/20 — Karta raqami:</b>\nMasalan: 8600 2113 9408 0402\n(Bo'sh = Stars to'lov only)",
     "card_owner": "👤 <b>6/20 — Karta egasi:</b>\nMasalan: FALONCHAYEV FALONCHA\n(Bo'sh = karta to'lov yo'q)",
     "price_1_month": "💰 <b>7/20 — 1 oylik narx ($):</b>\nMasalan: 25",
@@ -52,10 +50,16 @@ WIZARD_QUESTIONS = {
     "stars_1_month": "⭐ <b>10/20 — 1 oylik Stars narxi:</b>\nMasalan: 1250",
     "stars_3_month": "⭐ <b>11/20 — 3 oylik Stars narxi:</b>\nMasalan: 2500",
     "stars_6_month": "⭐ <b>12/20 — 6 oylik Stars narxi:</b>\nMasalan: 5000",
-    "instagram_url": "📷 <b>13/20 — Instagram URL:</b>\nMasalan: https://instagram.com/example\n(Bo'sh = ko'rsatilmaydi)",
+    "instagram_url": (
+        "📷 <b>13/20 — Instagram URL:</b>\nMasalan: https://instagram.com/example\n"
+        "(Bo'sh = ko'rsatilmaydi)"
+    ),
     "youtube_url": "▶️ <b>14/20 — YouTube URL:</b>\nMasalan: https://youtube.com/@example\n(Bo'sh = ko'rsatilmaydi)",
     "website_url": "🌐 <b>15/20 — Website URL:</b>\nMasalan: https://example.com\n(Bo'sh = ko'rsatilmaydi)",
-    "free_channel_url": "🆓 <b>16/20 — Bepul kanal URL:</b>\nMasalan: https://t.me/your_free_channel\n(Bo'sh = ko'rsatilmaydi)",
+    "free_channel_url": (
+        "🆓 <b>16/20 — Bepul kanal URL:</b>\nMasalan: https://t.me/your_free_channel\n"
+        "(Bo'sh = ko'rsatilmaydi)"
+    ),
     "course_channel_id": "📚 <b>17/20 — Kurs kanal ID:</b>\nMasalan: -1002271613165\n(Bo'sh =kurs yo'q)",
     "course_tariff_name": "📚 <b>18/20 — Kurs nomi:</b>\nMasalan: Premium Trading Kurs\n(Standart: Kurs)",
     "course_price_1_month": "💰 <b>19/20 — Kurs narxi ($):</b>\nMasalan: 25",
@@ -110,6 +114,7 @@ for state_obj in STATE_ORDER:
 
 # Register handlers for each wizard state
 for _state in STATE_ORDER:
+
     @setup_router.message(_state)
     async def _wizard_step_handler(message: Message, state: FSMContext) -> None:
         current_state = await state.get_state()

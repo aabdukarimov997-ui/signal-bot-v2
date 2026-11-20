@@ -1,14 +1,12 @@
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
-from aiogram.fsm.context import FSMContext
+from aiogram import F, Router
+from aiogram.types import CallbackQuery
 
-from bot.config import settings
 from bot.models.user import User
-from bot.services.settings_service import get_admin_ids
 from bot.services.payment_service import get_pending_payments
-from bot.utils.helpers import safe_edit, format_date
-from bot.utils.keyboards import admin_approval_kb, InlineKeyboardMarkup, InlineKeyboardButton
-from bot.utils.texts import ADMIN_PAYMENTS_EMPTY, ADMIN_PAYMENT_NOTIFICATION
+from bot.services.settings_service import get_admin_ids
+from bot.utils.helpers import format_date, safe_edit
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup, admin_approval_kb
+from bot.utils.texts import ADMIN_PAYMENT_NOTIFICATION, ADMIN_PAYMENTS_EMPTY
 
 admin_payments_router = Router()
 
@@ -21,17 +19,24 @@ async def admin_payments_handler(callback: CallbackQuery, user: User) -> None:
 
     payments = await get_pending_payments()
     if not payments:
-        await safe_edit(callback.message, ADMIN_PAYMENTS_EMPTY, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-        ]))
+        await safe_edit(
+            callback.message,
+            ADMIN_PAYMENTS_EMPTY,
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+                ]
+            ),
+        )
         await callback.answer()
         return
 
     for payment in payments:
-        from bot.database.session import get_session
         from sqlalchemy import select
-        from bot.models.user import User as UserModel
+
+        from bot.database.session import get_session
         from bot.models.tariff import SignalTariff
+        from bot.models.user import User as UserModel
 
         async with get_session() as session:
             u_result = await session.execute(select(UserModel).where(UserModel.id == payment.user_id))
@@ -42,7 +47,11 @@ async def admin_payments_handler(callback: CallbackQuery, user: User) -> None:
         if not target_user or not tariff:
             continue
 
-        method_label = "🔗 TRON TRC20" if payment.payment_method == "tron_trc20" else ("⭐ Stars" if payment.payment_method == "stars" else "💳 Karta/Check")
+        method_label = (
+            "🔗 TRON TRC20"
+            if payment.payment_method == "tron_trc20"
+            else ("⭐ Stars" if payment.payment_method == "stars" else "💳 Karta/Check")
+        )
         text = ADMIN_PAYMENT_NOTIFICATION.format(
             invoice_id=payment.invoice_id or "???",
             full_name=target_user.full_name,

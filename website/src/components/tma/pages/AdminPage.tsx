@@ -73,7 +73,7 @@ export function AdminPage() {
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={async () => {
-                        await api.adminActionPayment(p.id, 'approve', Number(user.telegramId));
+                        await api.adminActionPayment(p.id, 'approve', String(user.telegramId));
                         // Refresh
                         const pData = await api.getAdminPayments();
                         setPayments(pData.payments);
@@ -84,7 +84,7 @@ export function AdminPage() {
                     </button>
                     <button
                       onClick={async () => {
-                        await api.adminActionPayment(p.id, 'reject', Number(user.telegramId));
+                        await api.adminActionPayment(p.id, 'reject', String(user.telegramId));
                         const pData = await api.getAdminPayments();
                         setPayments(pData.payments);
                       }}

@@ -11,14 +11,15 @@ Post to'g'ridan-to'g'ri sayt bazasiga yoziladi (bot va sayt bitta
 PostgreSQL'ni ishlatadi), shuning uchun post sayt blogida darhol chiqadi.
 """
 
+import contextlib
 import html
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy import text
 
 from bot.database.session import get_session
@@ -32,9 +33,11 @@ BLOG_TABLE = '"website"."BlogPost"'
 USER_TABLE = '"website"."User"'
 DEFAULT_SITE_URL = "https://atanalysis.serveirc.com"
 
+
 # Sayt blog manzili — bot sozlamalaridagi website_url dan olinadi
 async def _site_url() -> str:
     from bot.config import settings
+
     db_url = await get_setting("website_url")
     return db_url or settings.SOCIAL_WEBSITE or DEFAULT_SITE_URL
 
@@ -43,37 +46,47 @@ async def _site_url() -> str:
 # 🎛 KEYBOARDS
 # ─────────────────────────────────────────────────────────
 
+
 def blog_skip_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="➡️ O'tkazib yuborish", callback_data="blog_skip_excerpt")],
-        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="➡️ O'tkazib yuborish", callback_data="blog_skip_excerpt")],
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
+        ]
+    )
 
 
 def blog_confirm_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Blogga joylash", callback_data="blog_publish")],
-        [InlineKeyboardButton(text="🔄 Qayta yozish", callback_data="blog_redo")],
-        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Blogga joylash", callback_data="blog_publish")],
+            [InlineKeyboardButton(text="🔄 Qayta yozish", callback_data="blog_redo")],
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
+        ]
+    )
 
 
 def blog_cancel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
+        ]
+    )
 
 
 def blog_flow_cancel_kb() -> InlineKeyboardMarkup:
     """Flow davomida ko'rsatiladigan tugma — state'ni tozalaydi (admin_back emas)."""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="blog_cancel")],
+        ]
+    )
 
 
 # ─────────────────────────────────────────────────────────
 # 🛠 YORDAMCHI FUNKSIYALAR
 # ─────────────────────────────────────────────────────────
+
 
 def generate_slug(title: str) -> str:
     """Sayt admin panelidagi slug generatoriga mos (generateSlug)."""
@@ -81,7 +94,7 @@ def generate_slug(title: str) -> str:
     # [^a-z0-9\u0621-\u064A] → '-'
     slug = re.sub(r"[^a-z0-9\u0621-\u064a]+", "-", slug)
     slug = slug.strip("-")
-    return slug or f"post-{int(datetime.now(timezone.utc).timestamp())}"
+    return slug or f"post-{int(datetime.now(UTC).timestamp())}"
 
 
 async def make_unique_slug(title: str) -> str:
@@ -127,15 +140,15 @@ async def resolve_author_id() -> str:
 
         # 3) fallback — 'admin' id bilan user yaratish (admin panel ham shu id ishlatadi)
         # PostgreSQL timestamp (without time zone) ustunlari uchun naive datetime kerak
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(UTC).replace(tzinfo=None)
         admin_id = "admin"
-        try:
+        with contextlib.suppress(Exception):
             await session.execute(
                 text(
-                    f'INSERT INTO {USER_TABLE} '
+                    f"INSERT INTO {USER_TABLE} "
                     '("id", "email", "name", "role", "createdAt", "updatedAt") '
-                    'VALUES (:id, :email, :name, :role, :now, :now) '
-                    'ON CONFLICT DO NOTHING'
+                    "VALUES (:id, :email, :name, :role, :now, :now) "
+                    "ON CONFLICT DO NOTHING"
                 ),
                 {
                     "id": admin_id,
@@ -145,8 +158,6 @@ async def resolve_author_id() -> str:
                     "now": now,
                 },
             )
-        except Exception:
-            pass
 
         # Yaratilgan user mavjudligini tekshiramiz — aks holda boshqa user qidiramiz
         result = await session.execute(
@@ -163,6 +174,7 @@ async def resolve_author_id() -> str:
 # ─────────────────────────────────────────────────────────
 # 🚀 ENTRY: Admin panel → "📝 Blog post"
 # ─────────────────────────────────────────────────────────
+
 
 @admin_blog_router.callback_query(F.data == "admin_blog_post")
 async def blog_start_handler(callback: CallbackQuery, state: FSMContext) -> None:
@@ -223,9 +235,7 @@ async def blog_excerpt_handler(message: Message, state: FSMContext) -> None:
     await state.update_data(excerpt=excerpt)
     await state.set_state(AdminBlogPostStates.waiting_content)
     await message.answer(
-        "3/3 — <b>To'liq matn</b>ni yuboring:\n\n"
-        "💡 Post matni (bitta xabar sifatida).\n"
-        "❌ Bekor qilish: /cancel",
+        "3/3 — <b>To'liq matn</b>ni yuboring:\n\n💡 Post matni (bitta xabar sifatida).\n❌ Bekor qilish: /cancel",
         reply_markup=blog_flow_cancel_kb(),
     )
 
@@ -245,8 +255,8 @@ async def blog_content_handler(message: Message, state: FSMContext) -> None:
     await state.update_data(content=content)
     await state.set_state(AdminBlogPostStates.confirm)
 
-    title_escaped = html.escape(data.get('title', ''))
-    excerpt_short = (data.get('excerpt') or '').strip()[:100]
+    title_escaped = html.escape(data.get("title", ""))
+    excerpt_short = (data.get("excerpt") or "").strip()[:100]
     excerpt_display = html.escape(excerpt_short) if excerpt_short else "<i>(yo'q)</i>"
     content_preview = html.escape(content[:400])
 
@@ -265,6 +275,7 @@ async def blog_content_handler(message: Message, state: FSMContext) -> None:
 # ─────────────────────────────────────────────────────────
 # ✅ CONFIRM → Blogga yozish
 # ─────────────────────────────────────────────────────────
+
 
 @admin_blog_router.callback_query(F.data == "blog_publish", AdminBlogPostStates.confirm)
 async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> None:
@@ -296,17 +307,17 @@ async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> No
         author_id = await resolve_author_id()
         # website."BlogPost".createdAt/updatedAt — timestamp without time zone,
         # shuning uchun naive datetime ishlatamiz (aware datetime asyncpg'da xato beradi)
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(UTC).replace(tzinfo=None)
         post_id = str(uuid.uuid4())
 
         async with get_session() as session:
             await session.execute(
                 text(
-                    f'INSERT INTO {BLOG_TABLE} '
+                    f"INSERT INTO {BLOG_TABLE} "
                     '("id", "title", "slug", "content", "excerpt", "coverImage", '
                     '"published", "authorId", "createdAt", "updatedAt") '
-                    'VALUES (:id, :title, :slug, :content, :excerpt, :cover, '
-                    'TRUE, :author, :now, :now)'
+                    "VALUES (:id, :title, :slug, :content, :excerpt, :cover, "
+                    "TRUE, :author, :now, :now)"
                 ),
                 {
                     "id": post_id,
@@ -348,6 +359,7 @@ async def blog_publish_handler(callback: CallbackQuery, state: FSMContext) -> No
 # 🔄 REDO / ❌ CANCEL
 # ─────────────────────────────────────────────────────────
 
+
 @admin_blog_router.callback_query(F.data == "blog_redo", AdminBlogPostStates.confirm)
 async def blog_redo_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if callback.from_user.id not in await get_admin_ids():
@@ -356,9 +368,7 @@ async def blog_redo_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(AdminBlogPostStates.waiting_title)
     await safe_edit(
         callback.message,
-        "🔄 <b>Qayta yozish</b>\n\n"
-        "1/3 — <b>Sarlavha</b> kiriting:\n\n"
-        "❌ Bekor qilish: /cancel",
+        "🔄 <b>Qayta yozish</b>\n\n1/3 — <b>Sarlavha</b> kiriting:\n\n❌ Bekor qilish: /cancel",
         reply_markup=blog_flow_cancel_kb(),
     )
     await callback.answer()

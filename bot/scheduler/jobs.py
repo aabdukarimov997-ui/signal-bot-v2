@@ -1,24 +1,25 @@
-from aiogram import Bot
-
-from bot.services.subscription_service import (
-    expire_all_expired_subscriptions,
-    get_expiring_soon,
-    get_all_subscriptions,
-    get_all_tariffs,
-)
-from bot.services.channel_service import ban_channel_member, get_signal_channel_id
-from bot.services.settings_service import get_setting
+import contextlib
 import logging
 
+from aiogram import Bot
+
+from bot.services.channel_service import ban_channel_member, get_signal_channel_id
+from bot.services.settings_service import get_setting
+from bot.services.subscription_service import (
+    expire_all_expired_subscriptions,
+    get_all_subscriptions,
+    get_all_tariffs,
+    get_expiring_soon,
+)
 from bot.utils.texts import (
+    REMINDER_1_DAY,
+    REMINDER_1_DAY_COURSE,
+    REMINDER_3_DAYS,
+    REMINDER_3_DAYS_COURSE,
+    REMINDER_7_DAYS,
+    REMINDER_7_DAYS_COURSE,
     SUBSCRIPTION_EXPIRED,
     SUBSCRIPTION_EXPIRED_COURSE,
-    REMINDER_7_DAYS,
-    REMINDER_3_DAYS,
-    REMINDER_1_DAY,
-    REMINDER_7_DAYS_COURSE,
-    REMINDER_3_DAYS_COURSE,
-    REMINDER_1_DAY_COURSE,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,9 +37,11 @@ async def _get_channel_for_sub(sub) -> str:
 
 
 async def _get_product_type(sub) -> str:
-    from bot.database.session import get_session
     from sqlalchemy import select
+
+    from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
+
     async with get_session() as session:
         result = await session.execute(select(SignalTariff).where(SignalTariff.id == sub.tariff_id))
         tariff = result.scalar_one_or_none()
@@ -48,9 +51,11 @@ async def _get_product_type(sub) -> str:
 async def expire_subscriptions_job(bot: Bot) -> None:
     expired = await expire_all_expired_subscriptions()
     for sub in expired:
-        from bot.database.session import get_session
         from sqlalchemy import select
+
+        from bot.database.session import get_session
         from bot.models.user import User
+
         async with get_session() as session:
             result = await session.execute(select(User).where(User.id == sub.user_id))
             user = result.scalar_one_or_none()
@@ -64,6 +69,7 @@ async def expire_subscriptions_job(bot: Bot) -> None:
                 # — "Obunangiz tugadi" xabarini va ban'ni YUBORMAYMIZ. Bu eski dublikat
                 # qator tugaganda ham obuna davom etayotganini anglatadi.
                 from bot.services.subscription_service import get_active_subscription_by_type
+
                 other_active = await get_active_subscription_by_type(sub.user_id, product_type)
                 if other_active:
                     continue
@@ -78,26 +84,36 @@ async def expire_subscriptions_job(bot: Bot) -> None:
 
 async def verify_channel_membership_job(bot: Bot) -> None:
     """Check active subscribers are in channel; kick those who left/kicked (no re-invite)."""
+    from sqlalchemy import select
+
+    from bot.database.session import get_session
+    from bot.models.user import User
+
     subs = await get_all_subscriptions(status="active")
     for sub in subs:
-        product_type = await _get_product_type(sub)
         channel_id = await _get_channel_for_sub(sub)
         if not channel_id:
             continue
+
+        async with get_session() as session:
+            result = await session.execute(select(User).where(User.id == sub.user_id))
+            user = result.scalar_one_or_none()
+        if not user:
+            continue
+
+        telegram_id = user.telegram_id
         try:
-            member = await bot.get_chat_member(channel_id, sub.telegram_id)
+            member = await bot.get_chat_member(channel_id, telegram_id)
             status = member.status
             if status in ("left", "kicked"):
-                await ban_channel_member(bot, channel_id, sub.telegram_id)
-                try:
+                await ban_channel_member(bot, channel_id, telegram_id)
+                with contextlib.suppress(Exception):
                     await bot.send_message(
-                        chat_id=sub.telegram_id,
+                        chat_id=telegram_id,
                         text="🚫 <b>Kanalga kirish huquqi yo'q</b>\n\n"
-                             "Siz kanaldan chiqdingiz yoki chiqarib yuborildingiz.\n"
-                             "Qayta kirish uchun admin bilan bog'laning.",
+                        "Siz kanaldan chiqdingiz yoki chiqarib yuborildingiz.\n"
+                        "Qayta kirish uchun admin bilan bog'laning.",
                     )
-                except Exception:
-                    pass
         except Exception:
             pass
 
@@ -121,6 +137,7 @@ async def purge_non_subscribers_job(bot: Bot) -> None:
                     allowed = await _is_subscriber_allowed(telegram_id, channel_id)
                     if not allowed:
                         from bot.services.channel_service import ban_channel_member
+
                         await ban_channel_member(bot, channel_id, telegram_id)
                         logging.info(f"🚫 Purged {telegram_id} from {channel_id} (no active subscription)")
             except Exception:
@@ -132,9 +149,9 @@ async def send_marketing_job(bot: Bot) -> None:
     Obuna olmagan foydalanuvchilarga chiroyli marketing xabar yuboradi.
     """
     from bot.services.settings_service import get_setting
-    from bot.services.user_service import get_all_user_telegram_ids
     from bot.services.subscription_service import get_active_subscription_by_type
-    from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
+    from bot.services.user_service import get_all_user_telegram_ids
+    from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
 
     enabled = await get_setting("marketing_enabled")
     if enabled != "true":
@@ -153,10 +170,14 @@ async def send_marketing_job(bot: Bot) -> None:
     signal_tariffs = await get_all_tariffs("signal")
     kb_buttons = []
     for t in signal_tariffs:
-        kb_buttons.append([InlineKeyboardButton(
-            text=f"{t.label} — ${float(t.price):.0f}",
-            callback_data=f"tariff_{t.id}",
-        )])
+        kb_buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=f"{t.label} — ${float(t.price):.0f}",
+                    callback_data=f"tariff_{t.id}",
+                )
+            ]
+        )
     kb_buttons.append([InlineKeyboardButton(text="⬅️ Asosiy menyu", callback_data="back_main")])
     kb = InlineKeyboardMarkup(inline_keyboard=kb_buttons)
 
@@ -164,8 +185,9 @@ async def send_marketing_job(bot: Bot) -> None:
     skipped = 0
     for tg_id in telegram_ids:
         # Faqat obuna olmaganlarga yuboramiz
-        from bot.database.session import get_session
         from sqlalchemy import select
+
+        from bot.database.session import get_session
         from bot.models.user import User
 
         async with get_session() as session:
@@ -195,17 +217,18 @@ async def send_marketing_job(bot: Bot) -> None:
 async def send_expiry_reminders_job(bot: Bot) -> None:
     """
     Obuna tugashiga 7/3/1 kun qolganda eslatma yuboradi.
-    
+
     Database'dagi reminder_*_sent flaglari orqali dublikat oldi olinadi:
     - Har bir interval (7/3/1 kun) uchun FAQAT 1 marta yuboriladi
     - Bot restart qilinsa ham flag DB da qoladi → takror yuborilmaydi
     - Obuna uzaytirilganda flaglar reset qilinadi → yangi muddatdan hisoblanadi
     """
-    from bot.database.session import get_session
     from sqlalchemy import select
-    from bot.models.user import User
+
+    from bot.database.session import get_session
     from bot.models.subscription import Subscription
     from bot.models.tariff import SignalTariff
+    from bot.models.user import User
 
     ranges = [
         (7, 3, "reminder_7_sent", REMINDER_7_DAYS, REMINDER_7_DAYS_COURSE),
@@ -222,9 +245,7 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
         for sub in subs:
             async with get_session() as session:
                 # Fresh DB read — flag qiymatini tekshiramiz
-                result = await session.execute(
-                    select(Subscription).where(Subscription.id == sub.id)
-                )
+                result = await session.execute(select(Subscription).where(Subscription.id == sub.id))
                 db_sub = result.scalar_one_or_none()
                 if not db_sub:
                     continue
@@ -235,17 +256,13 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
                     continue
 
                 # Foydalanuvchini olamiz
-                user_result = await session.execute(
-                    select(User).where(User.id == db_sub.user_id)
-                )
+                user_result = await session.execute(select(User).where(User.id == db_sub.user_id))
                 user = user_result.scalar_one_or_none()
                 if not user:
                     continue
 
                 # Product type ni aniqlaymiz
-                tariff_result = await session.execute(
-                    select(SignalTariff).where(SignalTariff.id == db_sub.tariff_id)
-                )
+                tariff_result = await session.execute(select(SignalTariff).where(SignalTariff.id == db_sub.tariff_id))
                 tariff = tariff_result.scalar_one_or_none()
                 product_type = tariff.product_type if tariff else "signal"
 
@@ -254,6 +271,7 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
                 # Bu holat eski qatorning muddati oynaga tushib, yangi qator oynadan
                 # tashqarida bo'lganda (masalan eski 3 kunda, yangi 30 kunda tugaydi) ro'y beradi.
                 from bot.services.subscription_service import get_active_subscription_by_type
+
                 latest_active = await get_active_subscription_by_type(db_sub.user_id, product_type)
                 if latest_active and latest_active.id != db_sub.id:
                     total_skipped += 1
@@ -272,3 +290,35 @@ async def send_expiry_reminders_job(bot: Bot) -> None:
 
     logger.info(f"📊 Reminders: sent={total_sent}, skipped(already sent)={total_skipped}")
 
+
+async def check_crypto_payments_job(bot: Bot) -> None:
+    """TRON TRC20 va BNB BEP20 to'lovlarini blokcheyndan tekshiradi.
+
+    Mos kelgan tranzaksiya topilsa — to'lov avtomatik tasdiqlanadi
+    (admin aralashuvisiz obuna faollashtiriladi).
+    """
+    from bot.services.crypto_pay_service import check_payments
+    from bot.services.crypto_service import check_all_crypto_payments
+    from bot.services.payment_finalizer import finalize_crypto_payment
+    from bot.services.payment_service import expire_stale_crypto_invoices
+
+    await check_payments(bot)
+    try:
+        confirmed = await check_all_crypto_payments(bot)
+    except Exception as e:
+        logger.warning("Kripto to'lovlarni tekshirishda xatolik: %s", e)
+        return
+
+    for item in confirmed:
+        try:
+            await finalize_crypto_payment(bot, item["payment_id"], item["tx_hash"])
+            logger.info("✅ Avtomatik kripto to'lov tasdiqlandi: %s (%s)", item["payment_id"], item["tx_hash"])
+        except Exception as e:
+            logger.warning("Kripto to'lovni yakunlashda xatolik (%s): %s", item["payment_id"], e)
+
+    try:
+        expired = await expire_stale_crypto_invoices(ttl_minutes=60)
+        if expired:
+            logger.info("⌛ %d ta kripto invoice muddati o'tdi", expired)
+    except Exception as e:
+        logger.warning("Kripto invoice'larni yopishda xatolik: %s", e)

@@ -22,7 +22,7 @@ export type TmaPage =
   | 'login';
 
 export interface TmaUser {
-  id: number;
+  id: string;
   telegramId: string;
   fullName: string;
   username?: string;
@@ -33,18 +33,31 @@ export interface TmaUser {
 }
 
 export interface TmaTariff {
-  id: number;
+  id: string;
   name: string;
   durationMonths: number;
+  durationDays?: number | null;
   price: number;
   starsPrice: number;
   isActive: boolean;
   productType: string;
 }
 
+export function formatTmaTariffDuration(t: TmaTariff, monthsLabel = 'oy'): string {
+  if (t.durationDays) {
+    const d = t.durationDays;
+    if (d === 1) return '1 kun';
+    if (d === 7) return '1 hafta';
+    if (d === 14) return '2 hafta';
+    if (d % 7 === 0) return `${d / 7} hafta`;
+    return `${d} kun`;
+  }
+  return `${t.durationMonths} ${monthsLabel}`;
+}
+
 export interface TmaSubscription {
-  id: number;
-  tariffId: number;
+  id: string;
+  tariffId: string;
   tariffName: string;
   status: string;
   startDate: string;
@@ -55,8 +68,8 @@ export interface TmaSubscription {
 }
 
 export interface TmaPayment {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   productType: string;
   amount: number;
   currency: string;

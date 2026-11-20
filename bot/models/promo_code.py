@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, Numeric, String
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bot.models.base import Base, BaseMixin
@@ -16,4 +15,4 @@ class PromoCode(BaseMixin, Base):
     current_uses: Mapped[int] = mapped_column(Integer, default=0)
     product_type: Mapped[str] = mapped_column(String(32), nullable=False)  # signal, course, all
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

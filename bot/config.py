@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,6 +37,16 @@ class Settings(BaseSettings):
     TON_WALLET_ADDRESS: str = ""
     BNB_WALLET_ADDRESS: str = ""
 
+    # Kripto avtomatik to'lov (blokcheyndan tekshirish)
+    CRYPTO_AUTO_ENABLED: bool = True
+    CRYPTO_POLL_SECONDS: int = 60
+    TRON_USDT_CONTRACT: str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+    BNB_USDT_CONTRACT: str = "0x55d398326f99059fF775485246999027B3197955"
+    BSC_RPC_URL: str = "https://bsc-dataseed.binance.org"
+    TRONGRID_API_KEY: str = ""
+    PROJECT_CRYPTO_PAY_TOKEN: str = ""
+    PROJECT_CRYPTO_PAY_TESTNET: bool = False
+
     ADMIN_IDS: str = "[]"
     ADMIN_LINK: str = "@admin"
 
@@ -61,10 +70,7 @@ class Settings(BaseSettings):
             return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite+aiosqlite:///{self.DB_NAME}"
-        return (
-            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        )
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
     def db_url_sync(self) -> str:
@@ -75,10 +81,7 @@ class Settings(BaseSettings):
             return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite:///{self.DB_NAME}"
-        return (
-            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        )
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
 settings = Settings()

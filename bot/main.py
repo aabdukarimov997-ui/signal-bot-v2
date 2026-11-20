@@ -7,18 +7,21 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from bot.config import settings
-from bot.handlers.start import start_router
-from bot.handlers.signals import signal_router
-from bot.handlers.course import course_router
-from bot.handlers.announcement import announcement_router
 from bot.handlers.account import account_router
-from bot.handlers.referral import referral_router
-from bot.handlers.social import social_router
-from bot.handlers.help import help_router
-from bot.handlers.setup import setup_router
-from bot.handlers.channel_guard import channel_guard_router
 from bot.handlers.admin import routers as admin_routers
+from bot.handlers.announcement import announcement_router
+from bot.handlers.channel_guard import channel_guard_router
+from bot.handlers.course import course_router
+from bot.handlers.crypto_pay import crypto_pay_router
+from bot.handlers.escape import escape_router
+from bot.handlers.help import help_router
+from bot.handlers.referral import referral_router
+from bot.handlers.setup import setup_router
+from bot.handlers.signals import signal_router
+from bot.handlers.social import social_router
+from bot.handlers.start import start_router
 from bot.middlewares.auth import AuthMiddleware
+from bot.middlewares.reset_state import ResetStateMiddleware
 from bot.scheduler.setup import setup_scheduler, start_scheduler
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -31,9 +34,12 @@ bot = Bot(
 
 
 def register_routers() -> None:
+    # Escape router birinchi — foydalanuvchi qotib qolgan holatdan chiqishi uchun
+    dp.include_router(escape_router)
     dp.include_router(channel_guard_router)
     dp.include_router(setup_router)
     dp.include_router(start_router)
+    dp.include_router(crypto_pay_router)
     dp.include_router(signal_router)
     dp.include_router(course_router)
     dp.include_router(announcement_router)
@@ -46,6 +52,10 @@ def register_routers() -> None:
 
 
 def register_middlewares() -> None:
+    # ResetStateMiddleware birinchi — menyu tugmalari bosilganda qotib qolgan
+    # FSM holatini tozalaydi, keyin AuthMiddleware foydalanuvchini tekshiradi.
+    dp.message.middleware(ResetStateMiddleware())
+    dp.callback_query.middleware(ResetStateMiddleware())
     dp.message.middleware(AuthMiddleware())
     dp.callback_query.middleware(AuthMiddleware())
 
@@ -74,60 +84,82 @@ async def main() -> None:
     # Create tables if not exist
     from bot.database.engine import engine
     from bot.models.base import Base
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         # Add channel_id column if missing (ALTER TABLE for existing DB)
         from sqlalchemy import text
-        # Add channel_id column if missing
-        result = await conn.execute(text(
-            "SELECT column_name FROM information_schema.columns "
-            "WHERE table_name='signal_tariffs' AND column_name='channel_id'"
-        ))
-        if not result.scalar():
-            await conn.execute(text(
-                "ALTER TABLE signal_tariffs ADD COLUMN channel_id VARCHAR(64) NULL DEFAULT NULL"
-            ))
-        # Add duration_days column if missing
-        result = await conn.execute(text(
-            "SELECT column_name FROM information_schema.columns "
-            "WHERE table_name='signal_tariffs' AND column_name='duration_days'"
-        ))
-        if not result.scalar():
-            await conn.execute(text(
-                "ALTER TABLE signal_tariffs ADD COLUMN duration_days INTEGER NULL DEFAULT NULL"
-            ))
 
+        # Add channel_id column if missing
+        result = await conn.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='signal_tariffs' AND column_name='channel_id'"
+            )
+        )
+        if not result.scalar():
+            await conn.execute(text("ALTER TABLE signal_tariffs ADD COLUMN channel_id VARCHAR(64) NULL DEFAULT NULL"))
+        # Add duration_days column if missing
+        result = await conn.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='signal_tariffs' AND column_name='duration_days'"
+            )
+        )
+        if not result.scalar():
+            await conn.execute(text("ALTER TABLE signal_tariffs ADD COLUMN duration_days INTEGER NULL DEFAULT NULL"))
+
+        # Kripto avtomatik to'lov ustunlari (mavjud DB uchun)
+        crypto_columns = [
+            ("crypto_network", "VARCHAR(16)"),
+            ("crypto_address", "VARCHAR(64)"),
+            ("crypto_amount", "NUMERIC(18, 6)"),
+            ("crypto_tx_hash", "VARCHAR(128)"),
+            ("crypto_checked_at", "TIMESTAMPTZ"),
+            ("auto_approved", "BOOLEAN DEFAULT FALSE"),
+            ("crypto_expires_at", "TIMESTAMPTZ"),
+        ]
+        for col_name, col_type in crypto_columns:
+            col_result = await conn.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name='payments' AND column_name=:col"
+                ),
+                {"col": col_name},
+            )
+            if not col_result.scalar():
+                await conn.execute(text(f"ALTER TABLE payments ADD COLUMN {col_name} {col_type} NULL"))
 
     # Seed settings from .env defaults if no settings exist
-    from bot.services.settings_service import seed_defaults_from_env, is_setup_completed
+    from bot.services.settings_service import is_setup_completed, seed_defaults_from_env
+
     await seed_defaults_from_env()
 
     # Seed tariffs from DB settings if no tariffs exist
+    from sqlalchemy import func, select
+
     from bot.database.session import get_session
-    from sqlalchemy import select, func
     from bot.models.tariff import SignalTariff
     from bot.services.settings_service import get_setting
 
     async with get_session() as session:
         # Seed signal tariffs
-        result = await session.execute(
-            select(func.count(SignalTariff.id)).where(SignalTariff.product_type == "signal")
-        )
+        result = await session.execute(select(func.count(SignalTariff.id)).where(SignalTariff.product_type == "signal"))
         count = result.scalar() or 0
         if count == 0:
             price_1 = float(await get_setting("price_1_month") or "25")
             price_3 = float(await get_setting("price_3_month") or "50")
             price_6 = float(await get_setting("price_6_month") or "100")
-            session.add_all([
-                SignalTariff(name="1 oy", duration_months=1, price=price_1, product_type="signal", sort_order=1),
-                SignalTariff(name="3 oy", duration_months=3, price=price_3, product_type="signal", sort_order=2),
-                SignalTariff(name="6 oy", duration_months=6, price=price_6, product_type="signal", sort_order=3),
-            ])
+            session.add_all(
+                [
+                    SignalTariff(name="1 oy", duration_months=1, price=price_1, product_type="signal", sort_order=1),
+                    SignalTariff(name="3 oy", duration_months=3, price=price_3, product_type="signal", sort_order=2),
+                    SignalTariff(name="6 oy", duration_months=6, price=price_6, product_type="signal", sort_order=3),
+                ]
+            )
 
         # Seed course tariffs (only 1 tariff)
-        result = await session.execute(
-            select(func.count(SignalTariff.id)).where(SignalTariff.product_type == "course")
-        )
+        result = await session.execute(select(func.count(SignalTariff.id)).where(SignalTariff.product_type == "course"))
         course_count = result.scalar() or 0
         if course_count == 0:
             c_price = float(await get_setting("course_price_1_month") or "25")

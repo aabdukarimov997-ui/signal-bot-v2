@@ -10,9 +10,12 @@ interface NavigationState {
   /** #/pay/signal yoki #/pay/course — alohida to'lov sahifasi parametrlari */
   payProductType: PayProductType;
   payTariffId: string | null;
+  /** #/blog/{slug} — blog maqolasi sahifasi uchun slug */
+  blogPostSlug: string | null;
   navigate: (page: PageId) => void;
   goBack: () => void;
   navigateToPay: (productType: PayProductType, tariffId?: string | null) => void;
+  setBlogPostSlug: (slug: string | null) => void;
   /** Hash'ni parslab sahifani o'rnatadi (#/vip, #/pay/signal/{id}, ...) */
   applyHash: (hash: string) => void;
 }
@@ -33,6 +36,7 @@ export const useNavigationStore = create<NavigationState>((set) => ({
   previousPage: null,
   payProductType: 'signal',
   payTariffId: null,
+  blogPostSlug: null,
 
   navigate: (page) => {
     // Har bir sahifa o'z URL'iga ega: #/vip, #/course, #/blog, ...
@@ -83,8 +87,15 @@ export const useNavigationStore = create<NavigationState>((set) => ({
       });
       return;
     }
+    // #/blog/{slug} — blog maqolasi
+    if (first === 'blog' && parts.length >= 2) {
+      set({ currentPage: 'blog-detail', blogPostSlug: parts[1], payTariffId: null });
+      return;
+    }
     set({ currentPage: first, payTariffId: null });
   },
+
+  setBlogPostSlug: (slug) => set({ blogPostSlug: slug }),
 }));
 
 interface AuthState {

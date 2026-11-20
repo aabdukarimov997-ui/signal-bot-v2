@@ -9,15 +9,16 @@ Admin kanallarga chiroyli formatda xabar yuborishi mumkin:
 Qo'llab-quvvatlanadigan kanallar: VIP Signal kanali, Darslar kanali, Custom kanal.
 """
 
+import contextlib
 import html
 
-from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, Message, ContentType
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, ContentType, Message
 
-from bot.services.settings_service import get_setting, get_admin_ids
+from bot.services.settings_service import get_admin_ids, get_setting
 from bot.utils.helpers import safe_edit
-from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
 from bot.utils.states import AdminChannelAnnouncementStates
 
 admin_channel_announce_router = Router()
@@ -26,38 +27,46 @@ admin_channel_announce_router = Router()
 # ❇️ KANAL TANLASH
 # ─────────────────────────────────────────────────────────
 
+
 def channel_selection_kb() -> InlineKeyboardMarkup:
     """Kanallar ro'yxati — qaysi kanalga xabar yuborishni tanlash."""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔒 VIP Signal kanali", callback_data="announce_channel_signal")],
-        [InlineKeyboardButton(text="📚 Darslar kanali", callback_data="announce_channel_course")],
-        [InlineKeyboardButton(text="✏️ Boshqa kanal (ID kiriting)", callback_data="announce_channel_custom")],
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔒 VIP Signal kanali", callback_data="announce_channel_signal")],
+            [InlineKeyboardButton(text="📚 Darslar kanali", callback_data="announce_channel_course")],
+            [InlineKeyboardButton(text="✏️ Boshqa kanal (ID kiriting)", callback_data="announce_channel_custom")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
 
 
 def content_type_kb() -> InlineKeyboardMarkup:
     """Xabar turini tanlash — matn, rasm+matn, video+matn."""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📝 Matnli xabar", callback_data="announce_type_text")],
-        [InlineKeyboardButton(text="🖼 Rasm + matn", callback_data="announce_type_photo")],
-        [InlineKeyboardButton(text="🎬 Video + matn", callback_data="announce_type_video")],
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_channels")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Matnli xabar", callback_data="announce_type_text")],
+            [InlineKeyboardButton(text="🖼 Rasm + matn", callback_data="announce_type_photo")],
+            [InlineKeyboardButton(text="🎬 Video + matn", callback_data="announce_type_video")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_channels")],
+        ]
+    )
 
 
 def confirm_send_kb() -> InlineKeyboardMarkup:
     """Tasdiqlash tugmalari."""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Kanalga yuborish", callback_data="announce_confirm_send")],
-        [InlineKeyboardButton(text="🔄 Qayta yozish", callback_data="announce_redo")],
-        [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="announce_cancel")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Kanalga yuborish", callback_data="announce_confirm_send")],
+            [InlineKeyboardButton(text="🔄 Qayta yozish", callback_data="announce_redo")],
+            [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="announce_cancel")],
+        ]
+    )
 
 
 # ─────────────────────────────────────────────────────────
 # 🔊 ENTRY: Admin panel → "📢 Kanalga e'lon"
 # ─────────────────────────────────────────────────────────
+
 
 @admin_channel_announce_router.callback_query(F.data == "admin_channel_announce")
 async def announce_start_handler(callback: CallbackQuery) -> None:
@@ -67,8 +76,7 @@ async def announce_start_handler(callback: CallbackQuery) -> None:
 
     await safe_edit(
         callback.message,
-        "📢 <b>Kanalga e'lon yuborish</b>\n\n"
-        "Qaysi kanalga xabar yubormoqchisiz?",
+        "📢 <b>Kanalga e'lon yuborish</b>\n\nQaysi kanalga xabar yubormoqchisiz?",
         reply_markup=channel_selection_kb(),
     )
     await callback.answer()
@@ -78,13 +86,13 @@ async def announce_start_handler(callback: CallbackQuery) -> None:
 # 🔙 BACK TO CHANNEL SELECTION
 # ─────────────────────────────────────────────────────────
 
+
 @admin_channel_announce_router.callback_query(F.data == "announce_back_channels")
 async def announce_back_channels_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     await safe_edit(
         callback.message,
-        "📢 <b>Kanalga e'lon yuborish</b>\n\n"
-        "Qaysi kanalga xabar yubormoqchisiz?",
+        "📢 <b>Kanalga e'lon yuborish</b>\n\nQaysi kanalga xabar yubormoqchisiz?",
         reply_markup=channel_selection_kb(),
     )
     await callback.answer()
@@ -93,6 +101,7 @@ async def announce_back_channels_handler(callback: CallbackQuery, state: FSMCont
 # ─────────────────────────────────────────────────────────
 # 🎯 CHANNEL SELECTED
 # ─────────────────────────────────────────────────────────
+
 
 @admin_channel_announce_router.callback_query(F.data.startswith("announce_channel_"))
 async def announce_channel_selected_handler(callback: CallbackQuery, state: FSMContext) -> None:
@@ -123,9 +132,11 @@ async def announce_channel_selected_handler(callback: CallbackQuery, state: FSMC
             callback.message,
             f"❌ <b>{channel_type.capitalize()} kanali sozlanmagan!</b>\n\n"
             "Iltimos, avval ⚙️ Sozlamalar bo'limida kanal ID sini o'rnating.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+                ]
+            ),
         )
         await callback.answer()
         return
@@ -157,6 +168,7 @@ async def _resolve_channel(channel_type: str) -> dict | None:
 # 🆕 CUSTOM CHANNEL — manual ID kiritish
 # ─────────────────────────────────────────────────────────
 
+
 @admin_channel_announce_router.message(F.text, AdminChannelAnnouncementStates.waiting_channel)
 async def announce_custom_channel_handler(message: Message, state: FSMContext) -> None:
     channel_id = message.text.strip()
@@ -164,7 +176,8 @@ async def announce_custom_channel_handler(message: Message, state: FSMContext) -
     # Validate: should be a numeric ID starting with -100 or @username
     if not channel_id.startswith("-100") and not channel_id.startswith("@"):
         await message.answer(
-            "❌ Noto'g'ri format. Kanal ID <code>-100xxxx</code> yoki <code>@username</code> ko'rinishida bo'lishi kerak.\n\n"
+            "❌ Noto'g'ri format. Kanal ID <code>-100xxxx</code> yoki "
+            "<code>@username</code> ko'rinishida bo'lishi kerak.\n\n"
             "Qayta urinib ko'ring yoki /cancel"
         )
         return
@@ -177,6 +190,7 @@ async def announce_custom_channel_handler(message: Message, state: FSMContext) -
 # 📝 POST TURINI TANLASH (matn/rasm+matn/video+matn)
 # ─────────────────────────────────────────────────────────
 
+
 async def _ask_content_type(target: Message, state: FSMContext) -> None:
     """Admin dan xabar turini so'rash."""
     data = await state.get_data()
@@ -184,11 +198,7 @@ async def _ask_content_type(target: Message, state: FSMContext) -> None:
 
     await state.set_state(AdminChannelAnnouncementStates.waiting_content_type)
 
-    text = (
-        f"📢 <b>E'lon yuborish</b>\n\n"
-        f"📌 <b>Kanal:</b> {channel_name}\n\n"
-        f"Xabar turini tanlang:"
-    )
+    text = f"📢 <b>E'lon yuborish</b>\n\n📌 <b>Kanal:</b> {channel_name}\n\nXabar turini tanlang:"
 
     kb = content_type_kb()
     await target.answer(text, reply_markup=kb)
@@ -203,7 +213,10 @@ async def announce_custom_channel_invalid(message: Message) -> None:
 # 🎨 POST TURI TANLANDI
 # ─────────────────────────────────────────────────────────
 
-@admin_channel_announce_router.callback_query(F.data.startswith("announce_type_"), AdminChannelAnnouncementStates.waiting_content_type)
+
+@admin_channel_announce_router.callback_query(
+    F.data.startswith("announce_type_"), AdminChannelAnnouncementStates.waiting_content_type
+)
 async def announce_type_selected_handler(callback: CallbackQuery, state: FSMContext) -> None:
     if callback.from_user.id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
@@ -228,9 +241,11 @@ async def announce_type_selected_handler(callback: CallbackQuery, state: FSMCont
             f"• <code>Kod</code> → <code>&lt;code&gt;text&lt;/code&gt;</code>\n"
             f"• <a href='https://t.me'>Havola</a> → <code>&lt;a href='url'&gt;text&lt;/a&gt;</code>\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
     elif post_type == "photo":
         await state.set_state(AdminChannelAnnouncementStates.waiting_photo)
@@ -242,9 +257,11 @@ async def announce_type_selected_handler(callback: CallbackQuery, state: FSMCont
             f"<b>2.</b> Rasm caption'iga xabar matnini yozing\n\n"
             f"💡 HTML format qo'llab-quvvatlanadi!\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
     elif post_type == "video":
         await state.set_state(AdminChannelAnnouncementStates.waiting_video)
@@ -256,9 +273,11 @@ async def announce_type_selected_handler(callback: CallbackQuery, state: FSMCont
             f"<b>2.</b> Video caption'iga xabar matnini yozing\n\n"
             f"💡 HTML format qo'llab-quvvatlanadi!\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
 
     await callback.answer()
@@ -281,6 +300,7 @@ async def announce_back_type_handler(callback: CallbackQuery, state: FSMContext)
 # 📝 TEXT RECEIVED — Preview
 # ─────────────────────────────────────────────────────────
 
+
 @admin_channel_announce_router.message(AdminChannelAnnouncementStates.waiting_text)
 async def announce_text_received_handler(message: Message, state: FSMContext, bot: Bot) -> None:
     if message.text is None:
@@ -296,6 +316,7 @@ async def announce_text_received_handler(message: Message, state: FSMContext, bo
 # ─────────────────────────────────────────────────────────
 # 🖼 PHOTO + CAPTION RECEIVED — Preview
 # ─────────────────────────────────────────────────────────
+
 
 @admin_channel_announce_router.message(F.photo, AdminChannelAnnouncementStates.waiting_photo)
 async def announce_photo_received_handler(message: Message, state: FSMContext, bot: Bot) -> None:
@@ -316,7 +337,10 @@ async def announce_photo_invalid_handler(message: Message) -> None:
 # 🎬 VIDEO + CAPTION RECEIVED — Preview
 # ─────────────────────────────────────────────────────────
 
-@admin_channel_announce_router.message(F.content_type == ContentType.VIDEO, AdminChannelAnnouncementStates.waiting_video)
+
+@admin_channel_announce_router.message(
+    F.content_type == ContentType.VIDEO, AdminChannelAnnouncementStates.waiting_video
+)
 async def announce_video_received_handler(message: Message, state: FSMContext, bot: Bot) -> None:
     file_id = message.video.file_id
     caption = message.caption or ""
@@ -334,6 +358,7 @@ async def announce_video_invalid_handler(message: Message) -> None:
 # ─────────────────────────────────────────────────────────
 # 👁 PREVIEW — Xabarni oldindan ko'rish
 # ─────────────────────────────────────────────────────────
+
 
 async def _show_preview(target: Message, state: FSMContext, bot: Bot) -> None:
     """Admin ga xabar preview + tasdiqlash tugmalarini ko'rsatish."""
@@ -381,15 +406,14 @@ async def _show_preview(target: Message, state: FSMContext, bot: Bot) -> None:
     await target.answer(preview_text, reply_markup=kb)
 
     # Delete the user's original message to keep chat clean
-    try:
+    with contextlib.suppress(Exception):
         await target.delete()
-    except Exception:
-        pass
 
 
 # ─────────────────────────────────────────────────────────
 # ✅ CONFIRM SEND — Kanalga jo'natish
 # ─────────────────────────────────────────────────────────
+
 
 @admin_channel_announce_router.callback_query(F.data == "announce_confirm_send", AdminChannelAnnouncementStates.confirm)
 async def announce_confirm_send_handler(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
@@ -431,10 +455,9 @@ async def announce_confirm_send_handler(callback: CallbackQuery, state: FSMConte
             )
 
         # Success — pin the message in the channel (optional)
-        try:
+        # Bot may not have pin permission — xatoni e'tiborsiz qoldiramiz
+        with contextlib.suppress(Exception):
             await bot.pin_chat_message(chat_id=channel_id, message_id=sent.message_id)
-        except Exception:
-            pass  # Bot may not have pin permission
 
         await safe_edit(
             callback.message,
@@ -443,10 +466,12 @@ async def announce_confirm_send_handler(callback: CallbackQuery, state: FSMConte
             f"📝 <b>Xabar:</b>\n"
             f"───\n{(text[:100] + '...') if len(text) > 100 else text}\n───\n\n"
             f"🚀 <b>Yana e'lon yuborish</b> uchun <b>📢 Kanalga e'lon</b> tugmasini bosing.",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="📢 Yana e'lon", callback_data="admin_channel_announce")],
-                [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="📢 Yana e'lon", callback_data="admin_channel_announce")],
+                    [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
+                ]
+            ),
         )
 
     except Exception as e:
@@ -460,10 +485,12 @@ async def announce_confirm_send_handler(callback: CallbackQuery, state: FSMConte
             f"• Bot kanalda adminmi?\n"
             f"• Kanal ID to'g'rimi?\n"
             f"• Botda xabar yozish ruxsati bormi?",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="🔄 Qayta yuborish", callback_data="announce_redo")],
-                [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="🔄 Qayta yuborish", callback_data="announce_redo")],
+                    [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
+                ]
+            ),
         )
 
     await state.clear()
@@ -473,6 +500,7 @@ async def announce_confirm_send_handler(callback: CallbackQuery, state: FSMConte
 # ─────────────────────────────────────────────────────────
 # 🔄 REDO — Qayta yozish
 # ─────────────────────────────────────────────────────────
+
 
 @admin_channel_announce_router.callback_query(F.data == "announce_redo")
 async def announce_redo_handler(callback: CallbackQuery, state: FSMContext) -> None:
@@ -492,9 +520,11 @@ async def announce_redo_handler(callback: CallbackQuery, state: FSMContext) -> N
             f"<b>1.</b> Rasm yuboring\n"
             f"<b>2.</b> Rasm caption'iga xabar matnini yozing\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
     elif post_type == "video":
         await state.set_state(AdminChannelAnnouncementStates.waiting_video)
@@ -505,9 +535,11 @@ async def announce_redo_handler(callback: CallbackQuery, state: FSMContext) -> N
             f"<b>1.</b> Video yuboring\n"
             f"<b>2.</b> Video caption'iga xabar matnini yozing\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
     else:
         await state.set_state(AdminChannelAnnouncementStates.waiting_text)
@@ -517,9 +549,11 @@ async def announce_redo_handler(callback: CallbackQuery, state: FSMContext) -> N
             f"📌 <b>Kanal:</b> {channel_name}\n\n"
             f"Xabar matnini yuboring. HTML formatda yozishingiz mumkin...\n\n"
             f"❌ Bekor qilish: /cancel",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="announce_back_type")],
+                ]
+            ),
         )
 
     await callback.answer()
@@ -529,6 +563,7 @@ async def announce_redo_handler(callback: CallbackQuery, state: FSMContext) -> N
 # ❌ CANCEL
 # ─────────────────────────────────────────────────────────
 
+
 @admin_channel_announce_router.callback_query(F.data == "announce_cancel")
 async def announce_cancel_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
@@ -536,10 +571,12 @@ async def announce_cancel_handler(callback: CallbackQuery, state: FSMContext) ->
         callback.message,
         "❌ E'lon bekor qilindi.\n\n"
         "📢 <b>Yangi e'lon yuborish</b> uchun admin panelda «📢 Kanalga e'lon» tugmasini bosing.",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Yana e'lon", callback_data="admin_channel_announce")],
-            [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="📢 Yana e'lon", callback_data="admin_channel_announce")],
+                [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
+            ]
+        ),
     )
     await callback.answer()
 
@@ -554,8 +591,10 @@ async def announce_cancel_text_handler(message: Message, state: FSMContext) -> N
     await state.clear()
     await message.answer(
         "❌ E'lon bekor qilindi.",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Yangi e'lon", callback_data="admin_channel_announce")],
-            [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
-        ]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="📢 Yangi e'lon", callback_data="admin_channel_announce")],
+                [InlineKeyboardButton(text="⬅️ Admin panel", callback_data="admin_back")],
+            ]
+        ),
     )

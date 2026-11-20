@@ -1,70 +1,65 @@
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+import contextlib
 
-from aiogram import Router, F
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, PreCheckoutQuery, LabeledPrice, ContentType
-from aiogram import Bot
+from aiogram.types import CallbackQuery, ContentType, Message, PreCheckoutQuery
 
 from bot.config import settings
 from bot.models.user import User
-from bot.models.tariff import SignalTariff
+from bot.services.channel_service import get_course_invite_links, get_invite_link, get_signal_channel_id
+from bot.services.exchange_service import format_payment_with_uzs
+from bot.services.payment_service import create_crypto_invoice, create_payment, get_payment_by_id
+from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting
 from bot.services.subscription_service import (
+    create_subscription,
+    get_active_subscription_by_type,
     get_all_tariffs,
     get_tariff_by_id,
-    create_subscription,
-    get_active_subscription,
-    get_active_subscription_by_type,
 )
-from bot.services.payment_service import create_payment, get_payment_by_id
-from bot.services.channel_service import get_invite_link, get_course_invite_links, get_signal_channel_id
-from bot.services.promo_service import validate_promo, apply_promo
-from bot.services.user_service import add_referral_bonus_days
-from bot.services.settings_service import get_setting, get_admin_ids, get_enabled_payment_methods
+from bot.services.user_service import consume_referral_bonus_days
+from bot.utils.helpers import format_date, safe_edit, safe_send
 from bot.utils.keyboards import (
-    tariff_selection_kb,
-    payment_method_kb,
-    visa_payment_kb,
-    card_payment_kb,
-    tron_payment_kb,
-    bnb_payment_kb,
-    toncoin_payment_kb,
-    check_uploaded_kb,
-    cancel_upload_kb,
     admin_approval_kb,
+    bnb_payment_kb,
+    cancel_upload_kb,
+    card_payment_kb,
+    check_uploaded_kb,
     course_channels_kb,
-)
-from bot.utils.texts import (
-    SIGNAL_TEXT,
-    ALREADY_SUBSCRIBED_TEXT,
-    PAYMENT_METHOD_TEXT,
-    VISA_PAYMENT_TEXT,
-    VISA_UPLOAD_TEXT,
-    VISA_RECEIVED_TEXT,
-    STARS_SUCCESS_TEXT,
-    STARS_SUCCESS_COURSE_TEXT,
-    CARD_PAYMENT_TEXT,
-    CHECK_UPLOAD_TEXT,
-    CHECK_RECEIVED_TEXT,
-    TRON_PAYMENT_TEXT,
-    TRON_UPLOAD_TEXT,
-    TRON_RECEIVED_TEXT,
-    BNB_PAYMENT_TEXT,
-    BNB_UPLOAD_TEXT,
-    BNB_RECEIVED_TEXT,
-    PAYMENT_APPROVED_TEXT,
-    PAYMENT_APPROVED_COURSE_TEXT,
-    PAYMENT_REJECTED_TEXT,
-    ADMIN_PAYMENT_NOTIFICATION,
+    payment_method_kb,
+    tariff_selection_kb,
+    toncoin_payment_kb,
+    tron_payment_kb,
+    visa_payment_kb,
 )
 from bot.utils.states import PaymentStates
-from bot.utils.helpers import safe_edit, safe_send, format_date, calculate_discounted_price
-from bot.services.exchange_service import format_payment_with_uzs
+from bot.utils.texts import (
+    ADMIN_PAYMENT_NOTIFICATION,
+    ALREADY_SUBSCRIBED_TEXT,
+    BNB_PAYMENT_TEXT,
+    BNB_RECEIVED_TEXT,
+    CARD_PAYMENT_TEXT,
+    CHECK_RECEIVED_TEXT,
+    CHECK_UPLOAD_TEXT,
+    PAYMENT_METHOD_TEXT,
+    PAYMENT_REJECTED_TEXT,
+    SIGNAL_TEXT,
+    STARS_SUCCESS_COURSE_TEXT,
+    STARS_SUCCESS_TEXT,
+    TON_PAYMENT_TEXT,
+    TON_RECEIVED_TEXT,
+    TON_UPLOAD_TEXT,
+    TRON_PAYMENT_TEXT,
+    TRON_RECEIVED_TEXT,
+    VISA_PAYMENT_TEXT,
+    VISA_RECEIVED_TEXT,
+    VISA_UPLOAD_TEXT,
+)
 
 signal_router = Router()
 
 
 # ─── Helper: Send Signal Subscription Message ──────────────────────
+
 
 async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
     """Send the VIP signal subscription message with optional photo/video from DB settings."""
@@ -86,10 +81,8 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             await bot.send_video(chat_id=message.chat.id, video=signal_vid, caption=signal_msg, reply_markup=kb)
             sent = True
             if is_edit:
-                try:
+                with contextlib.suppress(Exception):
                     await message.delete()
-                except Exception:
-                    pass
         except Exception:
             pass  # Video ishlamadi — rasmga o'tamiz
 
@@ -98,10 +91,8 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             await bot.send_photo(chat_id=message.chat.id, photo=signal_img, caption=signal_msg, reply_markup=kb)
             sent = True
             if is_edit:
-                try:
+                with contextlib.suppress(Exception):
                     await message.delete()
-                except Exception:
-                    pass
         except Exception:
             pass  # Rasm ishlamadi — matnga o'tamiz
 
@@ -113,6 +104,7 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
 
 
 # ─── Signal Menu: Show Tariffs ─────────────────────────────────────
+
 
 @signal_router.message(F.text == "📈 Signal kanal")
 async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
@@ -133,6 +125,7 @@ async def back_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
 
 
 # ─── Select Tariff → Payment Method ────────────────────────────────
+
 
 @signal_router.callback_query(F.data.startswith("tariff_"))
 async def tariff_selected_handler(callback: CallbackQuery) -> None:
@@ -161,16 +154,13 @@ async def pay_method_handler(callback: CallbackQuery) -> None:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
     enabled_methods = await get_enabled_payment_methods()
-    text = (
-        f"📈 <b>{tariff.label}</b>\n\n"
-        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n"
-        f"{PAYMENT_METHOD_TEXT}"
-    )
+    text = f"📈 <b>{tariff.label}</b>\n\n💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n{PAYMENT_METHOD_TEXT}"
     await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
 
 # ─── Visa Payment ───────────────────────────────────────────────────
+
 
 @signal_router.callback_query(F.data.startswith("visa_"))
 async def visa_payment_handler(callback: CallbackQuery) -> None:
@@ -203,6 +193,7 @@ async def upload_visa_handler(callback: CallbackQuery, state: FSMContext) -> Non
 
 # ─── Stars Pre-Checkout & Successful Payment ──────────────────────────
 
+
 @signal_router.pre_checkout_query(lambda q: True)
 async def pre_checkout_handler(pre_checkout_q: PreCheckoutQuery) -> None:
     await pre_checkout_q.answer(ok=True)
@@ -213,7 +204,11 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
     payload = message.successful_payment.invoice_payload
     telegram_charge_id = message.successful_payment.telegram_payment_charge_id
     provider_charge_id = message.successful_payment.provider_payment_charge_id
-    total_amount = message.successful_payment.total_amount / 100
+    total_amount = message.successful_payment.total_amount
+    # XTR (Stars) butun yulduz birligida keladi — 100 ga bo'lish shart emas.
+    # Boshqa valyutalar (USD va h.k.) minimal birlikda keladi, ularni 100 ga bo'lamiz.
+    if message.successful_payment.currency != "XTR":
+        total_amount = total_amount / 100
 
     # Parse payload: signal_stars_{tariff_id} or course_stars_{tariff_id}
     parts = payload.split("_")
@@ -232,10 +227,9 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
     if product_type == "course":
         success_text = STARS_SUCCESS_COURSE_TEXT
         channels = await get_course_invite_links(bot)
-        bonus_days = user.referral_bonus_days or 0
-        if bonus_days > 0:
-            user.referral_bonus_days = 0
-        sub = await create_subscription(user.id, tariff, invite_link=channels[0]["link"] if channels else None, bonus_days=bonus_days)
+        bonus_days = await consume_referral_bonus_days(user.id, user.referral_bonus_days or 0)
+        first_link = channels[0]["link"] if channels else None
+        await create_subscription(user.id, tariff, invite_link=first_link, bonus_days=bonus_days)
 
         await create_payment(
             user_id=user.id,
@@ -262,11 +256,9 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
     invite_link = await get_invite_link(bot, channel_id) if channel_id else None
 
-    bonus_days = user.referral_bonus_days or 0
-    if bonus_days > 0:
-        user.referral_bonus_days = 0
+    bonus_days = await consume_referral_bonus_days(user.id, user.referral_bonus_days or 0)
 
-    sub = await create_subscription(user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
+    await create_subscription(user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
 
     await create_payment(
         user_id=user.id,
@@ -296,7 +288,7 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
                 "🎁 <b>Tabriklaymiz!</b>\n\n"
                 "6 oylik obuna sotib olganingiz uchun sizga <b>1 oylik Telegram Premium</b> sovg'a qilindi!\n\n"
                 f"Premium ni faollashtirish uchun havolaga o'ting:\n{gift_link}",
-                disable_web_page_preview=True
+                disable_web_page_preview=True,
             )
         else:
             await message.answer(
@@ -307,21 +299,20 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
             # Admin ga xabar yuborish
             admin_ids = await get_admin_ids()
             for admin_id in admin_ids:
-                try:
+                with contextlib.suppress(Exception):
                     await bot.send_message(
                         admin_id,
                         f"🎁 <b>Telegram Premium sovg'a!</b>\n\n"
                         f"👤 Foydalanuvchi: {user.full_name}\n"
                         f"🆔 ID: <code>{user.telegram_id}</code>\n\n"
-                        f"6 oylik obuna sotib oldi. Premium sovg'a linkini yuboring!"
+                        f"6 oylik obuna sotib oldi. Premium sovg'a linkini yuboring!",
                     )
-                except Exception:
-                    pass
 
 
 # ─── Card Payment ───────────────────────────────────────────────────
 
 # ─── Helper: refresh exchange rate ────────────────────────────────────
+
 
 async def _refresh_rate_and_reply(
     callback: CallbackQuery,
@@ -353,6 +344,7 @@ async def _refresh_rate_and_reply(
 
 
 # ─── Refresh Exchange Rate ────────────────────────────────────────────
+
 
 @signal_router.callback_query(F.data.startswith("refresh_card_"))
 async def refresh_card_rate_handler(callback: CallbackQuery) -> None:
@@ -471,7 +463,7 @@ async def receipt_received_handler(message: Message, user: User, state: FSMConte
             else (
                 TRON_RECEIVED_TEXT
                 if payment_method == "tron_trc20"
-                else CHECK_RECEIVED_TEXT
+                else (TON_RECEIVED_TEXT if payment_method == "toncoin" else CHECK_RECEIVED_TEXT)
             )
         )
     )
@@ -494,83 +486,82 @@ async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext, bot:
 
 # ─── TRON TRC20 Payment ──────────────────────────────────────────────
 
+
 @signal_router.callback_query(F.data.startswith("tron_"))
-async def tron_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def tron_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariff_id = callback.data.replace("tron_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    wallet_addr = await get_setting("ton_wallet_address") or settings.TON_WALLET_ADDRESS
-    qr_code = await get_setting("tron_qr_code")
-    if not wallet_addr:
+    # Avtomatik to'lov — noyob summa bilan invoice yaratamiz
+    try:
+        payment = await create_crypto_invoice(
+            user_id=user.id,
+            product_type=tariff.product_type or "signal",
+            product_id=tariff.id,
+            network="tron",
+            amount=float(tariff.price),
+        )
+    except ValueError:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
         return
 
-    text = TRON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    qr_code = await get_setting("tron_qr_code")
+    text = TRON_PAYMENT_TEXT.format(
+        wallet_address=payment.crypto_address,
+        amount=f"{float(payment.crypto_amount):.4f}",
+    )
+    kb = tron_payment_kb(tariff.id, payment.id)
     if qr_code:
         try:
-            await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=tron_payment_kb(tariff.id)
-            )
+            await callback.message.answer_photo(photo=qr_code, caption=text, reply_markup=kb)
             await callback.message.delete()
         except Exception:
-            await safe_edit(callback.message, text, reply_markup=tron_payment_kb(tariff.id))
+            await safe_edit(callback.message, text, reply_markup=kb)
     else:
-        await safe_edit(callback.message, text, reply_markup=tron_payment_kb(tariff.id))
+        await safe_edit(callback.message, text, reply_markup=kb)
     await callback.answer()
 
 
 # ─── BNB BEP20 Payment ──────────────────────────────────────────────
 
+
 @signal_router.callback_query(F.data.startswith("bnb_"))
-async def bnb_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def bnb_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariff_id = callback.data.replace("bnb_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    wallet_addr = await get_setting("bnb_wallet_address")
-    qr_code = await get_setting("bnb_qr_code")
-    if not wallet_addr:
+    try:
+        payment = await create_crypto_invoice(
+            user_id=user.id,
+            product_type=tariff.product_type or "signal",
+            product_id=tariff.id,
+            network="bnb",
+            amount=float(tariff.price),
+        )
+    except ValueError:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
         return
 
-    text = BNB_PAYMENT_TEXT.format(wallet_address=wallet_addr)
+    qr_code = await get_setting("bnb_qr_code")
+    text = BNB_PAYMENT_TEXT.format(
+        wallet_address=payment.crypto_address,
+        amount=f"{float(payment.crypto_amount):.4f}",
+    )
+    kb = bnb_payment_kb(tariff.id, payment.id)
     if qr_code:
         try:
-            await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=bnb_payment_kb(tariff.id)
-            )
+            await callback.message.answer_photo(photo=qr_code, caption=text, reply_markup=kb)
             await callback.message.delete()
         except Exception:
-            await safe_edit(callback.message, text, reply_markup=bnb_payment_kb(tariff.id))
+            await safe_edit(callback.message, text, reply_markup=kb)
     else:
-        await safe_edit(callback.message, text, reply_markup=bnb_payment_kb(tariff.id))
-    await callback.answer()
-
-
-@signal_router.callback_query(F.data.startswith("upload_tron_"))
-async def upload_tron_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    tariff_id = callback.data.replace("upload_tron_", "")
-    await state.set_state(PaymentStates.upload_receipt)
-    await state.update_data(tariff_id=tariff_id, payment_method="tron_trc20")
-    await safe_edit(callback.message, TRON_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
-    await callback.answer()
-
-
-@signal_router.callback_query(F.data.startswith("upload_bnb_"))
-async def upload_bnb_handler(callback: CallbackQuery, state: FSMContext) -> None:
-    tariff_id = callback.data.replace("upload_bnb_", "")
-    await state.set_state(PaymentStates.upload_receipt)
-    await state.update_data(tariff_id=tariff_id, payment_method="bnb")
-    await safe_edit(callback.message, BNB_UPLOAD_TEXT, reply_markup=cancel_upload_kb())
+        await safe_edit(callback.message, text, reply_markup=kb)
     await callback.answer()
 
 
@@ -591,11 +582,7 @@ async def toncoin_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
     text = TON_PAYMENT_TEXT.format(wallet_address=wallet_addr)
     if qr_code:
         try:
-            await callback.message.answer_photo(
-                photo=qr_code,
-                caption=text,
-                reply_markup=toncoin_payment_kb(tariff.id)
-            )
+            await callback.message.answer_photo(photo=qr_code, caption=text, reply_markup=toncoin_payment_kb(tariff.id))
             await callback.message.delete()
         except Exception:
             await safe_edit(callback.message, text, reply_markup=toncoin_payment_kb(tariff.id))
@@ -613,7 +600,60 @@ async def upload_toncoin_handler(callback: CallbackQuery, state: FSMContext) -> 
     await callback.answer()
 
 
+# ─── Kripto to'lovni qo'lda tekshirish ────────────────────────────
+
+
+@signal_router.callback_query(F.data.startswith("check_crypto_"))
+async def check_crypto_handler(callback: CallbackQuery, bot: Bot) -> None:
+    """Foydalanuvchi "To'lovni tekshirish" tugmasini bosganda darhol tekshiradi."""
+    payment_id = callback.data.replace("check_crypto_", "")
+    payment = await get_payment_by_id(payment_id)
+    if not payment:
+        await callback.answer("❌ To'lov topilmadi", show_alert=True)
+        return
+    if payment.status == "approved":
+        await callback.answer("✅ To'lov allaqachon tasdiqlangan", show_alert=True)
+        return
+    if payment.status != "pending":
+        await callback.answer("❌ To'lov muddati tugagan", show_alert=True)
+        return
+    if not payment.crypto_network:
+        await callback.answer("❌ Bu to'lov avtomatik emas", show_alert=True)
+        return
+
+    from bot.services.crypto_service import check_network_payments
+    from bot.services.payment_finalizer import finalize_crypto_payment
+
+    await callback.answer("🔎 Blokcheyn tekshirilmoqda...")
+
+    confirmed = await check_network_payments(payment.crypto_network, bot)
+    for item in confirmed:
+        if item["payment_id"] != payment_id:
+            continue
+        await finalize_crypto_payment(bot, item["payment_id"], item["tx_hash"])
+        await safe_edit(
+            callback.message,
+            "✅ <b>To'lov tasdiqlandi!</b>\n\n"
+            "Blokcheyndagi tranzaksiya aniqlandi va obuna avtomatik faollashtirildi.\n"
+            "Kanalga kirish havolasi yuborildi.",
+            reply_markup=None,
+        )
+        return
+
+    # Boshqa payment ham tasdiqlangan bo'lishi mumkin — ularni ham yakunlaymiz
+    for item in confirmed:
+        if item["payment_id"] != payment_id:
+            await finalize_crypto_payment(bot, item["payment_id"], item["tx_hash"])
+
+    await callback.answer(
+        "⏳ To'lov hali topilmadi. Tranzaksiya tasdiqlanishi 1-2 daqiqa olishi mumkin. "
+        "Birozdan so'ng qayta tekshiring.",
+        show_alert=True,
+    )
+
+
 # ─── Admin Approval Callbacks ──────────────────────────────────────
+
 
 @signal_router.callback_query(F.data.startswith("approve_"))
 async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
@@ -627,67 +667,22 @@ async def approve_payment_handler(callback: CallbackQuery, user: User, bot: Bot)
         await callback.answer("❌ To'lov topilmadi yoki allaqachon ko'rib chiqilgan", show_alert=True)
         return
 
+    from bot.services.payment_finalizer import finalize_payment
     from bot.services.payment_service import approve_payment as approve_pay
+
+    if payment.payment_method in {"crypto_pay", "tron_trc20", "bnb"}:
+        await callback.answer("Bu to'lov faqat avtomatik tekshiruv orqali tasdiqlanadi", show_alert=True)
+        return
+
     payment = await approve_pay(payment_id, user.telegram_id)
-
-    # Get tariff and user
-    tariff = await get_tariff_by_id(payment.product_id)
-    from bot.models.user import User as UserModel
-    from bot.database.session import get_session
-    from sqlalchemy import select
-    async with get_session() as session:
-        result = await session.execute(select(UserModel).where(UserModel.id == payment.user_id))
-        target_user = result.scalar_one_or_none()
-
-    if not target_user or not tariff:
+    if not payment:
         await callback.answer("❌ Xatolik", show_alert=True)
         return
 
-    # Determine channel and text based on product_type
-    product_type = payment.product_type or "signal"
-    bonus_days = target_user.referral_bonus_days or 0
-    if bonus_days > 0:
-        target_user.referral_bonus_days = 0
-
-    if product_type == "course":
-        channels = await get_course_invite_links(bot)
-        sub = await create_subscription(target_user.id, tariff, invite_link=channels[0]["link"] if channels else None, bonus_days=bonus_days)
-
-        # Build invite_links text for all 3 channels
-        invite_links_text = ""
-        if channels:
-            for ch in channels:
-                invite_links_text += f"\n🔗 <b>{ch['name']}</b> — <a href='{ch['link']}'>Kanalga kirish</a>"
-        text = PAYMENT_APPROVED_COURSE_TEXT.format(invite_links=invite_links_text)
-        if channels:
-            text += "\n\n⚠️ Har bir link faqat 1 marta ishlatilishi mumkin."
-            try:
-                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True, reply_markup=course_channels_kb(channels))
-            except Exception:
-                pass
-        else:
-            text += "\n\n❌ Linklar yaratilmadi"
-            try:
-                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
-            except Exception:
-                pass
-    else:
-        channel_id = await get_signal_channel_id(tariff=tariff)
-        approved_text = PAYMENT_APPROVED_TEXT
-        invite_link = await get_invite_link(bot, channel_id) if channel_id else None
-        sub = await create_subscription(target_user.id, tariff, invite_link=invite_link, bonus_days=bonus_days)
-
-        # Notify user
-        try:
-            text = approved_text
-            if invite_link:
-                text += f"\n\n🔗 <a href='{invite_link}'>Kanalga kirish</a>\n\n⚠️ Link faqat 1 marta ishlatilishi mumkin."
-                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
-            else:
-                text += "\n\n❌ Link yaratilmadi"
-                await bot.send_message(chat_id=target_user.telegram_id, text=text, disable_web_page_preview=True)
-        except Exception:
-            pass
+    ok = await finalize_payment(bot, payment)
+    if not ok:
+        await callback.answer("❌ Tarif yoki foydalanuvchi topilmadi", show_alert=True)
+        return
 
     # Update admin message
     await safe_edit(
@@ -711,21 +706,22 @@ async def reject_payment_handler(callback: CallbackQuery, user: User, bot: Bot) 
         return
 
     from bot.services.payment_service import reject_payment as reject_pay
+
     payment = await reject_pay(payment_id, user.telegram_id)
 
     # Notify user
-    from bot.models.user import User as UserModel
-    from bot.database.session import get_session
     from sqlalchemy import select
+
+    from bot.database.session import get_session
+    from bot.models.user import User as UserModel
+
     async with get_session() as session:
         result = await session.execute(select(UserModel).where(UserModel.id == payment.user_id))
         target_user = result.scalar_one_or_none()
 
     if target_user:
-        try:
+        with contextlib.suppress(Exception):
             await bot.send_message(chat_id=target_user.telegram_id, text=PAYMENT_REJECTED_TEXT)
-        except Exception:
-            pass
 
     await safe_edit(
         callback.message,

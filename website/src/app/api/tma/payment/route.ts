@@ -1,124 +1,197 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
 import { sendAdminPaymentNotification } from '@/lib/tma/telegram';
+import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
+import { createCryptoPayInvoice, isCryptoPayAvailable } from '@/lib/tma/cryptopay';
+import { randomUUID } from 'node:crypto';
+
+export const runtime = 'nodejs';
+
+// Blokcheyn orqali AVTOMATIK tekshiriladigan usullar (bot tomonidagi poller)
+const AUTO_CRYPTO_METHODS: Record<string, 'tron' | 'bnb'> = {
+  tron_trc20: 'tron',
+  bnb: 'bnb',
+};
+const CRYPTO_PAY_METHOD = 'crypto_pay';
+
+const CRYPTO_WALLET_SETTING: Record<string, string> = {
+  tron: 'tron_wallet_address',
+  bnb: 'bnb_wallet_address',
+};
+
+async function getSetting(key: string): Promise<string> {
+  const res = await query(`SELECT value FROM ${TABLES.settings} WHERE key = $1 LIMIT 1`, [key]);
+  return res.rows[0]?.value || '';
+}
+
+/**
+ * Noyob kripto summa yaratadi (masalan $25 → 25.0137).
+ * Blokcheyndagi transfer aynan shu summa bo'yicha invoice'ga bog'lanadi.
+ */
+async function generateUniqueCryptoAmount(base: number): Promise<number> {
+  for (let i = 0; i < 50; i++) {
+    const candidate = Math.round((base + Math.floor(Math.random() * 9999 + 1) / 10000) * 10000) / 10000;
+    const existing = await query(
+      `SELECT id FROM ${TABLES.payments}
+       WHERE crypto_amount = $1 AND status = 'pending' AND crypto_network IS NOT NULL
+       LIMIT 1`,
+      [candidate]
+    );
+    if (existing.rows.length === 0) return candidate;
+  }
+  return Math.round(base * 10000) / 10000;
+}
 
 export async function POST(request: Request) {
   try {
-    const { userId, productType, productId, amount, paymentMethod, photoFileId } = await request.json();
+    // Identifikatsiya initData dan — client yuborgan userId ga ishonmaymiz
+    const auth = await getAuthenticatedUser(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const userId = auth.user.id;
 
-    if (!userId || !productId || !amount || !paymentMethod) {
+    const { productId, paymentMethod, photoFileId } = await request.json();
+
+    if (!productId || !paymentMethod) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Create a payment record (pending, needs admin approval for card methods)
-    const isAutoApprove = paymentMethod === 'stars';
-    const status = isAutoApprove ? 'approved' : 'pending';
+    // Faqat qo'llab-quvvatlanadigan karta/kripto usullari
+    const ALLOWED_METHODS = new Set(['card', 'visa', 'tron_trc20', 'bnb', 'toncoin', CRYPTO_PAY_METHOD]);
+    if (!ALLOWED_METHODS.has(paymentMethod)) {
+      return NextResponse.json({ error: "Noto'g'ri to'lov usuli" }, { status: 400 });
+    }
 
-    const result = await query(
-      `INSERT INTO ${TABLES.payments} 
-       (id, user_id, product_type, product_id, amount, currency, payment_method, status, discount, photo_file_id, created_at)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, 0, $8, NOW())
-       RETURNING *`,
-      [userId, productType, productId, amount, 'USD', paymentMethod, status, photoFileId || null]
+    // Stars to'lovi Telegram tomonidan botga yuboriladigan successful_payment orqali
+    // tasdiqlanadi (bot/handlers/signals.py). Bu endpoint orqali faollashtirilmaydi.
+    // Tarifni tekshiramiz va NARXNI SERVER TOMONDA hisoblaymiz (client amount ga ishonmaymiz)
+    const tariffRes = await query(
+      `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 AND is_active = true LIMIT 1`,
+      [productId]
     );
+    const tariff = tariffRes.rows[0];
+    if (!tariff) {
+      return NextResponse.json({ error: 'Tarif topilmadi' }, { status: 404 });
+    }
+    const amount = parseFloat(tariff.price);
+    // Mahsulot turi faqat tarifdan olinadi — client yuborgan productType ga ishonmaymiz
+    // (aks holda 'course' tarifni 'signal' deb belgilash mumkin bo'ladi).
+    const resolvedProductType = tariff.product_type;
 
-    const payment = result.rows[0];
+    if (paymentMethod === CRYPTO_PAY_METHOD && !isCryptoPayAvailable()) {
+      return NextResponse.json({ error: 'Crypto Pay mavjud emas' }, { status: 400 });
+    }
 
-    // If auto-approved (stars), create or EXTEND subscription
-    if (isAutoApprove) {
-      const tariffResult = await query(
-        `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
-        [productId]
+    if (paymentMethod === CRYPTO_PAY_METHOD) {
+      const existing = await query(
+        `SELECT id, status, provider_charge_id, telegram_charge_id, crypto_expires_at
+         FROM ${TABLES.payments}
+         WHERE user_id = $1 AND product_id = $2 AND payment_method = $3
+           AND status = 'pending' AND crypto_expires_at > NOW()
+           AND telegram_charge_id IS NOT NULL
+         ORDER BY created_at DESC LIMIT 1`,
+        [userId, productId, CRYPTO_PAY_METHOD]
       );
-      const tariff = tariffResult.rows[0];
-
-      if (tariff) {
-        // Get user's bonus days
-        const userResult = await query(
-          `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
-          [userId]
-        );
-        const user = userResult.rows[0];
-        const bonusDays = user?.referral_bonus_days || 0;
-
-        if (bonusDays > 0) {
-          await query(
-            `UPDATE ${TABLES.users} SET referral_bonus_days = 0 WHERE id = $1`,
-            [userId]
-          );
-        }
-
-        // Duration: prefer duration_days (1-day / 1-week tariffs), else months
-        const tariffDays = tariff.duration_days || (tariff.duration_months || 0) * 30;
-        const totalDays = tariffDays + bonusDays;
-
-        // Existing ACTIVE subscription of the same product type? → EXTEND it (no duplicates)
-        const existingRes = await query(
-          `SELECT s.* FROM ${TABLES.subscriptions} s
-           JOIN ${TABLES.tariffs} t ON s.tariff_id = t.id
-           WHERE s.user_id = $1 AND s.status = 'active' AND t.product_type = $2
-           ORDER BY s.end_date DESC LIMIT 1`,
-          [userId, productType]
-        );
-        const existingSub = existingRes.rows[0];
-
-        if (existingSub) {
-          // Uzaytirish: joriy end_date ga kunlarni qo'shamiz, eslatma flaglarini reset qilamiz.
-          // Agar end_date allaqachon o'tib ketgan bo'lsa (eski aktiv qator, hali expire bo'lmagan)
-          // — bazani hozirgi vaqtdan boshlaymiz, aks holda foydalanuvchi kunlardan yutqazadi.
-          const baseTime = Math.max(Date.now(), new Date(existingSub.end_date).getTime());
-          const newEnd = new Date(baseTime + totalDays * 24 * 60 * 60 * 1000);
-          await query(
-            `UPDATE ${TABLES.subscriptions}
-             SET end_date = $1,
-                 reminder_7_sent = false,
-                 reminder_3_sent = false,
-                 reminder_1_sent = false
-             WHERE id = $2`,
-            [newEnd.toISOString(), existingSub.id]
-          );
-        } else {
-          // Yangi obuna
-          const startDate = new Date().toISOString();
-          const endDate = new Date(
-            Date.now() + totalDays * 24 * 60 * 60 * 1000
-          ).toISOString();
-
-          await query(
-            `INSERT INTO ${TABLES.subscriptions} 
-             (id, user_id, tariff_id, status, start_date, end_date, auto_renew, reminder_7_sent, reminder_3_sent, reminder_1_sent)
-             VALUES (gen_random_uuid()::text, $1, $2, 'active', $3, $4, false, false, false, false)`,
-            [userId, productId, startDate, endDate]
-          );
-        }
+      if (existing.rows[0]) {
+        const payment = existing.rows[0];
+        return NextResponse.json({
+          payment: {
+            id: payment.id,
+            status: payment.status,
+            cryptoPay: true,
+            providerInvoiceId: String(payment.provider_charge_id),
+            providerInvoiceUrl: payment.telegram_charge_id,
+          },
+        });
       }
     }
 
-    // Adminlarga Telegram xabar yuboramiz (karta/chek to'lovlar uchun) —
-    // admin tugmani bossa, BOT to'liq oqimni bajaradi (invite link + obuna + xabar)
-    if (!isAutoApprove) {
+    // Karta/kripto to'lovlari har doim 'pending'.
+    // TRON/BNB uchun noyob summa beriladi — bot blokcheyndagi tranzaksiyani
+    // shu summa bo'yicha topib, to'lovni AVTOMATIK tasdiqlaydi.
+    const network = AUTO_CRYPTO_METHODS[paymentMethod];
+    let cryptoAmount: number | null = null;
+    let cryptoAddress: string | null = null;
+    let cryptoExpiresAt: Date | null = null;
+
+    if (network) {
+      cryptoAddress = await getSetting(CRYPTO_WALLET_SETTING[network]);
+      if (!cryptoAddress) {
+        return NextResponse.json({ error: `${network.toUpperCase()} wallet sozlanmagan` }, { status: 400 });
+      }
+      cryptoAmount = await generateUniqueCryptoAmount(amount);
+      cryptoExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    }
+
+    const paymentId = randomUUID();
+    const cryptoPayExpiresAt = paymentMethod === CRYPTO_PAY_METHOD
+      ? new Date(Date.now() + 60 * 60 * 1000)
+      : null;
+    const result = await query(
+      `INSERT INTO ${TABLES.payments} 
+       (id, user_id, product_type, product_id, amount, currency, payment_method, status, discount, photo_file_id,
+        crypto_network, crypto_address, crypto_amount, crypto_expires_at, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11, $12, $13, NOW())
+       RETURNING *`,
+      [
+        paymentId, userId, resolvedProductType, productId, amount, 'USD', paymentMethod, 'pending',
+        photoFileId || null, network || null, cryptoAddress, cryptoAmount,
+        cryptoPayExpiresAt || cryptoExpiresAt,
+      ]
+    );
+
+    let payment = result.rows[0];
+
+    if (paymentMethod === CRYPTO_PAY_METHOD) {
       try {
-        const userResult = await query(
-          `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
-          [userId]
+        const invoice = await createCryptoPayInvoice(String(tariff.price), paymentId);
+        const updated = await query(
+          `UPDATE ${TABLES.payments}
+           SET provider_charge_id = $1, telegram_charge_id = $2
+           WHERE id = $3 AND status = 'pending'
+           RETURNING *`,
+          [String(invoice.invoice_id), invoice.bot_invoice_url, paymentId]
         );
-        const tariffResult = await query(
-          `SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`,
-          [productId]
-        );
-        await sendAdminPaymentNotification(
-          result.rows[0],
-          userResult.rows[0],
-          tariffResult.rows[0]
-        );
+        payment = updated.rows[0] || payment;
+      } catch {
+        await query(`UPDATE ${TABLES.payments} SET status = 'failed' WHERE id = $1 AND status = 'pending'`, [paymentId]);
+        return NextResponse.json({ error: 'Crypto Pay invoice yaratilmadi' }, { status: 502 });
+      }
+    }
+
+    // Adminlarga Telegram xabar faqat QO'LDA tasdiqlanadigan usullar uchun.
+    // Avtomatik kripto to'lovlar blokcheyndan tekshirilib, adminlarga natija
+    // haqida alohida xabar boradi (bot/services/payment_finalizer.py).
+    if (!network && paymentMethod !== CRYPTO_PAY_METHOD) {
+      try {
+        const userResult = await query(`SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`, [userId]);
+        const tariffResult = await query(`SELECT * FROM ${TABLES.tariffs} WHERE id = $1 LIMIT 1`, [productId]);
+        await sendAdminPaymentNotification(result.rows[0], userResult.rows[0], tariffResult.rows[0]);
       } catch (e) {
         console.error('Admin payment notification failed:', e);
       }
     }
 
-    return NextResponse.json({ payment: { ...payment, id: payment.id } }, { status: 201 });
-  } catch (error: any) {
+    return NextResponse.json(
+      {
+        payment: {
+          ...payment,
+          id: payment.id,
+          cryptoNetwork: network || null,
+          cryptoAddress,
+          cryptoAmount,
+           autoVerify: Boolean(network),
+          cryptoPay: paymentMethod === CRYPTO_PAY_METHOD,
+          providerInvoiceId: payment.provider_charge_id || null,
+          providerInvoiceUrl: payment.telegram_charge_id || null,
+          cryptoExpiresAt: payment.crypto_expires_at || null,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
     console.error('Failed to create payment:', error);
-    return NextResponse.json({ error: error?.message }, { status: 500 });
+    return NextResponse.json({ error: 'To\'lovni yaratib bo\'lmadi' }, { status: 500 });
   }
 }

@@ -1,9 +1,9 @@
-import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from bot.models.subscription import Subscription
+import pytest
+
 from bot.database.engine import async_session_factory
-from sqlalchemy import select
+from bot.models.subscription import Subscription
 
 
 @pytest.mark.asyncio
@@ -48,18 +48,18 @@ async def test_expire_subscription(sample_user, sample_tariff):
     await expire_subscription(sub.id)
 
     from bot.services.subscription_service import get_active_subscription
+
     active = await get_active_subscription(sample_user.id)
     assert active is None
 
 
 @pytest.mark.asyncio
 async def test_expire_all_expired_subscriptions(sample_user, sample_tariff):
-    from bot.services.subscription_service import create_subscription, expire_all_expired_subscriptions
-    from bot.database.engine import async_session_factory
+    from bot.services.subscription_service import expire_all_expired_subscriptions
 
     # Create a subscription with past end_date
     async with async_session_factory() as session:
-        past = datetime.now(timezone.utc) - timedelta(days=10)
+        past = datetime.now(UTC) - timedelta(days=10)
         sub = Subscription(
             user_id=sample_user.id,
             tariff_id=sample_tariff.id,
@@ -78,17 +78,17 @@ async def test_expire_all_expired_subscriptions(sample_user, sample_tariff):
 
 @pytest.mark.asyncio
 async def test_extend_subscription(sample_user, sample_tariff):
+
     from bot.services.subscription_service import create_subscription, extend_subscription
-    from datetime import timezone as tz
 
     sub = await create_subscription(sample_user.id, sample_tariff)
     original_end = sub.end_date
     if original_end.tzinfo is None:
-        original_end = original_end.replace(tzinfo=tz.utc)
+        original_end = original_end.replace(tzinfo=UTC)
     extended = await extend_subscription(sample_user.id, 7)
     assert extended is not None
     if extended.end_date.tzinfo is None:
-        extended.end_date = extended.end_date.replace(tzinfo=tz.utc)
+        extended.end_date = extended.end_date.replace(tzinfo=UTC)
     assert extended.end_date > original_end
     diff = (extended.end_date - original_end).days
     assert diff == 7

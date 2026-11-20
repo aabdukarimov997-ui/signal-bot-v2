@@ -1,17 +1,14 @@
-from typing import Optional
-
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 
-from bot.config import settings
 from bot.models.user import User
 from bot.services.settings_service import get_admin_ids
 from bot.services.subscription_service import get_all_tariffs, get_tariff_by_id
-from bot.utils.keyboards import admin_tariffs_kb, skip_channel_kb
-from bot.utils.texts import ADMIN_TARIFFS_TEXT
-from bot.utils.states import AdminAddTariffStates, AdminEditTariffStates
 from bot.utils.helpers import safe_edit
+from bot.utils.keyboards import admin_tariffs_kb, skip_channel_kb
+from bot.utils.states import AdminAddTariffStates, AdminEditTariffStates
+from bot.utils.texts import ADMIN_TARIFFS_TEXT
 
 admin_tariffs_router = Router()
 
@@ -37,21 +34,20 @@ async def admin_tariff_detail_handler(callback: CallbackQuery, user: User) -> No
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    from sqlalchemy import select
+
     from bot.database.session import get_session
-    from sqlalchemy import select, update
 
     # Toggle active status
     async with get_session() as session:
-        result = await session.execute(
-            select(type(tariff)).where(type(tariff).id == tariff_id)
-        )
+        result = await session.execute(select(type(tariff)).where(type(tariff).id == tariff_id))
         t = result.scalar_one_or_none()
         if t:
             t.is_active = not t.is_active
 
     tariffs = await get_all_tariffs()
     await safe_edit(callback.message, ADMIN_TARIFFS_TEXT, reply_markup=admin_tariffs_kb(tariffs))
-    await callback.answer(f"✅ Tarif holati o'zgartirildi" if tariff.is_active else "❌ Tarif o'chirildi")
+    await callback.answer("✅ Tarif holati o'zgartirildi" if tariff.is_active else "❌ Tarif o'chirildi")
 
 
 @admin_tariffs_router.callback_query(F.data == "admin_add_tariff")
@@ -71,13 +67,15 @@ async def admin_add_tariff_name(message: Message, state: FSMContext) -> None:
         return
     await state.update_data(name=message.text.strip() or "—")
     await state.set_state(AdminAddTariffStates.waiting_duration)
-    await message.answer("📅 <b>Tarif muddatini kiriting:</b>\n\n"
+    await message.answer(
+        "📅 <b>Tarif muddatini kiriting:</b>\n\n"
         "Formatlar:\n"
         "• <code>1 oy</code> — oylik tarif\n"
         "• <code>7 kun</code> — kunlik tarif\n"
         "• <code>14 kun</code> — ikki haftalik\n"
         "• <code>3 oy</code> — uch oylik\n"
-        "\nMasalan: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>")
+        "\nMasalan: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>"
+    )
 
 
 @admin_tariffs_router.message(AdminAddTariffStates.waiting_duration)
@@ -90,9 +88,12 @@ async def admin_add_tariff_duration(message: Message, state: FSMContext) -> None
 
     # Parse: "7 kun" or "1 oy" or "14 kun" or "3 oy"
     import re
+
     match = re.match(r"^(\d+)\s*(oy|kun)$", text)
     if not match:
-        await message.answer("❌ Iltimos, to'g'ri formatda yozing: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>")
+        await message.answer(
+            "❌ Iltimos, to'g'ri formatda yozing: <code>1 oy</code>, <code>7 kun</code>, <code>14 kun</code>"
+        )
         return
 
     value = int(match.group(1))
@@ -155,16 +156,17 @@ async def admin_add_tariff_channel_skip(callback: CallbackQuery, state: FSMConte
     await _save_new_tariff(state, None, callback.message)
 
 
-async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Message) -> None:
+async def _save_new_tariff(state: FSMContext, channel_id: str | None, msg: Message) -> None:
     data = await state.get_data()
     name = data.get("name", f"{data.get('duration_months', 1)} oy")
     duration_months = data.get("duration_months", 1)
     duration_days = data.get("duration_days")
     price = data.get("price", 0)
 
+    from sqlalchemy import func, select
+
     from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
-    from sqlalchemy import select, func
 
     async with get_session() as session:
         result = await session.execute(select(func.max(SignalTariff.sort_order)))
@@ -185,10 +187,7 @@ async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Me
     duration_str = f"{duration_days} kun" if duration_days else f"{duration_months} oy"
     channel_info = f"\n🔗 Kanal: <code>{channel_id}</code>" if channel_id else ""
     await msg.answer(
-        f"✅ <b>Tarif qo'shildi!</b>\n\n"
-        f"📛 Nomi: {name}\n"
-        f"💰 Narx: ${price:.0f}\n"
-        f"📅 Muddat: {duration_str}{channel_info}"
+        f"✅ <b>Tarif qo'shildi!</b>\n\n📛 Nomi: {name}\n💰 Narx: ${price:.0f}\n📅 Muddat: {duration_str}{channel_info}"
     )
 
     # Show updated tariffs
@@ -197,6 +196,7 @@ async def _save_new_tariff(state: FSMContext, channel_id: Optional[str], msg: Me
 
 
 # ─── Edit Tariff ─────────────────────────────────────────────────────
+
 
 @admin_tariffs_router.callback_query(F.data.startswith("edit_tariff_"))
 async def admin_edit_tariff_start(callback: CallbackQuery, state: FSMContext) -> None:
@@ -242,8 +242,16 @@ async def admin_edit_tariff_field(message: Message, state: FSMContext) -> None:
     prompts = {
         "name": "📝 <b>Yangi tarif nomini kiriting:</b>\nMasalan: 1 oy",
         "price": "💰 <b>Yangi narxni kiriting ($):</b>\nMasalan: 30",
-        "duration": "📅 <b>Yangi muddatni kiriting:</b>\n\nFormatlar:\n• <code>1 oy</code> — oylik\n• <code>7 kun</code> — kunlik\n\nMasalan: <code>1 oy</code>, <code>7 kun</code>",
-        "channel": "🔗 <b>Maxfiy kanal ID kiriting:</b>\nMasalan: -1002271613164\n(Kanal ID @username_infobot'dan oling)\n\n⚠️ Bo'sh yuborsangiz — umumiy kanal (private_channel_id) ishlatiladi",
+        "duration": (
+            "📅 <b>Yangi muddatni kiriting:</b>\n\nFormatlar:\n"
+            "• <code>1 oy</code> — oylik\n• <code>7 kun</code> — kunlik\n\n"
+            "Masalan: <code>1 oy</code>, <code>7 kun</code>"
+        ),
+        "channel": (
+            "🔗 <b>Maxfiy kanal ID kiriting:</b>\nMasalan: -1002271613164\n"
+            "(Kanal ID @username_infobot'dan oling)\n\n"
+            "⚠️ Bo'sh yuborsangiz — umumiy kanal (private_channel_id) ishlatiladi"
+        ),
     }
     await state.set_state(AdminEditTariffStates.waiting_value)
     await message.answer(prompts[field])
@@ -277,6 +285,7 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
             return
     elif field == "duration":
         import re
+
         match = re.match(r"^(\d+)\s*(oy|kun)$", message.text.strip().lower())
         if not match:
             await message.answer("❌ Iltimos, to'g'ri formatda yozing: <code>1 oy</code>, <code>7 kun</code>")
@@ -287,7 +296,7 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
             await message.answer("❌ Muddat 1 dan kichik bo'lishi mumkin emas.")
             return
         new_value = value
-        is_days = (unit == "kun")
+        is_days = unit == "kun"
     elif field == "channel":
         new_value = message.text.strip() or None  # Empty → None (use global channel)
     else:
@@ -295,8 +304,9 @@ async def admin_edit_tariff_value(message: Message, state: FSMContext) -> None:
         await state.clear()
         return
 
-    from bot.database.session import get_session
     from sqlalchemy import select
+
+    from bot.database.session import get_session
     from bot.models.tariff import SignalTariff
 
     async with get_session() as session:

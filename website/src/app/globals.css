@@ -313,6 +313,13 @@
       inset 0 0 24px rgba(46, 230, 168, 0.03);
   }
 
+  .border-glow-gold {
+    box-shadow:
+      0 0 34px rgba(212, 167, 44, 0.14),
+      0 0 70px rgba(212, 167, 44, 0.06),
+      inset 0 0 24px rgba(212, 167, 44, 0.03);
+  }
+
   .glass-emerald {
     background: var(--glass-emerald-bg);
     backdrop-filter: blur(20px);

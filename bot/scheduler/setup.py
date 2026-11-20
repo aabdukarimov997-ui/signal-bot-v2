@@ -4,8 +4,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-from bot.config import settings
-
 scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
 
 
@@ -15,32 +13,50 @@ async def setup_scheduler(bot) -> None:  # type: ignore[no-untyped-def]
     @scheduler.scheduled_job(CronTrigger(hour=0, minute=0))
     async def expire_job():
         from bot.scheduler.jobs import expire_subscriptions_job
+
         await expire_subscriptions_job(bot)
 
     @scheduler.scheduled_job(CronTrigger(hour=9, minute=0))
     async def reminder_job():
         from bot.scheduler.jobs import send_expiry_reminders_job
+
         await send_expiry_reminders_job(bot)
 
     @scheduler.scheduled_job(IntervalTrigger(hours=6))
     async def verify_membership_job():
         from bot.scheduler.jobs import verify_channel_membership_job
+
         await verify_channel_membership_job(bot)
 
     @scheduler.scheduled_job(CronTrigger(hour=3, minute=0))
     async def purge_job():
         from bot.scheduler.jobs import purge_non_subscribers_job
+
         await purge_non_subscribers_job(bot)
+
+    # Kripto to'lovlar — har 60 soniyada blokcheyndan tekshirish
+    from bot.services.settings_service import get_setting as _get_setting
+
+    poll_raw = await _get_setting("crypto_poll_seconds")
+    poll_seconds = int(poll_raw) if poll_raw and poll_raw.isdigit() and int(poll_raw) >= 15 else 60
+
+    @scheduler.scheduled_job(IntervalTrigger(seconds=poll_seconds), max_instances=1, coalesce=True)
+    async def crypto_check_job():
+        from bot.scheduler.jobs import check_crypto_payments_job
+
+        await check_crypto_payments_job(bot)
 
     # Marketing job — obuna olmaganlarga xabar
     # Interval marketing_interval_hooks DB sozlamasidan olinadi
     from bot.services.settings_service import get_setting
+
     marketing_hours_str = await get_setting("marketing_interval_hours")
     marketing_hours = int(marketing_hours_str) if marketing_hours_str and marketing_hours_str.isdigit() else 3
 
     @scheduler.scheduled_job(IntervalTrigger(hours=marketing_hours))
     async def marketing_job():
         from bot.scheduler.jobs import send_marketing_job
+
         await send_marketing_job(bot)
 
 

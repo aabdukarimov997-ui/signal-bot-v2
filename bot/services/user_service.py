@@ -1,12 +1,16 @@
-from typing import Optional
-
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from bot.database.session import get_session
 from bot.models.user import User
 
 
-async def get_user_by_telegram_id(telegram_id: int) -> Optional[User]:
+async def get_user_by_id(user_id: str) -> User | None:
+    async with get_session() as session:
+        result = await session.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
+
+
+async def get_user_by_telegram_id(telegram_id: int) -> User | None:
     async with get_session() as session:
         result = await session.execute(select(User).where(User.telegram_id == telegram_id))
         return result.scalar_one_or_none()
@@ -15,8 +19,8 @@ async def get_user_by_telegram_id(telegram_id: int) -> Optional[User]:
 async def create_user(
     telegram_id: int,
     full_name: str,
-    username: Optional[str] = None,
-    referred_by: Optional[str] = None,
+    username: str | None = None,
+    referred_by: str | None = None,
 ) -> User:
     async with get_session() as session:
         user = User(
@@ -34,7 +38,7 @@ async def create_user(
 async def get_or_create_user(
     telegram_id: int,
     full_name: str,
-    username: Optional[str] = None,
+    username: str | None = None,
 ) -> User:
     user = await get_user_by_telegram_id(telegram_id)
     if user:
@@ -45,9 +49,7 @@ async def get_or_create_user(
 async def update_user_activity(telegram_id: int) -> None:
     async with get_session() as session:
         await session.execute(
-            User.__table__.update()
-            .where(User.telegram_id == telegram_id)
-            .values(last_activity=func.now())
+            User.__table__.update().where(User.telegram_id == telegram_id).values(last_activity=func.now())
         )
 
 
@@ -91,9 +93,21 @@ async def add_referral_bonus_days(user_id: str, days: int) -> None:
             user.referral_bonus_days = (user.referral_bonus_days or 0) + days
 
 
+async def consume_referral_bonus_days(user_id: str, days: int) -> int:
+    """Bonus kunlarni OLADI va 0 ga tushiradi (commit bilan). Qaytadi: ishlatilgan kunlar."""
+    async with get_session() as session:
+        result = await session.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            return 0
+        available = max(user.referral_bonus_days or 0, 0)
+        used = min(available, days) if days and days > 0 else 0
+        if used > 0:
+            user.referral_bonus_days = available - used
+        return used
+
+
 async def get_all_user_telegram_ids() -> list[int]:
     async with get_session() as session:
-        result = await session.execute(
-            select(User.telegram_id).where(User.is_banned == False)
-        )
+        result = await session.execute(select(User.telegram_id).where(User.is_banned.is_(False)))
         return list(result.scalars().all())

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -15,7 +14,7 @@ class Subscription(BaseMixin, Base):
     start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="active")  # active, expired, cancelled
-    invite_link: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    invite_link: Mapped[str | None] = mapped_column(Text, nullable=True)
     auto_renew: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Reminder tracking flags — 7, 3, 1 kun qolgan eslatmalar bir marta yuboriladi

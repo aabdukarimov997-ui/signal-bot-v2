@@ -15,6 +15,7 @@ export async function GET(request: Request) {
       id: t.id,
       name: t.name,
       durationMonths: t.duration_months,
+      durationDays: t.duration_days ?? null,
       price: parseFloat(t.price),
       starsPrice: t.stars_price || parseFloat(t.price) * 50,
       isActive: t.is_active,

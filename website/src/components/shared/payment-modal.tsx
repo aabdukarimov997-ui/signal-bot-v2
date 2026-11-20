@@ -13,10 +13,24 @@ interface Tariff {
   id: string;
   name: string;
   durationMonths: number;
+  durationDays?: number | null;
   price: number;
   starsPrice: number;
   isActive: boolean;
   productType: string;
+}
+
+function formatTariffDuration(t: Tariff): string {
+  if (t.durationDays) {
+    const d = t.durationDays;
+    if (d === 1) return '1 kun';
+    if (d === 7) return '1 hafta';
+    if (d === 14) return '2 hafta';
+    if (d % 7 === 0) return `${d / 7} hafta`;
+    return `${d} kun`;
+  }
+  if (t.durationMonths > 0) return `${t.durationMonths} oy`;
+  return 'Doimiy';
 }
 
 type PaymentMethod = 'card' | 'visa' | 'tron_trc20' | 'bnb' | 'toncoin';
@@ -270,7 +284,7 @@ export default function PaymentModal({
                       <div>
                         <p className="text-sm font-semibold text-foreground">{t.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {t.durationMonths > 0 ? `${t.durationMonths} oy` : 'Doimiy'}
+                          {formatTariffDuration(t)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

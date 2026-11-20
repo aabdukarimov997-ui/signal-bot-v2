@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
 
 export const runtime = 'nodejs';
 
@@ -7,6 +8,11 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 
 export async function POST(request: Request) {
   try {
+    const auth = await getAuthenticatedUser(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { tariffId } = await request.json();
     if (!tariffId) {
       return NextResponse.json({ error: 'tariffId required' }, { status: 400 });
@@ -24,9 +30,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tarif topilmadi' }, { status: 404 });
     }
 
-    // Stars narxi: sozlangan bo'lsa (signal_stars_X_month), aks holda price * 50
+    // Stars narxi: sozlangan bo'lsa (signal_stars_X_month / course_stars_X_month),
+    // aks holda price * 50. Kalit prefiksi mahsulot turiga mos bo'lishi shart.
     let starsAmount = 0;
-    const monthsKey = tariff.duration_months ? `signal_stars_${tariff.duration_months}_month` : null;
+    const productPrefix = tariff.product_type === 'course' ? 'course' : 'signal';
+    const monthsKey = tariff.duration_months
+      ? `${productPrefix}_stars_${tariff.duration_months}_month`
+      : null;
     if (monthsKey) {
       const s = await query(`SELECT value FROM ${TABLES.settings} WHERE key = $1 LIMIT 1`, [monthsKey]);
       const v = s.rows[0]?.value;
@@ -37,16 +47,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Stars narxi sozlanmagan' }, { status: 400 });
     }
 
+    const productLabel = tariff.product_type === 'course' ? 'Kurs' : 'Signal';
     const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: `📈 ${tariff.name || 'Signal obuna'}`,
-        description: `Signal kanaliga ${tariff.name || 'obuna'}`,
-        payload: `signal_stars_${tariff.id}`,
+        title: `📈 ${tariff.name || `${productLabel} obuna`}`,
+        description: `${productLabel} kanaliga ${tariff.name || 'obuna'}`,
+        payload: `${productPrefix}_stars_${tariff.id}`,
         provider_token: '',
         currency: 'XTR',
-        prices: [{ label: tariff.name || 'Signal', amount: starsAmount }],
+        prices: [{ label: tariff.name || productLabel, amount: starsAmount }],
       }),
     });
     const data = await r.json();

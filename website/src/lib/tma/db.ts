@@ -42,17 +42,20 @@ export const TABLES = {
   subscriptions: 'subscriptions',
   payments: 'payments',
   settings: 'project_settings',
-  promoCodes: 'promo_codes',
+  promoCodes: 'promocodes',
   referralStats: 'referral_stats',
   contactMessages: 'contact_messages',
 };
 
 export interface BotUser {
-  id: number;
+  id: string;
   telegram_id: string;
   full_name: string;
   username?: string;
+  language?: string;
   is_banned: boolean;
+  is_admin?: boolean;
+  referral_code?: string;
   referred_by?: string;
   referral_bonus_days: number;
   created_at: Date;
@@ -60,7 +63,7 @@ export interface BotUser {
 }
 
 export interface BotTariff {
-  id: number;
+  id: string;
   name: string;
   duration_months: number;
   price: number;
@@ -71,9 +74,9 @@ export interface BotTariff {
 }
 
 export interface BotSubscription {
-  id: number;
-  user_id: number;
-  tariff_id: number;
+  id: string;
+  user_id: string;
+  tariff_id: string;
   status: string; // 'active' | 'expired' | 'cancelled'
   start_date: Date;
   end_date: Date;
@@ -85,10 +88,10 @@ export interface BotSubscription {
 }
 
 export interface BotPayment {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   product_type: string;
-  product_id: number;
+  product_id: string;
   amount: number;
   currency: string;
   payment_method: string;
@@ -104,15 +107,15 @@ export interface BotPayment {
 }
 
 export interface BotSetting {
-  id: number;
+  id: string;
   key: string;
   value: string;
   description?: string;
 }
 
 export interface BotContactMessage {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   message_text: string;
   photo_file_id?: string;
   is_read: boolean;

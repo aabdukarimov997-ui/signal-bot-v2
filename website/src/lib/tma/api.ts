@@ -2,10 +2,25 @@ import type { TmaTariff, TmaSubscription, TmaPayment, TmaAdminStats, TmaUser } f
 
 const BASE = '/api/tma';
 
+function getInitData(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    // Telegram WebApp global (script orqali yuklanadi)
+    return (window as any)?.Telegram?.WebApp?.initData || '';
+  } catch {
+    return '';
+  }
+}
+
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
+  const initData = getInitData();
   const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(initData ? { 'x-telegram-init-data': initData } : {}),
+      ...(options?.headers || {}),
+    },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unknown error' }));
@@ -26,25 +41,57 @@ export const api = {
     return fetchJSON(`${BASE}/tariffs?type=${type}`);
   },
 
-  async getSubscription(userId: number, type: string = 'signal'): Promise<{ subscription: TmaSubscription | null }> {
+  async getSubscription(userId: string, type: string = 'signal'): Promise<{ subscription: TmaSubscription | null }> {
     return fetchJSON(`${BASE}/subscription?userId=${userId}&type=${type}`);
   },
 
   async createPayment(data: {
-    userId: number;
+    userId: string;
     productType: string;
-    productId: number;
+    productId: string;
     amount: number;
     paymentMethod: string;
     photoFileId?: string;
-  }): Promise<{ payment: any }> {
+  }): Promise<{
+    payment: {
+      id: string;
+      status: string;
+      cryptoNetwork?: 'tron' | 'bnb' | null;
+      cryptoAddress?: string | null;
+      cryptoAmount?: number | null;
+      autoVerify?: boolean;
+      cryptoPay?: boolean;
+      providerInvoiceId?: string | null;
+      providerInvoiceUrl?: string | null;
+      cryptoExpiresAt?: string | null;
+    };
+  }> {
     return fetchJSON(`${BASE}/payment`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async getReferral(userId: number): Promise<{
+  async getPaymentStatus(paymentId: string): Promise<{
+    payment: {
+      id: string;
+      status: string;
+      paymentMethod: string;
+      cryptoNetwork?: string | null;
+      cryptoAmount?: number | null;
+      cryptoTxHash?: string | null;
+      autoApproved: boolean;
+      productType: string;
+      amount: number;
+      createdAt: string;
+      cryptoExpiresAt?: string | null;
+      providerInvoiceUrl?: string | null;
+    };
+  }> {
+    return fetchJSON(`${BASE}/payment/status?paymentId=${encodeURIComponent(paymentId)}`);
+  },
+
+  async getReferral(userId: string): Promise<{
     referralCode: string;
     referralCount: number;
     activeCount: number;
@@ -53,11 +100,11 @@ export const api = {
     return fetchJSON(`${BASE}/referral?userId=${userId}`);
   },
 
-  async getSettings(): Promise<{ settings: Record<string, string> }> {
+  async getSettings(): Promise<{ settings: Record<string, string>; cryptoPayAvailable: boolean }> {
     return fetchJSON(`${BASE}/settings`);
   },
 
-  async sendContactMessage(userId: number, messageText: string): Promise<{ message: any }> {
+  async sendContactMessage(userId: string, messageText: string): Promise<{ message: any }> {
     return fetchJSON(`${BASE}/contact`, {
       method: 'POST',
       body: JSON.stringify({ userId, messageText }),
@@ -69,7 +116,7 @@ export const api = {
     return fetchJSON(`${BASE}/admin/payments`);
   },
 
-  async adminActionPayment(paymentId: number, action: 'approve' | 'reject', adminTelegramId: number) {
+  async adminActionPayment(paymentId: string, action: 'approve' | 'reject', adminTelegramId: string) {
     return fetchJSON(`${BASE}/admin/payments`, {
       method: 'PUT',
       body: JSON.stringify({ paymentId, action, adminTelegramId }),

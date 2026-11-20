@@ -1,18 +1,17 @@
-from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, ContentType
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, ContentType, Message
 
-from bot.config import settings
 from bot.services.settings_service import (
-    get_all_settings,
-    set_setting,
-    export_settings,
-    import_settings,
     SETTINGS_KEYS,
+    export_settings,
     get_admin_ids,
+    get_all_settings,
+    import_settings,
+    set_setting,
 )
-from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
 from bot.utils.helpers import safe_edit
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
 from bot.utils.states import AdminSettingsStates
 
 admin_settings_router = Router()
@@ -21,16 +20,58 @@ admin_settings_router = Router()
 # Settings grouped by category for cleaner UI
 SETTINGS_CATEGORIES = {
     "📝 Asosiy": ["project_name", "admin_username", "support_username", "welcome_message", "welcome_video"],
-    "📈 Signal": ["signal_message", "signal_image", "signal_video", "private_channel_id", "free_channel_url", "invite_link_url"],
-    "💰 Narxlar": ["price_1_month", "price_3_month", "price_6_month", "stars_1_month", "stars_3_month", "stars_6_month"],
-    "💳 To'lov": ["card_number", "card_owner", "visa_card_number", "visa_card_holder",
-                  "ton_wallet_address", "tron_qr_code", "bnb_wallet_address", "bnb_qr_code",
-                  "toncoin_wallet_address", "toncoin_qr_code"],
-    "📚 Darslar": ["course_tariff_name", "course_message", "course_description", "course_image", "course_video",
-                    "course_price_1_month", "course_stars_1_month",
-                    "course_channel_id", "course_channel_2_id", "course_channel_3_id",
-                    "course_channel_1_name", "course_channel_2_name", "course_channel_3_name",
-                    "course_invite_link_1", "course_invite_link_2", "course_invite_link_3"],
+    "📈 Signal": [
+        "signal_message",
+        "signal_image",
+        "signal_video",
+        "private_channel_id",
+        "free_channel_url",
+        "invite_link_url",
+    ],
+    "💰 Narxlar": [
+        "price_1_month",
+        "price_3_month",
+        "price_6_month",
+        "stars_1_month",
+        "stars_3_month",
+        "stars_6_month",
+    ],
+    "💳 To'lov": [
+        "card_number",
+        "card_owner",
+        "visa_card_number",
+        "visa_card_holder",
+        "ton_wallet_address",
+        "tron_wallet_address",
+        "tron_qr_code",
+        "tron_usdt_contract",
+        "bnb_wallet_address",
+        "bnb_qr_code",
+        "bnb_usdt_contract",
+        "bsc_rpc_url",
+        "trongrid_api_key",
+        "crypto_poll_seconds",
+        "toncoin_wallet_address",
+        "toncoin_qr_code",
+    ],
+    "📚 Darslar": [
+        "course_tariff_name",
+        "course_message",
+        "course_description",
+        "course_image",
+        "course_video",
+        "course_price_1_month",
+        "course_stars_1_month",
+        "course_channel_id",
+        "course_channel_2_id",
+        "course_channel_3_id",
+        "course_channel_1_name",
+        "course_channel_2_name",
+        "course_channel_3_name",
+        "course_invite_link_1",
+        "course_invite_link_2",
+        "course_invite_link_3",
+    ],
     "🌐 Ijtimoiy": ["instagram_url", "twitter_url", "youtube_url", "website_url"],
     "📢 Marketing": ["marketing_enabled", "marketing_interval_hours", "marketing_message", "marketing_image"],
     "🎁 Bonus": ["premium_gift_link", "admin_ids"],
@@ -38,19 +79,21 @@ SETTINGS_CATEGORIES = {
 
 
 def settings_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📝 Sozlamalarni tahrirlash", callback_data="admin_settings_edit")],
-        [InlineKeyboardButton(text="📦 Export (JSON)", callback_data="admin_settings_export")],
-        [InlineKeyboardButton(text="📥 Import (JSON)", callback_data="admin_settings_import")],
-        [InlineKeyboardButton(text="🔄 Setup Wizard", callback_data="admin_settings_wizard")],
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Sozlamalarni tahrirlash", callback_data="admin_settings_edit")],
+            [InlineKeyboardButton(text="📦 Export (JSON)", callback_data="admin_settings_export")],
+            [InlineKeyboardButton(text="📥 Import (JSON)", callback_data="admin_settings_import")],
+            [InlineKeyboardButton(text="🔄 Setup Wizard", callback_data="admin_settings_wizard")],
+            [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+        ]
+    )
 
 
 def settings_edit_kb() -> InlineKeyboardMarkup:
     # Show category buttons first, then individual settings
     buttons = []
-    for category, keys in SETTINGS_CATEGORIES.items():
+    for category, _keys in SETTINGS_CATEGORIES.items():
         buttons.append([InlineKeyboardButton(text=f"📁 {category}", callback_data=f"admin_set_cat_{category}")])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_settings")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -85,7 +128,9 @@ async def admin_settings_handler(callback: CallbackQuery) -> None:
 
 @admin_settings_router.callback_query(F.data == "admin_settings_edit")
 async def admin_settings_edit_handler(callback: CallbackQuery) -> None:
-    await safe_edit(callback.message, "✏️ <b>Sozlamalar kategoriyalari</b>\n\nKategoriyani tanlang:", reply_markup=settings_edit_kb())
+    await safe_edit(
+        callback.message, "✏️ <b>Sozlamalar kategoriyalari</b>\n\nKategoriyani tanlang:", reply_markup=settings_edit_kb()
+    )
     await callback.answer()
 
 
@@ -119,7 +164,12 @@ async def admin_set_key_handler(callback: CallbackQuery, state: FSMContext) -> N
     await state.set_state(AdminSettingsStates.waiting_setting_value)
     await state.update_data(setting_key=key)
 
-    await safe_edit(callback.message, f"✏️ <b>{desc}</b>\n\nJoriy: <code>{current_val.get(key, '—')}</code>\n\nYangi qiymat kiriting (matn, rasm, video yoki fayl):", reply_markup=None)
+    await safe_edit(
+        callback.message,
+        f"✏️ <b>{desc}</b>\n\nJoriy: <code>{current_val.get(key, '—')}</code>\n\n"
+        "Yangi qiymat kiriting (matn, rasm, video yoki fayl):",
+        reply_markup=None,
+    )
     await callback.answer()
 
 
@@ -186,7 +236,9 @@ async def admin_export_handler(callback: CallbackQuery) -> None:
 @admin_settings_router.callback_query(F.data == "admin_settings_import")
 async def admin_import_start_handler(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(AdminSettingsStates.waiting_import_json)
-    await safe_edit(callback.message, "📥 <b>Import — Sozlamalar JSON</b>\n\nJSON ni yuboring (barcha sozlamalar o'zgartiriladi):")
+    await safe_edit(
+        callback.message, "📥 <b>Import — Sozlamalar JSON</b>\n\nJSON ni yuboring (barcha sozlamalar o'zgartiriladi):"
+    )
     await callback.answer()
 
 
@@ -197,9 +249,12 @@ async def admin_import_handler(message: Message, state: FSMContext) -> None:
         return
     try:
         import json
+
         await import_settings(message.text)
         await state.clear()
-        await message.answer("✅ <b>Sozlamalar import qilindi!</b>\nBarcha qiymatlar yangilandi.", reply_markup=settings_kb())
+        await message.answer(
+            "✅ <b>Sozlamalar import qilindi!</b>\nBarcha qiymatlar yangilandi.", reply_markup=settings_kb()
+        )
     except (json.JSONDecodeError, Exception) as e:
         await state.clear()
         await message.answer(f"❌ Xatolik: {e}")
@@ -208,5 +263,6 @@ async def admin_import_handler(message: Message, state: FSMContext) -> None:
 @admin_settings_router.callback_query(F.data == "admin_settings_wizard")
 async def admin_wizard_handler(callback: CallbackQuery, state: FSMContext) -> None:
     from bot.handlers.setup import start_wizard
+
     await start_wizard(callback.message, state)
     await callback.answer()

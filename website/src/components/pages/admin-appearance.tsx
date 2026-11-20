@@ -147,7 +147,7 @@ export default function AdminAppearance() {
           <Label>Oldindan ko&apos;rish</Label>
           <div className="relative h-48 rounded-xl overflow-hidden border border-glass-border bg-background">
             {bgUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img
                 src={bgUrl}
                 alt="Orqa fon"

@@ -1,5 +1,4 @@
 import html
-from typing import Union
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup, Message
@@ -8,7 +7,7 @@ from aiogram.types import InlineKeyboardMarkup, Message
 async def safe_send(
     target: Message,
     text: str,
-    reply_markup: Union[InlineKeyboardMarkup, None] = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
     disable_web_page_preview: bool = True,
 ) -> bool:
     """Send message safely — falls back to plain text if HTML parsing fails."""
@@ -21,7 +20,9 @@ async def safe_send(
             # HTML noto'g'ri — escaped qilib yuboramiz
             safe_text = html.escape(text)
             try:
-                await target.answer(safe_text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview)
+                await target.answer(
+                    safe_text, reply_markup=reply_markup, disable_web_page_preview=disable_web_page_preview
+                )
                 return True
             except Exception:
                 return False
@@ -31,7 +32,7 @@ async def safe_send(
 async def safe_edit(
     message: Message,
     text: str,
-    reply_markup: Union[InlineKeyboardMarkup, None] = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
     disable_web_page_preview: bool = True,
 ) -> bool:
     """Edit message text/caption safely, ignoring common transient errors."""

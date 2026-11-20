@@ -1,24 +1,17 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
+
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    const auth = await getAuthenticatedUser(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-
-    // ── User info from bot DB ──
-    const userRes = await query(
-      `SELECT * FROM ${TABLES.users} WHERE id = $1 LIMIT 1`,
-      [userId]
-    );
-    const user = userRes.rows[0];
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const user = auth.user;
+    const userId = user.id;
 
     const now = new Date();
 

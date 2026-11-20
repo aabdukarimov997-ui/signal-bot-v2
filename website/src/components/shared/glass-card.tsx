@@ -9,6 +9,7 @@ interface GlassCardProps {
   className?: string;
   glow?: boolean;
   glowEmerald?: boolean;
+  glowGold?: boolean;
   hover?: boolean;
   index?: number;
 }
@@ -18,6 +19,7 @@ export function GlassCard({
   className,
   glow = false,
   glowEmerald = false,
+  glowGold = false,
   hover = false,
   index,
 }: GlassCardProps) {
@@ -45,6 +47,7 @@ export function GlassCard({
         'glass-card p-6',
         glow && 'border-glow',
         glowEmerald && 'border-glow-emerald',
+        glowGold && 'border-glow-gold',
         hover && 'transition-shadow duration-300 cursor-pointer',
         className
       )}

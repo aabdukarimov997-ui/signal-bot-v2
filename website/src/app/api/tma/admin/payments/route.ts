@@ -6,9 +6,17 @@ import {
   notifyPaymentApproved,
   notifyPaymentRejected,
 } from '@/lib/tma/telegram';
+import { requireAdmin, getInitDataFromRequest } from '@/lib/tma/verify';
 
-export async function GET() {
+export const runtime = 'nodejs';
+
+export async function GET(request: Request) {
   try {
+    const auth = await requireAdmin(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const result = await query(
       `SELECT p.*, u.full_name as user_name, u.telegram_id as user_telegram_id, t.name as tariff_name
        FROM ${TABLES.payments} p
@@ -42,7 +50,13 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const { paymentId, action, adminTelegramId } = await request.json();
+    const auth = await requireAdmin(getInitDataFromRequest(request));
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const adminTelegramId = auth.telegramId;
+
+    const { paymentId, action } = await request.json();
     
     if (!paymentId || !action) {
       return NextResponse.json({ error: 'paymentId and action required' }, { status: 400 });
@@ -57,6 +71,10 @@ export async function PUT(request: Request) {
       const payment = paymentResult.rows[0];
       if (!payment) {
         return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+      }
+
+      if (payment.payment_method === 'crypto_pay' || ['tron_trc20', 'bnb'].includes(payment.payment_method)) {
+        return NextResponse.json({ error: 'Bu tolov avtomatik tekshiriladi' }, { status: 409 });
       }
 
       // Dublikat tasdiqlashni oldini olish — faqat 'pending' to'lov tasdiqlanadi

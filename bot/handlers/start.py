@@ -6,19 +6,18 @@ import logging
 import os
 import time
 
-from aiogram import Router, Bot, F
+from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, CallbackQuery, LabeledPrice
 from aiogram.fsm.context import FSMContext
+from aiogram.types import LabeledPrice, Message
 
 from bot.config import settings
 from bot.models.user import User
-from bot.services.user_service import get_or_create_user, update_user_activity, get_user_by_telegram_id
-from bot.services.settings_service import is_setup_completed, get_setting, get_admin_ids, get_enabled_payment_methods
+from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting, is_setup_completed
 from bot.services.subscription_service import get_tariff_by_id
+from bot.services.user_service import get_user_by_telegram_id, update_user_activity
 from bot.utils.keyboards import main_menu_kb, payment_method_kb
-from bot.utils.texts import START_TEXT, PAYMENT_METHOD_TEXT
-from bot.utils.states import AdminSettingsStates
+from bot.utils.texts import PAYMENT_METHOD_TEXT, START_TEXT
 
 start_router = Router()
 
@@ -26,6 +25,7 @@ start_router = Router()
 # ─── Admin panelga sayt orqali kirish ─────────────────────────────────
 # Bot admin'ga bir martalik imzolangan kirish havolasini yuboradi —
 # foydalanuvchi uni bossa, sayt avtomatik admin sifatida tizimga kiradi.
+
 
 def _make_admin_login_token(admin_id: int) -> str:
     """HMAC-SHA256 bilan imzolangan, 10 daqiqa amal qiladigan kirish tokeni."""
@@ -57,7 +57,7 @@ async def _handle_admin_login(message: Message, user: User) -> None:
     await message.answer(
         "🔐 <b>Sayt admin paneliga kirish</b>\n\n"
         "Quyidagi havolani bosing — sayt avtomatik admin sifatida tizimga kiritadi:\n\n"
-        f"<a href=\"{link}\">🔓 Admin panelga kirish</a>\n\n"
+        f'<a href="{link}">🔓 Admin panelga kirish</a>\n\n'
         f"⚠️ Havola <b>10 daqiqa</b> amal qiladi.\n"
         f"Yangi havola olish: <code>https://t.me/{bot_username}?start=admin_login</code>"
     )
@@ -74,7 +74,9 @@ async def _send_welcome(bot: Bot, chat_id: int, text: str, reply_markup, video_f
 
 
 @start_router.message(Command("start"))
-async def start_handler(message: Message, command: CommandObject, user: User, bot: Bot) -> None:
+async def start_handler(message: Message, command: CommandObject, user: User, bot: Bot, state: FSMContext) -> None:
+    # Qotib qolgan FSM holatini tozalaymiz — /start har doim bosh menyuga qaytaradi
+    await state.clear()
     await update_user_activity(user.telegram_id)
 
     # TMA (Mini App) to'lov hand-off: /start pay_stars_{tariff_id} va /start pay_card_{tariff_id}
@@ -94,8 +96,7 @@ async def start_handler(message: Message, command: CommandObject, user: User, bo
         setup_done = await is_setup_completed()
         if not setup_done:
             await message.answer(
-                "🛠 <b>Bot birinchi marta ishga tushdi!</b>\n\n"
-                "Setup Wizard boshlash uchun /setup yuboring."
+                "🛠 <b>Bot birinchi marta ishga tushdi!</b>\n\nSetup Wizard boshlash uchun /setup yuboring."
             )
             return
 
@@ -109,6 +110,7 @@ async def start_handler(message: Message, command: CommandObject, user: User, bo
                 user.referred_by = f"ref_{referrer_tg_id}"
                 from bot.services.referral_service import add_referral_bonus
                 from bot.services.user_service import add_referral_bonus_days
+
                 await add_referral_bonus(referrer.id, user.id, "signal_days", 3)
                 await add_referral_bonus_days(referrer.id, 3)
 
@@ -132,26 +134,13 @@ async def setup_command_handler(message: Message, user: User, state: FSMContext)
         await message.answer("✅ Setup allaqachon tugallangan.\nSozlamalarni o'zgartirish: /admin → ⚙️ Sozlamalar")
         return
     from bot.handlers.setup import start_wizard
+
     await start_wizard(message, state)
 
 
-@start_router.callback_query(lambda c: c.data == "back_main")
-async def back_main_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
-    welcome_msg = await get_setting("welcome_message")
-    if not welcome_msg:
-        welcome_msg = START_TEXT
-    welcome_video = await get_setting("welcome_video")
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    is_admin = user.telegram_id in await get_admin_ids()
-    await _send_welcome(bot, callback.message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin), welcome_video)
-    await callback.answer()
-
-
 @start_router.message(F.text == "🚀 Start")
-async def start_button_handler(message: Message, user: User, bot: Bot) -> None:
+async def start_button_handler(message: Message, user: User, bot: Bot, state: FSMContext) -> None:
+    await state.clear()
     await update_user_activity(user.telegram_id)
     welcome_msg = await get_setting("welcome_message")
     if not welcome_msg:
@@ -169,11 +158,13 @@ async def test_video_handler(message: Message, user: User, bot: Bot) -> None:
     current_video = await get_setting("welcome_video")
     welcome_msg = await get_setting("welcome_message") or START_TEXT
     if not current_video:
-        await message.answer("📹 <b>welcome_video hali o'rnatilmagan.</b>\n\n"
-            "/set_welcome_video buyrug'ini yuboring va video jo'nating.")
+        await message.answer(
+            "📹 <b>welcome_video hali o'rnatilmagan.</b>\n\n/set_welcome_video buyrug'ini yuboring va video jo'nating."
+        )
         return
     await message.answer(f"📹 Joriy file_id: <code>{current_video}</code>\n\nVideoni qayta yuboraman:")
     await _send_welcome(bot, message.chat.id, welcome_msg, None, current_video)
+
 
 # ─── TMA to'lov hand-off handler'lar ─────────────────────────────────
 # Mini App (TMA) dan /start pay_stars_{tariff_id} yoki /start pay_card_{tariff_id}
@@ -196,9 +187,7 @@ async def _handle_pay_stars(message: Message, user: User, bot: Bot, tariff_id: s
     if stars_amount <= 0:
         stars_amount = tariff.stars_price or 0
     if stars_amount <= 0:
-        await message.answer(
-            "❌ Stars narxi sozlanmagan. Iltimos, karta orqali to'lang yoki admin bilan bog'laning."
-        )
+        await message.answer("❌ Stars narxi sozlanmagan. Iltimos, karta orqali to'lang yoki admin bilan bog'laning.")
         return
 
     prices = [LabeledPrice(label=tariff.label or tariff.name, amount=int(stars_amount))]

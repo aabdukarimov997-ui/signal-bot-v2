@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useTmaStore, type TmaTariff } from '@/lib/tma/store';
+import { useTmaStore, formatTmaTariffDuration, type TmaTariff } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
 import { NationalFrame, DecorativeDivider, GeometricBg } from '../shared/UzbekPattern';
 import { api } from '@/lib/tma/api';
@@ -81,7 +81,7 @@ export function SignalsPage() {
         <NationalFrame>
           <h2 className="text-lg font-semibold text-center mb-2">{selectedTariff.name}</h2>
           <p className="text-2xl font-bold text-center text-[#d4a72c] mb-4">
-            ${selectedTariff.price} <span className="text-sm text-[#7c7b7b]">/ {selectedTariff.durationMonths} {t('months')}</span>
+            ${selectedTariff.price} <span className="text-sm text-[#7c7b7b]">/ {formatTmaTariffDuration(selectedTariff, t('months'))}</span>
           </p>
           
           <h3 className="text-sm font-medium text-[#c0c0c0] mb-3">{t('payment_method')}:</h3>
@@ -139,7 +139,7 @@ export function SignalsPage() {
                     </div>
                     <div className="text-left">
                       <p className="font-medium text-sm">{tariff.name}</p>
-                      <p className="text-xs text-[#7c7b7b]">{tariff.durationMonths} {t('months')}</p>
+                      <p className="text-xs text-[#7c7b7b]">{formatTmaTariffDuration(tariff, t('months'))}</p>
                     </div>
                   </div>
                   <div className="text-right">

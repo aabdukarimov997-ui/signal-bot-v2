@@ -152,7 +152,7 @@ export default function VideosPage() {
                   <GlassCard hover className="p-0 overflow-hidden h-full">
                     {/* Thumbnail */}
                     <div className="relative aspect-video overflow-hidden bg-muted/30">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img
                         src={video.thumbnail}
                         alt={video.title}

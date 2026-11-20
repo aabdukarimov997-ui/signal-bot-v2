@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 
@@ -7,12 +6,12 @@ from bot.database.session import get_session
 from bot.models.promo_code import PromoCode
 
 
-async def validate_promo(code: str, product_type: str) -> Optional[PromoCode]:
+async def validate_promo(code: str, product_type: str) -> PromoCode | None:
     async with get_session() as session:
         result = await session.execute(
             select(PromoCode).where(
                 PromoCode.code == code.upper(),
-                PromoCode.is_active == True,
+                PromoCode.is_active,
             )
         )
         promo = result.scalar_one_or_none()
@@ -20,7 +19,7 @@ async def validate_promo(code: str, product_type: str) -> Optional[PromoCode]:
             return None
         if promo.max_uses > 0 and promo.current_uses >= promo.max_uses:
             return None
-        if promo.expires_at and promo.expires_at < datetime.now(timezone.utc):
+        if promo.expires_at and promo.expires_at < datetime.now(UTC):
             return None
         if promo.product_type != "all" and promo.product_type != product_type:
             return None

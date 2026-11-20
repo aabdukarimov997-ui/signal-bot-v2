@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { verifyInitData } from '@/lib/tma/verify';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
@@ -8,28 +11,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'initData required' }, { status: 400 });
     }
 
-    // Parse initData
-    const params = new URLSearchParams(initData);
-    const userJson = params.get('user');
-    if (!userJson) {
-      return NextResponse.json({ error: 'User not found in initData' }, { status: 401 });
+    // Telegram imzosini tekshiramiz — soxta initData rad etiladi
+    const verified = verifyInitData(initData);
+    if (!verified) {
+      return NextResponse.json({ error: 'Invalid initData signature' }, { status: 401 });
     }
-    
-    const tgUser = JSON.parse(userJson);
-    const telegramId = String(tgUser.id);
-    const fullName = tgUser.first_name || tgUser.last_name || 'User';
-    const username = tgUser.username || '';
-    // users.language ustuni NOT NULL — bot modeliga mos ravishda yozamiz
-    const language = tgUser.language_code || 'uz';
+
+    const telegramId = verified.telegramId;
+    const fullName = verified.firstName;
+    const username = verified.username;
+    const language = verified.languageCode || 'uz';
 
     // Find or create user in bot DB
     let result = await query(
       `SELECT * FROM ${TABLES.users} WHERE telegram_id = $1 LIMIT 1`,
       [telegramId]
     );
-    
+
     let dbUser = result.rows[0];
-    
+
     if (!dbUser) {
       const refCode = `ref_${telegramId}`;
       result = await query(
@@ -48,6 +48,10 @@ export async function POST(request: Request) {
       );
     }
 
+    if (dbUser.is_banned) {
+      return NextResponse.json({ error: 'Accaunt bloklangan' }, { status: 403 });
+    }
+
     // Check if user is admin
     const adminIdsResult = await query(
       `SELECT value FROM ${TABLES.settings} WHERE key = 'admin_ids' LIMIT 1`
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
     if (adminIdsResult.rows[0]) {
       try {
         const adminIds = JSON.parse(adminIdsResult.rows[0].value);
-        isAdmin = adminIds.includes(Number(telegramId));
+        isAdmin = adminIds.map(String).includes(String(telegramId));
       } catch {}
     }
 

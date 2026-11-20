@@ -1,16 +1,14 @@
-from aiogram import Router, F
+from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery
-from aiogram import Bot
 
-from bot.config import settings
 from bot.models.user import User
+from bot.services.payment_service import get_today_revenue, get_total_revenue
 from bot.services.settings_service import get_admin_ids, get_setting
-from bot.services.payment_service import get_total_revenue, get_today_revenue
 from bot.services.subscription_service import get_active_subscription_count
 from bot.services.user_service import get_user_count
-from bot.utils.texts import ADMIN_STATS_TEXT
 from bot.utils.helpers import safe_edit
-from bot.utils.keyboards import InlineKeyboardMarkup, InlineKeyboardButton
+from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
+from bot.utils.texts import ADMIN_STATS_TEXT
 
 admin_stats_router = Router()
 
@@ -46,7 +44,13 @@ async def admin_stats_handler(callback: CallbackQuery, user: User, bot: Bot) -> 
         today_revenue=today_revenue,
         channel_members=channel_members,
     )
-    await safe_edit(callback.message, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
-    ]))
+    await safe_edit(
+        callback.message,
+        text,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
+            ]
+        ),
+    )
     await callback.answer()

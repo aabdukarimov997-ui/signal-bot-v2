@@ -38,7 +38,7 @@ const fadeUp = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   },
 };
 
@@ -77,11 +77,11 @@ const FEATURES = [
 ] as const;
 
 /* Bosh sahifa reklamasidagi raqamlar — admin panel orqali o'zgartiriladi (/api/stats) */
-const DEFAULT_STATS = [
+const DEFAULT_STATS: { key: string; value: string; label: string }[] = [
   { key: 'stat_students', value: '230+', label: 'O\'quvchilar' },
   { key: 'stat_experience', value: '5 yillik', label: 'Tajriba' },
   { key: 'stat_signals', value: '5000+', label: 'Signallar' },
-] as const;
+];
 
 /* ──────────────── component ──────────────── */
 export default function HomePage() {
@@ -211,7 +211,7 @@ export default function HomePage() {
         aria-hidden
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.9, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ delay: 0.9, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="absolute right-[6%] top-[30%] z-10 hidden xl:block"
       >
         <div className="glass-card animate-float rounded-2xl px-5 py-4">
@@ -228,7 +228,7 @@ export default function HomePage() {
         aria-hidden
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.05, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ delay: 1.05, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="absolute left-[6%] top-[46%] z-10 hidden xl:block"
       >
         <div className="glass-card animate-float-slow rounded-2xl px-5 py-4">
@@ -245,7 +245,7 @@ export default function HomePage() {
         aria-hidden
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ delay: 1.2, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="absolute bottom-[22%] right-[12%] z-10 hidden xl:block"
       >
         <div className="glass-card animate-float rounded-2xl px-5 py-4" style={{ animationDelay: '1.5s' }}>
@@ -463,7 +463,7 @@ export default function HomePage() {
                     initial={{ opacity: 0, x: 40 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -40 }}
-                    transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
                     className="relative p-8 sm:p-12 flex flex-col items-center text-center gap-4"
                   >
                     {banners[activeBanner]?.imageUrl && (
