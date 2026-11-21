@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -67,6 +68,13 @@ class Settings(BaseSettings):
                 url = url.replace("postgres://", "postgresql+asyncpg://", 1)
             elif url.startswith("postgresql://"):
                 url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            parts = urlsplit(url)
+            query = dict(parse_qsl(parts.query))
+            # libpq uses sslmode; asyncpg accepts the equivalent ssl option.
+            mode = query.pop("sslmode", None)
+            if mode is not None:
+                query.setdefault("ssl", mode)
+            url = urlunsplit(parts._replace(query=urlencode(query)))
             return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite+aiosqlite:///{self.DB_NAME}"
@@ -76,12 +84,16 @@ class Settings(BaseSettings):
     def db_url_sync(self) -> str:
         if self.DATABASE_URL:
             url = self.DATABASE_URL
-            if "+asyncpg" in url:
-                url = url.replace("+asyncpg", "")
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
             return url
         if self.DB_TYPE == "sqlite":
             return f"sqlite:///{self.DB_NAME}"
-        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
 settings = Settings()
