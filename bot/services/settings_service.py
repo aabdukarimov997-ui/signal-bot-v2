@@ -233,6 +233,21 @@ async def get_enabled_payment_methods() -> set[str]:
     if not await is_crypto_auto_enabled():
         enabled.discard("tron")
         enabled.discard("bnb")
+    else:
+        # Hamyon manzili noto'g'ri (masalan kontrakt kiritilgan) bo'lsa,
+        # ishlamaydigan usulni foydalanuvchiga ko'rsatmaymiz.
+        from bot.services.crypto_service import _get_config, is_wallet_configured
+
+        for network in ("tron", "bnb"):
+            if network not in enabled:
+                continue
+            try:
+                cfg = await _get_config(network)
+            except Exception:
+                enabled.discard(network)
+                continue
+            if not is_wallet_configured(network, cfg):
+                enabled.discard(network)
     from bot.config import settings
 
     if settings.PROJECT_CRYPTO_PAY_TOKEN:
