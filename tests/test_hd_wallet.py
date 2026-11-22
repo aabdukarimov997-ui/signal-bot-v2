@@ -229,3 +229,32 @@ async def test_hd_invoice_checked_on_its_own_address(sample_user, monkeypatch):
     assert [c["payment_id"] for c in confirmed] == [payment.id]
     fresh = await get_payment_by_id(payment.id)
     assert fresh.status == "approved"
+
+
+@pytest.mark.asyncio
+async def test_hd_invoice_uses_exact_amount(sample_user):
+    """HD rejimda noyob summa kerak emas — aniq tarif narxi ishlatiladi."""
+    from bot.services.payment_service import create_crypto_invoice
+    from bot.services.settings_service import set_setting
+
+    await set_setting("tron_hd_xpub", TRON_XPUB)
+    payment = await create_crypto_invoice(
+        user_id=sample_user.id, product_type="signal", product_id="t1", network="tron", amount=25.0
+    )
+    assert float(payment.crypto_amount) == 25.0
+
+
+@pytest.mark.asyncio
+async def test_shared_wallet_still_uses_unique_amount(sample_user):
+    """Umumiy hamyon rejimida noyob summa saqlanib qoladi."""
+    from bot.services.payment_service import create_crypto_invoice
+    from bot.services.settings_service import set_setting
+
+    await set_setting("tron_hd_xpub", "")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
+
+    payment = await create_crypto_invoice(
+        user_id=sample_user.id, product_type="signal", product_id="t1", network="tron", amount=25.0
+    )
+    assert float(payment.crypto_amount) != 25.0
+    assert 25.0 < float(payment.crypto_amount) < 26.0

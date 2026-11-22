@@ -266,7 +266,7 @@ async def create_crypto_invoice(
     HD rejim yoqilgan bo'lsa, `crypto_address` — mijozning **shaxsiy**
     manzili bo'ladi (har bir mijozga alohida).
     """
-    from bot.services.crypto_service import _get_config, is_wallet_configured
+    from bot.services.crypto_service import _get_config, is_hd_enabled, is_wallet_configured
 
     cfg = await _get_config(network)
     method = CRYPTO_METHODS.get(network)
@@ -299,7 +299,15 @@ async def create_crypto_invoice(
         return existing
 
     address = await _resolve_deposit_address(user_id, network, cfg)
-    crypto_amount = await _generate_unique_crypto_amount(float(amount))
+
+    # HD rejimda har bir mijozning o'z manzili bor — noyob summa shart emas,
+    # aniq tarif narxi ishlatiladi (foydalanuvchi uchun tushunarli).
+    # Umumiy hamyon rejimida esa noyob summa kerak (bir manzilga ko'p to'lov).
+    if is_hd_enabled(cfg):
+        crypto_amount = round(float(amount), 2)
+    else:
+        crypto_amount = await _generate_unique_crypto_amount(float(amount))
+
     expires_at = datetime.now(UTC) + timedelta(minutes=ttl_minutes)
     return await create_payment(
         user_id=user_id,
