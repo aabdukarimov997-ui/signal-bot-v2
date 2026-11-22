@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HD xpub generator — oflayn</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121821;
+    --border: #22303f;
+    --text: #e6edf3;
+    --muted: #8b98a8;
+    --gold: #d4af37;
+    --danger: #ff6b6b;
+    --ok: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 64px;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .warn {
+    border: 1px solid var(--danger);
+    background: rgba(255, 107, 107, 0.08);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+  }
+  .warn b { color: var(--danger); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  textarea, input, select {
+    width: 100%;
+    background: #0a1017;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    resize: vertical;
+  }
+  textarea { min-height: 84px; }
+  input:focus, textarea:focus, select:focus { outline: 1px solid var(--gold); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  button {
+    background: var(--gold);
+    color: #10161d;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .out {
+    margin-top: 6px;
+    padding: 12px;
+    background: #0a1017;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    word-break: break-all;
+    min-height: 44px;
+    color: var(--ok);
+  }
+  .err { color: var(--danger); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  ol { padding-left: 20px; margin: 8px 0 0; }
+  li { margin-bottom: 6px; font-size: 13.5px; }
+  .checks { font-size: 13px; }
+  .checks div { padding: 4px 0; }
+  .pass { color: var(--ok); }
+  .fail { color: var(--danger); }
+  code { background: #0a1017; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>HD xpub generator</h1>
+  <div class="sub">Seed phrase'dan faqat <b>xpub</b> hosil qiladi. Internet kerak emas.</div>
+
+  <div class="warn">
+    <b>Muhim:</b> bu faylni internetga ulangan kompyuterda ochib, seed phrase kiritsangiz —
+    seed o'g'irlanishi mumkin. Faylni yuklab olib, <b>internetni uzing</b> (yoki
+    hech qachon internetga ulanmagan kompyuterda oching), keyin seed kiriting.
+    Hosil bo'lgan <b>xpub</b> maxfiy emas — uni botga bemalol yuborish mumkin.
+    <br><br>
+    <b>Hech qachon</b> seed phrase yoki <code>xprv</code> ni botga, chatga yoki serverga yubormang.
+  </div>
+
+  <div class="card">
+    <label for="mnemonic">Seed phrase (12 yoki 24 so'z)</label>
+    <textarea id="mnemonic" placeholder="abandon abandon abandon ... about" spellcheck="false" autocomplete="off"></textarea>
+    <div class="hint">So'zlarni bo'sh joy bilan ajratib yozing. Bu maydon hech qayerga yuborilmaydi — hammasi shu brauzerda hisoblanadi.</div>
+
+    <div class="row">
+      <div style="flex:1; min-width:220px;">
+        <label for="network">Tarmoq</label>
+        <select id="network">
+          <option value="tron">TRON (m/44'/195'/0')</option>
+          <option value="bnb">BNB Smart Chain (m/44'/60'/0')</option>
+        </select>
+      </div>
+      <div style="flex:1; min-width:120px;">
+        <label for="account">Account</label>
+        <input id="account" type="number" value="0" min="0" step="1">
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="run">xpub hosil qilish</button>
+      <button id="clear" class="ghost">Tozalash</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Natija — xpub</label>
+    <div id="xpubOut" class="out">—</div>
+    <div class="row">
+      <button id="copyXpub" class="ghost" disabled>xpub nusxalash</button>
+      <button id="download" class="ghost">Faylni yuklab olish (oflayn)</button>
+    </div>
+    <div id="status" class="hint"></div>
+  </div>
+
+  <div class="card">
+    <label>Tekshiruv — birinchi 3 manzil</label>
+    <div id="addresses" class="out" style="color:var(--text)">—</div>
+    <div class="hint">
+      Bu manzillar Trust Wallet'dagi birinchi manzillar bilan <b>bir xil</b> bo'lishi kerak.
+      Mos kelmasa — noto'g'ri seed yoki boshqa account.
+    </div>
+  </div>
+
+  <div class="card">
+    <label>O'z-o'zini tekshirish</label>
+    <div id="selfTest" class="checks">—</div>
+    <div class="hint">
+      Bu test ichki hisoblash to'g'ri ishlayotganini tasdiqlaydi (ma'lum test vektori bilan).
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Qanday ishlatiladi</label>
+    <ol>
+      <li>Bu faylni kompyuterga yuklab oling.</li>
+      <li>Internetni uzing (yoki oflayn kompyuterda oching).</li>
+      <li>Seed phrase'ni kiriting va tarmoqni tanlang.</li>
+      <li><b>xpub</b> ni nusxalab, botda <code>Sozlamalar → 💳 To'lov → TRON HD xpub</code> ga qo'ying.</li>
+      <li>Brauzer sahifasini yoping, seed'ni qog'ozdan o'chirmang — u sizning yagona zaxirangiz.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ─────────── BIP39 so'z ro'yxati (2048 so'z, ingliz) ─────────── */
+const WORDLIST = ["abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas", "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry", "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category", "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century", "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase", "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child", "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle", "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk", "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close", "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut", "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort", "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control", "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost", "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle", "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek", "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial", "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup", "cupboard", "curious", "current", "curtain", "curve", "cushion", "custom", "cute", "cycle", "dad", "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal", "debate", "debris", "decade", "december", "decide", "decline", "decorate", "decrease", "deer", "defense", "define", "defy", "degree", "delay", "deliver", "demand", "demise", "denial", "dentist", "deny", "depart", "depend", "deposit", "depth", "deputy", "derive", "describe", "desert", "design", "desk", "despair", "destroy", "detail", "detect", "develop", "device", "devote", "diagram", "dial", "diamond", "diary", "dice", "diesel", "diet", "differ", "digital", "dignity", "dilemma", "dinner", "dinosaur", "direct", "dirt", "disagree", "discover", "disease", "dish", "dismiss", "disorder", "display", "distance", "divert", "divide", "divorce", "dizzy", "doctor", "document", "dog", "doll", "dolphin", "domain", "donate", "donkey", "donor", "door", "dose", "double", "dove", "draft", "dragon", "drama", "drastic", "draw", "dream", "dress", "drift", "drill", "drink", "drip", "drive", "drop", "drum", "dry", "duck", "dumb", "dune", "during", "dust", "dutch", "duty", "dwarf", "dynamic", "eager", "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "economy", "edge", "edit", "educate", "effort", "egg", "eight", "either", "elbow", "elder", "electric", "elegant", "element", "elephant", "elevator", "elite", "else", "embark", "embody", "embrace", "emerge", "emotion", "employ", "empower", "empty", "enable", "enact", "end", "endless", "endorse", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enough", "enrich", "enroll", "ensure", "enter", "entire", "entry", "envelope", "episode", "equal", "equip", "era", "erase", "erode", "erosion", "error", "erupt", "escape", "essay", "essence", "estate", "eternal", "ethics", "evidence", "evil", "evoke", "evolve", "exact", "example", "excess", "exchange", "excite", "exclude", "excuse", "execute", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expire", "explain", "expose", "express", "extend", "extra", "eye", "eyebrow", "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family", "famous", "fan", "fancy", "fantasy", "farm", "fashion", "fat", "fatal", "father", "fatigue", "fault", "favorite", "feature", "february", "federal", "fee", "feed", "feel", "female", "fence", "festival", "fetch", "fever", "few", "fiber", "fiction", "field", "figure", "file", "film", "filter", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fiscal", "fish", "fit", "fitness", "fix", "flag", "flame", "flash", "flat", "flavor", "flee", "flight", "flip", "float", "flock", "floor", "flower", "fluid", "flush", "fly", "foam", "focus", "fog", "foil", "fold", "follow", "food", "foot", "force", "forest", "forget", "fork", "fortune", "forum", "forward", "fossil", "foster", "found", "fox", "fragile", "frame", "frequent", "fresh", "friend", "fringe", "frog", "front", "frost", "frown", "frozen", "fruit", "fuel", "fun", "funny", "furnace", "fury", "future", "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic", "garment", "gas", "gasp", "gate", "gather", "gauge", "gaze", "general", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gift", "giggle", "ginger", "giraffe", "girl", "give", "glad", "glance", "glare", "glass", "glide", "glimpse", "globe", "gloom", "glory", "glove", "glow", "glue", "goat", "goddess", "gold", "good", "goose", "gorilla", "gospel", "gossip", "govern", "gown", "grab", "grace", "grain", "grant", "grape", "grass", "gravity", "great", "green", "grid", "grief", "grit", "grocery", "group", "grow", "grunt", "guard", "guess", "guide", "guilt", "guitar", "gun", "gym", "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh", "harvest", "hat", "have", "hawk", "hazard", "head", "health", "heart", "heavy", "hedgehog", "height", "hello", "helmet", "help", "hen", "hero", "hidden", "high", "hill", "hint", "hip", "hire", "history", "hobby", "hockey", "hold", "hole", "holiday", "hollow", "home", "honey", "hood", "hope", "horn", "horror", "horse", "hospital", "host", "hotel", "hour", "hover", "hub", "huge", "human", "humble", "humor", "hundred", "hungry", "hunt", "hurdle", "hurry", "hurt", "husband", "hybrid", "ice", "icon", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate", "immense", "immune", "impact", "impose", "improve", "impulse", "inch", "include", "income", "increase", "index", "indicate", "indoor", "industry", "infant", "inflict", "inform", "inhale", "inherit", "initial", "inject", "injury", "inmate", "inner", "innocent", "input", "inquiry", "insane", "insect", "inside", "inspire", "install", "intact", "interest", "into", "invest", "invite", "involve", "iron", "island", "isolate", "issue", "item", "ivory", "jacket", "jaguar", "jar", "jazz", "jealous", "jeans", "jelly", "jewel", "job", "join", "joke", "journey", "joy", "judge", "juice", "jump", "jungle", "junior", "junk", "just", "kangaroo", "keen", "keep", "ketchup", "key", "kick", "kid", "kidney", "kind", "kingdom", "kiss", "kit", "kitchen", "kite", "kitten", "kiwi", "knee", "knife", "knock", "know", "lab", "label", "labor", "ladder", "lady", "lake", "lamp", "language", "laptop", "large", "later", "latin", "laugh", "laundry", "lava", "law", "lawn", "lawsuit", "layer", "lazy", "leader", "leaf", "learn", "leave", "lecture", "left", "leg", "legal", "legend", "leisure", "lemon", "lend", "length", "lens", "leopard", "lesson", "letter", "level", "liar", "liberty", "library", "license", "life", "lift", "light", "like", "limb", "limit", "link", "lion", "liquid", "list", "little", "live", "lizard", "load", "loan", "lobster", "local", "lock", "logic", "lonely", "long", "loop", "lottery", "loud", "lounge", "love", "loyal", "lucky", "luggage", "lumber", "lunar", "lunch", "luxury", "lyrics", "machine", "mad", "magic", "magnet", "maid", "mail", "main", "major", "make", "mammal", "man", "manage", "mandate", "mango", "mansion", "manual", "maple", "marble", "march", "margin", "marine", "market", "marriage", "mask", "mass", "master", "match", "material", "math", "matrix", "matter", "maximum", "maze", "meadow", "mean", "measure", "meat", "mechanic", "medal", "media", "melody", "melt", "member", "memory", "mention", "menu", "mercy", "merge", "merit", "merry", "mesh", "message", "metal", "method", "middle", "midnight", "milk", "million", "mimic", "mind", "minimum", "minor", "minute", "miracle", "mirror", "misery", "miss", "mistake", "mix", "mixed", "mixture", "mobile", "model", "modify", "mom", "moment", "monitor", "monkey", "monster", "month", "moon", "moral", "more", "morning", "mosquito", "mother", "motion", "motor", "mountain", "mouse", "move", "movie", "much", "muffin", "mule", "multiply", "muscle", "museum", "mushroom", "music", "must", "mutual", "myself", "mystery", "myth", "naive", "name", "napkin", "narrow", "nasty", "nation", "nature", "near", "neck", "need", "negative", "neglect", "neither", "nephew", "nerve", "nest", "net", "network", "neutral", "never", "news", "next", "nice", "night", "noble", "noise", "nominee", "noodle", "normal", "north", "nose", "notable", "note", "nothing", "notice", "novel", "now", "nuclear", "number", "nurse", "nut", "oak", "obey", "object", "oblige", "obscure", "observe", "obtain", "obvious", "occur", "ocean", "october", "odor", "off", "offer", "office", "often", "oil", "okay", "old", "olive", "olympic", "omit", "once", "one", "onion", "online", "only", "open", "opera", "opinion", "oppose", "option", "orange", "orbit", "orchard", "order", "ordinary", "organ", "orient", "original", "orphan", "ostrich", "other", "outdoor", "outer", "output", "outside", "oval", "oven", "over", "own", "owner", "oxygen", "oyster", "ozone", "pact", "paddle", "page", "pair", "palace", "palm", "panda", "panel", "panic", "panther", "paper", "parade", "parent", "park", "parrot", "party", "pass", "patch", "path", "patient", "patrol", "pattern", "pause", "pave", "payment", "peace", "peanut", "pear", "peasant", "pelican", "pen", "penalty", "pencil", "people", "pepper", "perfect", "permit", "person", "pet", "phone", "photo", "phrase", "physical", "piano", "picnic", "picture", "piece", "pig", "pigeon", "pill", "pilot", "pink", "pioneer", "pipe", "pistol", "pitch", "pizza", "place", "planet", "plastic", "plate", "play", "please", "pledge", "pluck", "plug", "plunge", "poem", "poet", "point", "polar", "pole", "police", "pond", "pony", "pool", "popular", "portion", "position", "possible", "post", "potato", "pottery", "poverty", "powder", "power", "practice", "praise", "predict", "prefer", "prepare", "present", "pretty", "prevent", "price", "pride", "primary", "print", "priority", "prison", "private", "prize", "problem", "process", "produce", "profit", "program", "project", "promote", "proof", "property", "prosper", "protect", "proud", "provide", "public", "pudding", "pull", "pulp", "pulse", "pumpkin", "punch", "pupil", "puppy", "purchase", "purity", "purpose", "purse", "push", "put", "puzzle", "pyramid", "quality", "quantum", "quarter", "question", "quick", "quit", "quiz", "quote", "rabbit", "raccoon", "race", "rack", "radar", "radio", "rail", "rain", "raise", "rally", "ramp", "ranch", "random", "range", "rapid", "rare", "rate", "rather", "raven", "raw", "razor", "ready", "real", "reason", "rebel", "rebuild", "recall", "receive", "recipe", "record", "recycle", "reduce", "reflect", "reform", "refuse", "region", "regret", "regular", "reject", "relax", "release", "relief", "rely", "remain", "remember", "remind", "remove", "render", "renew", "rent", "reopen", "repair", "repeat", "replace", "report", "require", "rescue", "resemble", "resist", "resource", "response", "result", "retire", "retreat", "return", "reunion", "reveal", "review", "reward", "rhythm", "rib", "ribbon", "rice", "rich", "ride", "ridge", "rifle", "right", "rigid", "ring", "riot", "ripple", "risk", "ritual", "rival", "river", "road", "roast", "robot", "robust", "rocket", "romance", "roof", "rookie", "room", "rose", "rotate", "rough", "round", "route", "royal", "rubber", "rude", "rug", "rule", "run", "runway", "rural", "sad", "saddle", "sadness", "safe", "sail", "salad", "salmon", "salon", "salt", "salute", "same", "sample", "sand", "satisfy", "satoshi", "sauce", "sausage", "save", "say", "scale", "scan", "scare", "scatter", "scene", "scheme", "school", "science", "scissors", "scorpion", "scout", "scrap", "screen", "script", "scrub", "sea", "search", "season", "seat", "second", "secret", "section", "security", "seed", "seek", "segment", "select", "sell", "seminar", "senior", "sense", "sentence", "series", "service", "session", "settle", "setup", "seven", "shadow", "shaft", "shallow", "share", "shed", "shell", "sheriff", "shield", "shift", "shine", "ship", "shiver", "shock", "shoe", "shoot", "shop", "short", "shoulder", "shove", "shrimp", "shrug", "shuffle", "shy", "sibling", "sick", "side", "siege", "sight", "sign", "silent", "silk", "silly", "silver", "similar", "simple", "since", "sing", "siren", "sister", "situate", "six", "size", "skate", "sketch", "ski", "skill", "skin", "skirt", "skull", "slab", "slam", "sleep", "slender", "slice", "slide", "slight", "slim", "slogan", "slot", "slow", "slush", "small", "smart", "smile", "smoke", "smooth", "snack", "snake", "snap", "sniff", "snow", "soap", "soccer", "social", "sock", "soda", "soft", "solar", "soldier", "solid", "solution", "solve", "someone", "song", "soon", "sorry", "sort", "soul", "sound", "soup", "source", "south", "space", "spare", "spatial", "spawn", "speak", "special", "speed", "spell", "spend", "sphere", "spice", "spider", "spike", "spin", "spirit", "split", "spoil", "sponsor", "spoon", "sport", "spot", "spray", "spread", "spring", "spy", "square", "squeeze", "squirrel", "stable", "stadium", "staff", "stage", "stairs", "stamp", "stand", "start", "state", "stay", "steak", "steel", "stem", "step", "stereo", "stick", "still", "sting", "stock", "stomach", "stone", "stool", "story", "stove", "strategy", "street", "strike", "strong", "struggle", "student", "stuff", "stumble", "style", "subject", "submit", "subway", "success", "such", "sudden", "suffer", "sugar", "suggest", "suit", "summer", "sun", "sunny", "sunset", "super", "supply", "supreme", "sure", "surface", "surge", "surprise", "surround", "survey", "suspect", "sustain", "swallow", "swamp", "swap", "swarm", "swear", "sweet", "swift", "swim", "swing", "switch", "sword", "symbol", "symptom", "syrup", "system", "table", "tackle", "tag", "tail", "talent", "talk", "tank", "tape", "target", "task", "taste", "tattoo", "taxi", "teach", "team", "tell", "ten", "tenant", "tennis", "tent", "term", "test", "text", "thank", "that", "theme", "then", "theory", "there", "they", "thing", "this", "thought", "three", "thrive", "throw", "thumb", "thunder", "ticket", "tide", "tiger", "tilt", "timber", "time", "tiny", "tip", "tired", "tissue", "title", "toast", "tobacco", "today", "toddler", "toe", "together", "toilet", "token", "tomato", "tomorrow", "tone", "tongue", "tonight", "tool", "tooth", "top", "topic", "topple", "torch", "tornado", "tortoise", "toss", "total", "tourist", "toward", "tower", "town", "toy", "track", "trade", "traffic", "tragic", "train", "transfer", "trap", "trash", "travel", "tray", "treat", "tree", "trend", "trial", "tribe", "trick", "trigger", "trim", "trip", "trophy", "trouble", "truck", "true", "truly", "trumpet", "trust", "truth", "try", "tube", "tuition", "tumble", "tuna", "tunnel", "turkey", "turn", "turtle", "twelve", "twenty", "twice", "twin", "twist", "two", "type", "typical", "ugly", "umbrella", "unable", "unaware", "uncle", "uncover", "under", "undo", "unfair", "unfold", "unhappy", "uniform", "unique", "unit", "universe", "unknown", "unlock", "until", "unusual", "unveil", "update", "upgrade", "uphold", "upon", "upper", "upset", "urban", "urge", "usage", "use", "used", "useful", "useless", "usual", "utility", "vacant", "vacuum", "vague", "valid", "valley", "valve", "van", "vanish", "vapor", "various", "vast", "vault", "vehicle", "velvet", "vendor", "venture", "venue", "verb", "verify", "version", "very", "vessel", "veteran", "viable", "vibrant", "vicious", "victory", "video", "view", "village", "vintage", "violin", "virtual", "virus", "visa", "visit", "visual", "vital", "vivid", "vocal", "voice", "void", "volcano", "volume", "vote", "voyage", "wage", "wagon", "wait", "walk", "wall", "walnut", "want", "warfare", "warm", "warrior", "wash", "wasp", "waste", "water", "wave", "way", "wealth", "weapon", "wear", "weasel", "weather", "web", "wedding", "weekend", "weird", "welcome", "west", "wet", "whale", "what", "wheat", "wheel", "when", "where", "whip", "whisper", "wide", "width", "wife", "wild", "will", "win", "window", "wine", "wing", "wink", "winner", "winter", "wire", "wisdom", "wise", "wish", "witness", "wolf", "woman", "wonder", "wood", "wool", "word", "work", "world", "worry", "worth", "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo"];
+
+/* ─────────── SHA-256 / HMAC / PBKDF2 — WebCrypto ─────────── */
+const enc = new TextEncoder();
+
+async function sha256(bytes) {
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+}
+async function sha512(bytes) {
+  return new Uint8Array(await crypto.subtle.digest("SHA-512", bytes));
+}
+async function hmacSha512(key, data) {
+  const k = await crypto.subtle.importKey(
+    "raw", key, { name: "HMAC", hash: "SHA-512" }, false, ["sign"]
+  );
+  return new Uint8Array(await crypto.subtle.sign("HMAC", k, data));
+}
+async function pbkdf2(password, salt, iterations, length) {
+  const k = await crypto.subtle.importKey("raw", password, "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-512" }, k, length * 8
+  );
+  return new Uint8Array(bits);
+}
+
+/* ─────────── BIP39: mnemonic → seed ─────────── */
+function normalizeMnemonic(text) {
+  return text.normalize("NFKD").toLowerCase().trim().split(/\s+/).filter(Boolean);
+}
+
+function mnemonicToEntropy(words) {
+  const bits = [];
+  for (const word of words) {
+    const idx = WORDLIST.indexOf(word);
+    if (idx < 0) throw new Error(`Noma'lum so'z: "${word}"`);
+    for (let i = 10; i >= 0; i--) bits.push((idx >> i) & 1);
+  }
+  const entBits = Math.floor((bits.length * 32) / 33);
+  const csBits = bits.length - entBits;
+  if (entBits % 32 !== 0 || csBits !== entBits / 32) {
+    throw new Error("So'zlar soni noto'g'ri (12, 15, 18, 21 yoki 24 bo'lishi kerak)");
+  }
+  const entropy = new Uint8Array(entBits / 8);
+  for (let i = 0; i < entBits; i++) {
+    if (bits[i]) entropy[i >> 3] |= 0x80 >> (i & 7);
+  }
+  return { entropy, checksumBits: bits.slice(entBits) };
+}
+
+async function validateMnemonic(words) {
+  if (![12, 15, 18, 21, 24].includes(words.length)) {
+    throw new Error(`So'zlar soni ${words.length} — 12, 15, 18, 21 yoki 24 bo'lishi kerak`);
+  }
+  const { entropy, checksumBits } = mnemonicToEntropy(words);
+  const hash = await sha256(entropy);
+  const expected = [];
+  for (let i = 0; i < checksumBits.length; i++) {
+    expected.push((hash[i >> 3] >> (7 - (i & 7))) & 1);
+  }
+  for (let i = 0; i < checksumBits.length; i++) {
+    if (checksumBits[i] !== expected[i]) {
+      throw new Error("Checksum mos emas — seed phrase xato yozilgan (so'z tartibi yoki harf)");
+    }
+  }
+  return entropy;
+}
+
+async function mnemonicToSeed(words) {
+  const mnemonic = words.join(" ");
+  return pbkdf2(enc.encode(mnemonic.normalize("NFKD")), enc.encode("mnemonic"), 2048, 64);
+}
+
+/* ─────────── BIP32 ─────────── */
+const P = 2n ** 256n - 2n ** 32n - 977n;
+const N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n;
+const GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n;
+const GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n;
+const HARDENED = 0x80000000;
+
+function mod(a, m) { const r = a % m; return r < 0n ? r + m : r; }
+
+function inv(a, m) {
+  let [old_r, r] = [mod(a, m), m];
+  let [old_s, s] = [1n, 0n];
+  while (r !== 0n) {
+    const q = old_r / r;
+    [old_r, r] = [r, old_r - q * r];
+    [old_s, s] = [s, old_s - q * s];
+  }
+  if (old_r !== 1n) throw new Error("teskari element mavjud emas");
+  return mod(old_s, m);
+}
+
+function pointAdd(p1, p2) {
+  if (!p1) return p2;
+  if (!p2) return p1;
+  const [x1, y1] = p1, [x2, y2] = p2;
+  if (x1 === x2 && mod(y1 + y2, P) === 0n) return null;
+  let lam;
+  if (x1 === x2 && y1 === y2) {
+    lam = mod(3n * x1 * x1 * inv(2n * y1, P), P);
+  } else {
+    lam = mod((y2 - y1) * inv(x2 - x1, P), P);
+  }
+  const x3 = mod(lam * lam - x1 - x2, P);
+  const y3 = mod(lam * (x1 - x3) - y1, P);
+  return [x3, y3];
+}
+
+function pointMul(point, scalar) {
+  let result = null, addend = point, k = scalar;
+  while (k > 0n) {
+    if (k & 1n) result = pointAdd(result, addend);
+    addend = pointAdd(addend, addend);
+    k >>= 1n;
+  }
+  return result;
+}
+
+function bytesToBig(bytes) {
+  let v = 0n;
+  for (const b of bytes) v = (v << 8n) | BigInt(b);
+  return v;
+}
+function bigToBytes(v, len) {
+  const out = new Uint8Array(len);
+  for (let i = len - 1; i >= 0; i--) { out[i] = Number(v & 0xffn); v >>= 8n; }
+  return out;
+}
+function concat(...arrays) {
+  const total = arrays.reduce((s, a) => s + a.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+function ser32(n) { return bigToBytes(BigInt(n >>> 0), 4); }
+
+function compress(point) {
+  const [x, y] = point;
+  return concat(new Uint8Array([(y & 1n) ? 3 : 2]), bigToBytes(x, 32));
+}
+function decompress(pub) {
+  if (pub.length !== 33 || (pub[0] !== 2 && pub[0] !== 3)) throw new Error("public key formati xato");
+  const x = bytesToBig(pub.slice(1));
+  if (x >= P) throw new Error("public key noto'g'ri");
+  const alpha = mod(x ** 3n + 7n, P);
+  let beta = 1n, base = alpha, exp = (P + 1n) / 4n;
+  while (exp > 0n) {
+    if (exp & 1n) beta = mod(beta * base, P);
+    base = mod(base * base, P);
+    exp >>= 1n;
+  }
+  if (mod(beta * beta, P) !== alpha) throw new Error("public key egri chiziqda emas");
+  const y = (beta & 1n) === BigInt(pub[0] & 1) ? beta : P - beta;
+  return [x, y];
+}
+
+async function masterFromSeed(seed) {
+  const I = await hmacSha512(enc.encode("Bitcoin seed"), seed);
+  const k = bytesToBig(I.slice(0, 32));
+  if (k === 0n || k >= N) throw new Error("seed yaroqsiz");
+  return { key: k, chain: I.slice(32), depth: 0, parentFp: new Uint8Array(4), index: 0 };
+}
+
+function ckdPriv(node, index) {
+  const data = index >= HARDENED
+    ? concat(new Uint8Array([0]), bigToBytes(node.key, 32), ser32(index))
+    : concat(compress(pointMul([GX, GY], node.key)), ser32(index));
+  return hmacSha512(node.chain, data).then((I) => {
+    const il = bytesToBig(I.slice(0, 32));
+    const child = mod(il + node.key, N);
+    if (il >= N || child === 0n) throw new Error("child kalit yaroqsiz");
+    const parentPub = compress(pointMul([GX, GY], node.key));
+    return {
+      key: child,
+      chain: I.slice(32),
+      depth: node.depth + 1,
+      parentFp: hash160(parentPub).slice(0, 4),
+      index,
+    };
+  });
+}
+
+function derivePath(node, path) {
+  let current = Promise.resolve(node);
+  for (const part of path.split("/").filter((p) => p && p !== "m")) {
+    const hardened = part.endsWith("'") || part.endsWith("h");
+    const idx = parseInt(hardened ? part.slice(0, -1) : part, 10);
+    if (Number.isNaN(idx)) throw new Error(`Yo'l xato: ${part}`);
+    const finalIdx = hardened ? idx + HARDENED : idx;
+    current = current.then((n) => ckdPriv(n, finalIdx));
+  }
+  return current;
+}
+
+function xpubFromNode(node) {
+  const payload = concat(
+    Uint8Array.from([0x04, 0x88, 0xb2, 0x1e]),
+    new Uint8Array([node.depth]),
+    node.parentFp,
+    ser32(node.index),
+    node.chain,
+    compress(pointMul([GX, GY], node.key))
+  );
+  return base58checkEncodeSync(payload);
+}
+
+/* ─────────── Base58 / Base58Check ─────────── */
+const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58Encode(bytes) {
+  let v = bytesToBig(bytes);
+  let out = "";
+  while (v > 0n) { out = B58[Number(v % 58n)] + out; v /= 58n; }
+  for (const b of bytes) { if (b === 0) out = "1" + out; else break; }
+  return out || "1";
+}
+async function base58checkEncode(payload) {
+  const hash = await sha256(await sha256(payload));
+  return base58Encode(concat(payload, hash.slice(0, 4)));
+}
+
+/* ─────────── Manzillar (keccak256) ─────────── */
+const KECCAK_RC = [
+  0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+  0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+  0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+  0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+  0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+  0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n,
+];
+const KECCAK_ROT = [
+  [0, 36, 3, 41, 18], [1, 44, 10, 45, 2], [62, 6, 43, 15, 61],
+  [28, 55, 25, 21, 56], [27, 20, 39, 8, 14],
+];
+const MASK64 = (1n << 64n) - 1n;
+function rotl64(x, n) {
+  if (n === 0) return x & MASK64;
+  const s = BigInt(n);
+  return ((x << s) | (x >> (64n - s))) & MASK64;
+}
+function keccakF(A) {
+  for (let round = 0; round < 24; round++) {
+    const C = [];
+    for (let x = 0; x < 5; x++) C[x] = A[x][0] ^ A[x][1] ^ A[x][2] ^ A[x][3] ^ A[x][4];
+    for (let x = 0; x < 5; x++) {
+      const D = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1);
+      for (let y = 0; y < 5; y++) A[x][y] = (A[x][y] ^ D) & MASK64;
+    }
+    const B = Array.from({ length: 5 }, () => Array(5).fill(0n));
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        B[y][(2 * x + 3 * y) % 5] = rotl64(A[x][y], KECCAK_ROT[x][y]);
+      }
+    }
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        A[x][y] = (B[x][y] ^ ((~B[(x + 1) % 5][y] & MASK64) & B[(x + 2) % 5][y])) & MASK64;
+      }
+    }
+    A[0][0] = (A[0][0] ^ KECCAK_RC[round]) & MASK64;
+  }
+  return A;
+}
+function keccak256(bytes) {
+  const rate = 136;
+  const padded = new Uint8Array(Math.ceil((bytes.length + 1) / rate) * rate);
+  padded.set(bytes);
+  padded[bytes.length] ^= 0x01;
+  padded[padded.length - 1] ^= 0x80;
+
+  const A = Array.from({ length: 5 }, () => Array(5).fill(0n));
+  for (let off = 0; off < padded.length; off += rate) {
+    for (let i = 0; i < rate / 8; i++) {
+      let lane = 0n;
+      for (let b = 7; b >= 0; b--) lane = (lane << 8n) | BigInt(padded[off + i * 8 + b]);
+      const x = i % 5, y = Math.floor(i / 5);
+      A[x][y] = (A[x][y] ^ lane) & MASK64;
+    }
+    keccakF(A);
+  }
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 4; i++) {
+    let lane = A[i % 5][Math.floor(i / 5)];
+    for (let b = 0; b < 8; b++) { out[i * 8 + b] = Number(lane & 0xffn); lane >>= 8n; }
+  }
+  return out;
+}
+
+function addressBytes(pubCompressed) {
+  const point = decompress(pubCompressed);
+  const uncompressed = concat(bigToBytes(point[0], 32), bigToBytes(point[1], 32));
+  return keccak256(uncompressed).slice(12);
+}
+
+function tronAddress(pubCompressed) {
+  const payload = concat(new Uint8Array([0x41]), addressBytes(pubCompressed));
+  return base58checkEncodeSync(payload);
+}
+function base58checkEncodeSync(payload) {
+  const h1 = sha256Sync(payload);
+  const h2 = sha256Sync(h1);
+  return base58Encode(concat(payload, h2.slice(0, 4)));
+}
+function sha256Sync(bytes) {
+  /* Sinxron SHA-256 — base58check uchun (kichik ma'lumot) */
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2,
+  ];
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const rotr = (x, n) => ((x >>> n) | (x << (32 - n))) >>> 0;
+
+  const len = bytes.length;
+  const bitLen = len * 8;
+  const total = Math.ceil((len + 9) / 64) * 64;
+  const msg = new Uint8Array(total);
+  msg.set(bytes);
+  msg[len] = 0x80;
+  const view = new DataView(msg.buffer);
+  view.setUint32(total - 4, bitLen >>> 0, false);
+  view.setUint32(total - 8, Math.floor(bitLen / 0x100000000), false);
+
+  const w = new Uint32Array(64);
+  for (let off = 0; off < total; off += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(off + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + t1) >>> 0;
+      d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  const out = new Uint8Array(32);
+  const outView = new DataView(out.buffer);
+  for (let i = 0; i < 8; i++) outView.setUint32(i * 4, H[i], false);
+  return out;
+}
+
+/* ─────────── RIPEMD-160 (BIP32 fingerprint uchun) ─────────── */
+const RM_ZL = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13];
+const RM_ZR = [5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11];
+const RM_SL = [11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6];
+const RM_SR = [8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11];
+const RM_KL = [0x00000000,0x5a827999,0x6ed9eba1,0x8f1bbcdc,0xa953fd4e];
+const RM_KR = [0x50a28be6,0x5c4dd124,0x6d703ef3,0x7a6d76e9,0x00000000];
+
+function rotl32(x, n) { return ((x << n) | (x >>> (32 - n))) >>> 0; }
+
+function rmdF(j, x, y, z) {
+  if (j < 16) return (x ^ y ^ z) >>> 0;
+  if (j < 32) return ((x & y) | (~x & z)) >>> 0;
+  if (j < 48) return ((x | ~y) ^ z) >>> 0;
+  if (j < 64) return ((x & z) | (y & ~z)) >>> 0;
+  return (x ^ (y | ~z)) >>> 0;
+}
+
+function ripemd160(bytes) {
+  const len = bytes.length;
+  const bitLen = len * 8;
+  const withOne = len + 1;
+  const rem = withOne % 64;
+  const padLen = rem <= 56 ? 56 - rem : 120 - rem;
+  const total = withOne + padLen + 8;
+  const buf = new Uint8Array(total);
+  buf.set(bytes);
+  buf[len] = 0x80;
+  let bl = bitLen;
+  for (let i = 0; i < 8; i++) { buf[total - 8 + i] = bl & 0xff; bl = Math.floor(bl / 256); }
+
+  let h0 = 0x67452301, h1 = 0xefcdab89, h2 = 0x98badcfe, h3 = 0x10325476, h4 = 0xc3d2e1f0;
+  const X = new Uint32Array(16);
+
+  for (let off = 0; off < total; off += 64) {
+    for (let i = 0; i < 16; i++) {
+      X[i] = buf[off + i * 4] | (buf[off + i * 4 + 1] << 8) | (buf[off + i * 4 + 2] << 16) | (buf[off + i * 4 + 3] << 24);
+    }
+    let al = h0, bl2 = h1, cl = h2, dl = h3, el = h4;
+    let ar = h0, br = h1, cr = h2, dr = h3, er = h4;
+
+    for (let j = 0; j < 80; j++) {
+      let t = (al + rmdF(j, bl2, cl, dl) + X[RM_ZL[j]] + RM_KL[j >> 4]) >>> 0;
+      t = (rotl32(t, RM_SL[j]) + el) >>> 0;
+      al = el; el = dl; dl = rotl32(cl, 10); cl = bl2; bl2 = t;
+
+      t = (ar + rmdF(79 - j, br, cr, dr) + X[RM_ZR[j]] + RM_KR[j >> 4]) >>> 0;
+      t = (rotl32(t, RM_SR[j]) + er) >>> 0;
+      ar = er; er = dr; dr = rotl32(cr, 10); cr = br; br = t;
+    }
+
+    const t = (h1 + cl + dr) >>> 0;
+    h1 = (h2 + dl + er) >>> 0;
+    h2 = (h3 + el + ar) >>> 0;
+    h3 = (h4 + al + br) >>> 0;
+    h4 = (h0 + bl2 + cr) >>> 0;
+    h0 = t;
+  }
+
+  const out = new Uint8Array(20);
+  const hv = [h0, h1, h2, h3, h4];
+  for (let i = 0; i < 5; i++) {
+    out[i * 4] = hv[i] & 0xff;
+    out[i * 4 + 1] = (hv[i] >>> 8) & 0xff;
+    out[i * 4 + 2] = (hv[i] >>> 16) & 0xff;
+    out[i * 4 + 3] = (hv[i] >>> 24) & 0xff;
+  }
+  return out;
+}
+
+function hash160(bytes) {
+  return ripemd160(sha256Sync(bytes));
+}
+
+function evmAddress(pubCompressed) {
+  const addr = addressBytes(pubCompressed);
+  const hex = Array.from(addr, (b) => b.toString(16).padStart(2, "0")).join("");
+  const digest = keccak256(enc.encode(hex));
+  const digestHex = Array.from(digest, (b) => b.toString(16).padStart(2, "0")).join("");
+  let out = "0x";
+  for (let i = 0; i < 40; i++) {
+    out += parseInt(digestHex[i], 16) >= 8 ? hex[i].toUpperCase() : hex[i];
+  }
+  return out;
+}
+
+/* ─────────── UI ─────────── */
+const $ = (id) => document.getElementById(id);
+let currentXpub = "";
+
+function setStatus(text, isError) {
+  const el = $("status");
+  el.textContent = text || "";
+  el.className = "hint" + (isError ? " err" : "");
+}
+
+async function run() {
+  const btn = $("run");
+  btn.disabled = true;
+  setStatus("Hisoblanmoqda...");
+  $("xpubOut").textContent = "—";
+  $("xpubOut").className = "out";
+  $("addresses").textContent = "—";
+  currentXpub = "";
+  $("copyXpub").disabled = true;
+
+  try {
+    const words = normalizeMnemonic($("mnemonic").value);
+    if (words.length === 0) throw new Error("Seed phrase kiriting");
+
+    const entropy = await validateMnemonic(words);
+    const seed = await mnemonicToSeed(words);
+
+    const network = $("network").value;
+    const account = parseInt($("account").value, 10) || 0;
+    const coin = network === "tron" ? 195 : 60;
+    const path = `m/44'/${coin}'/${account}'`;
+
+    const master = await masterFromSeed(seed);
+    const node = await derivePath(master, path);
+    const xpub = xpubFromNode(node);
+    currentXpub = xpub;
+    $("xpubOut").textContent = xpub;
+    $("copyXpub").disabled = false;
+
+    const lines = [];
+    for (let i = 0; i < 3; i++) {
+      const child = await derivePath(node, `0/${i}`);
+      const pub = compress(pointMul([GX, GY], child.key));
+      const addr = network === "tron" ? tronAddress(pub) : evmAddress(pub);
+      lines.push(`${i}: ${addr}`);
+    }
+    $("addresses").textContent = lines.join("\n");
+
+    // Entropiya uzunligini ko'rsatamiz (seed'ning o'zini emas)
+    setStatus(`Tayyor. ${words.length} so'z, ${entropy.length * 8} bit entropiya. Yo'l: ${path}`);
+  } catch (e) {
+    setStatus(e.message || String(e), true);
+    $("xpubOut").textContent = "Xato";
+    $("xpubOut").className = "out err";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function selfTest() {
+  const el = $("selfTest");
+  const results = [];
+  try {
+    const words = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about".split(" ");
+    const seed = await mnemonicToSeed(words);
+    const master = await masterFromSeed(seed);
+
+    const tronNode = await derivePath(master, "m/44'/195'/0'");
+    const tronXpub = xpubFromNode(tronNode);
+    const expectedTronXpub =
+      "xpub6D1AabNHCupeiLM65ZR9UStMhJ1vCpyV4XbZdyhMZBiJXALQtmn9p42VTQckoHVn8WNqS7dqnJokZHAHcHGoaQgmv8D45oNUKx6DZMNZBCd";
+    results.push(["TRON xpub", tronXpub === expectedTronXpub]);
+
+    const tronChild0 = await derivePath(tronNode, "0/0");
+    const tronAddr = tronAddress(compress(pointMul([GX, GY], tronChild0.key)));
+    results.push(["TRON manzil #0", tronAddr === "TUEZSdKsoDHQMeZwihtdoBiN46zxhGWYdH"]);
+
+    const tronChild1 = await derivePath(tronNode, "0/1");
+    const tronAddr1 = tronAddress(compress(pointMul([GX, GY], tronChild1.key)));
+    results.push(["TRON manzil #1", tronAddr1 === "TSeJkUh4Qv67VNFwY8LaAxERygNdy6NQZK"]);
+
+    const evmNode = await derivePath(master, "m/44'/60'/0'");
+    const evmXpub = xpubFromNode(evmNode);
+    const expectedEvmXpub =
+      "xpub6DCoCpSuQZB2jawqnGMEPS63ePKWkwWPH4TU45Q7LPXWuNd8TMtVxRrgjtEshuqpK3mdhaWHPFsBngh5GFZaM6si3yZdUsT8ddYM3PwnATt";
+    results.push(["BNB xpub", evmXpub === expectedEvmXpub]);
+
+    const evmChild0 = await derivePath(evmNode, "0/0");
+    const evmAddr = evmAddress(compress(pointMul([GX, GY], evmChild0.key)));
+    results.push(["BNB manzil #0", evmAddr === "0x9858EfFD232B4033E47d90003D41EC34EcaEda94"]);
+  } catch (e) {
+    el.innerHTML = `<div class="fail">Test xatosi: ${e.message}</div>`;
+    return;
+  }
+
+  const allOk = results.every(([, ok]) => ok);
+  el.innerHTML =
+    results
+      .map(([name, ok]) => `<div class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"} — ${name}</div>`)
+      .join("") +
+    `<div class="${allOk ? "pass" : "fail"}" style="margin-top:8px;font-weight:700">` +
+    (allOk ? "Barcha testlar o'tdi — hisoblash to'g'ri" : "DIQQAT: testlar o'tmadi, foydalanmang!") +
+    "</div>";
+}
+
+$("run").addEventListener("click", run);
+$("clear").addEventListener("click", () => {
+  $("mnemonic").value = "";
+  $("xpubOut").textContent = "—";
+  $("addresses").textContent = "—";
+  setStatus("");
+  currentXpub = "";
+  $("copyXpub").disabled = true;
+});
+$("copyXpub").addEventListener("click", async () => {
+  if (!currentXpub) return;
+  try {
+    await navigator.clipboard.writeText(currentXpub);
+    setStatus("xpub nusxalandi");
+  } catch {
+    setStatus("Nusxalab bo'lmadi — qo'lda belgilang", true);
+  }
+});
+
+$("download").addEventListener("click", async () => {
+  try {
+    const res = await fetch(window.location.href, { cache: "no-store" });
+    const text = await res.text();
+    const blob = new Blob([text], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "hd-xpub.html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Fayl yuklab olindi — endi internetni uzib, shu faylni oching");
+  } catch {
+    setStatus("Yuklab bo'lmadi — brauzerda Ctrl+S bilan saqlang", true);
+  }
+});
+
+selfTest();
+</script>
+</body>
+</html>
