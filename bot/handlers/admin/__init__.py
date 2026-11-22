@@ -8,6 +8,7 @@ from .marketing import admin_marketing_router
 from .messages import admin_messages_router
 from .payment_methods import admin_payment_methods_router
 from .payments import admin_payments_router
+from .quiz import admin_quiz_router
 from .settings import admin_settings_router
 from .signal_content import admin_signal_content_router
 from .social import admin_social_router
@@ -32,5 +33,6 @@ routers = [
     admin_messages_router,
     admin_diagnostic_router,
     admin_marketing_router,
+    admin_quiz_router,
     admin_blog_router,
 ]

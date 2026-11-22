@@ -70,6 +70,11 @@ SETTINGS_KEYS = {
     "premium_gift_link": "Telegram Premium sovg'a linki",
     "admin_ids": "Admin Telegram IDs (JSON list)",
     "setup_completed": "Setup completed (true/false)",
+    # Viktorina
+    "quiz_enabled": "Viktorina (yoqilgan/o'chirilgan)",
+    "quiz_pass_percent": "Viktorinadan o'tish foizi (%)",
+    "quiz_promo_code": "Viktorina promo kodi (o'tganlarga)",
+    "quiz_questions": "Viktorina savollari (JSON)",
     # Marketing
     "marketing_enabled": "Marketing xabarlar (yoqilgan/o'chirilgan)",
     "marketing_message": "Marketing xabar matni",

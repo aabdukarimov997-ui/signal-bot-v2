@@ -45,6 +45,10 @@ export const api = {
     return fetchJSON(`${BASE}/subscription?userId=${userId}&type=${type}`);
   },
 
+  async getSubscriptionHistory(): Promise<{ history: TmaSubscription[] }> {
+    return fetchJSON(`${BASE}/subscription/history`);
+  },
+
   async createPayment(data: {
     userId: string;
     productType: string;

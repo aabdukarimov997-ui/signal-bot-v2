@@ -15,6 +15,7 @@ from bot.handlers.course import course_router
 from bot.handlers.crypto_pay import crypto_pay_router
 from bot.handlers.escape import escape_router
 from bot.handlers.help import help_router
+from bot.handlers.quiz import quiz_router
 from bot.handlers.referral import referral_router
 from bot.handlers.setup import setup_router
 from bot.handlers.signals import signal_router
@@ -44,6 +45,7 @@ def register_routers() -> None:
     dp.include_router(course_router)
     dp.include_router(announcement_router)
     dp.include_router(account_router)
+    dp.include_router(quiz_router)
     dp.include_router(referral_router)
     dp.include_router(social_router)
     dp.include_router(help_router)

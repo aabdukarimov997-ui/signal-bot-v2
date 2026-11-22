@@ -107,6 +107,7 @@ SETTINGS_CATEGORIES = {
     ],
     "🌐 Ijtimoiy": ["instagram_url", "twitter_url", "youtube_url", "website_url"],
     "📢 Marketing": ["marketing_enabled", "marketing_interval_hours", "marketing_message", "marketing_image"],
+    "🎯 Viktorina": ["quiz_enabled", "quiz_pass_percent", "quiz_promo_code"],
     "🎁 Bonus": ["premium_gift_link", "admin_ids"],
 }
 

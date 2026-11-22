@@ -257,6 +257,16 @@ ACCOUNT_TEXT = (
     "👥 Referallar: {referral_count}"
 )
 
+SUBSCRIPTION_HISTORY_TEXT = (
+    "📜 <b>Obunalar tarixi</b>\n\n"
+    "{rows}\n\n"
+    "Jami: <b>{total}</b> ta obuna"
+)
+
+SUBSCRIPTION_HISTORY_EMPTY = "📜 <b>Obunalar tarixi</b>\n\nHozircha obunalar yo'q."
+
+SUBSCRIPTION_HISTORY_ROW = "{icon} <b>{tariff}</b> — {status}\n    📅 {start} → {end}\n"
+
 NO_SUBSCRIPTION = "Obuna yo'q"
 FREE_CHANNEL_TEXT = "🆓 <b>Bepul kanal</b>\n\nQuyidagi havola orqali bepul kanalga qo'shiling:"
 

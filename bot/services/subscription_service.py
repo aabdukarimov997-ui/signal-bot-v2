@@ -202,3 +202,16 @@ async def ban_user_subscriptions(user_id: str) -> None:
         )
         for sub in result.scalars().all():
             sub.status = "cancelled"
+
+
+async def get_user_subscription_history(user_id: str, limit: int = 10) -> list[tuple[Subscription, str | None]]:
+    """Foydalanuvchining barcha obunalari tarixi (tarif nomi bilan), eng yangisi birinchi."""
+    async with get_session() as session:
+        result = await session.execute(
+            select(Subscription, SignalTariff.name)
+            .outerjoin(SignalTariff, Subscription.tariff_id == SignalTariff.id)
+            .where(Subscription.user_id == user_id)
+            .order_by(Subscription.end_date.desc())
+            .limit(limit)
+        )
+        return [(row[0], row[1]) for row in result.all()]

@@ -10,12 +10,14 @@ from bot.models.tariff import SignalTariff
 # ─── Main Menu (Reply Keyboard) ───────────────────────────────────────
 
 
-def main_menu_kb(is_admin: bool = False) -> ReplyKeyboardMarkup:
+def main_menu_kb(is_admin: bool = False, quiz_enabled: bool = False) -> ReplyKeyboardMarkup:
     keyboard = [
         [KeyboardButton(text="📈 Signal kanal"), KeyboardButton(text="📚 Darslar")],
         [KeyboardButton(text="👤 Hisobim"), KeyboardButton(text="👥 Referal")],
         [KeyboardButton(text="☎️ Yordam"), KeyboardButton(text="🌐 Ijtimoiy tarmoqlar")],
     ]
+    if quiz_enabled:
+        keyboard.append([KeyboardButton(text="🎯 Viktorina")])
     if is_admin:
         keyboard.append([KeyboardButton(text="🚀 Start")])
         keyboard.append([KeyboardButton(text="📢 E'lon")])
@@ -242,6 +244,7 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🔗 Ijtimoiy tarmoqlar", callback_data="admin_social")],
             [InlineKeyboardButton(text="💰 To'lov usullari", callback_data="admin_payment_methods")],
             [InlineKeyboardButton(text="📢 Marketing", callback_data="admin_marketing")],
+            [InlineKeyboardButton(text="🎯 Viktorina", callback_data="admin_quiz")],
             [InlineKeyboardButton(text="📝 Blog post", callback_data="admin_blog_post")],
             [InlineKeyboardButton(text="📊 Diagnostika", callback_data="admin_diagnostic")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],

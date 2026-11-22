@@ -92,3 +92,44 @@ async def test_extend_subscription(sample_user, sample_tariff):
     assert extended.end_date > original_end
     diff = (extended.end_date - original_end).days
     assert diff == 7
+
+
+@pytest.mark.asyncio
+async def test_subscription_history(sample_user, sample_tariff):
+    from bot.services.subscription_service import get_user_subscription_history
+
+    now = datetime.now(UTC)
+    async with async_session_factory() as session:
+        session.add(
+            Subscription(
+                user_id=sample_user.id,
+                tariff_id=sample_tariff.id,
+                start_date=now - timedelta(days=90),
+                end_date=now - timedelta(days=60),
+                status="expired",
+            )
+        )
+        session.add(
+            Subscription(
+                user_id=sample_user.id,
+                tariff_id=sample_tariff.id,
+                start_date=now - timedelta(days=10),
+                end_date=now + timedelta(days=20),
+                status="active",
+            )
+        )
+        await session.commit()
+
+    history = await get_user_subscription_history(sample_user.id)
+    assert len(history) == 2
+    sub, name = history[0]
+    assert sub.user_id == sample_user.id
+    assert sub.status == "active"
+    assert name == sample_tariff.name
+
+
+@pytest.mark.asyncio
+async def test_subscription_history_empty(sample_user):
+    from bot.services.subscription_service import get_user_subscription_history
+
+    assert await get_user_subscription_history(sample_user.id) == []

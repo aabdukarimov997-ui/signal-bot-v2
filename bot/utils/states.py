@@ -77,3 +77,7 @@ class AdminBlogPostStates(StatesGroup):
 
 class ContactState(StatesGroup):
     waiting_message = State()
+
+
+class QuizStates(StatesGroup):
+    answering = State()

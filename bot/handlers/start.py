@@ -13,6 +13,7 @@ from aiogram.types import LabeledPrice, Message
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.quiz_service import is_quiz_enabled
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting, is_setup_completed
 from bot.services.subscription_service import get_tariff_by_id
 from bot.services.user_service import get_user_by_telegram_id, update_user_activity
@@ -121,7 +122,10 @@ async def start_handler(message: Message, command: CommandObject, user: User, bo
     welcome_video = await get_setting("welcome_video")
 
     is_admin = user.telegram_id in await get_admin_ids()
-    await _send_welcome(bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin), welcome_video)
+    quiz_on = await is_quiz_enabled()
+    await _send_welcome(
+        bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
+    )
 
 
 @start_router.message(Command("setup"))
@@ -147,7 +151,10 @@ async def start_button_handler(message: Message, user: User, bot: Bot, state: FS
         welcome_msg = START_TEXT
     welcome_video = await get_setting("welcome_video")
     is_admin = user.telegram_id in await get_admin_ids()
-    await _send_welcome(bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin), welcome_video)
+    quiz_on = await is_quiz_enabled()
+    await _send_welcome(
+        bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
+    )
 
 
 @start_router.message(Command("test_video"))

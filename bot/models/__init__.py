@@ -3,6 +3,7 @@ from bot.models.contact_message import ContactMessage
 from bot.models.payment import Payment
 from bot.models.project_settings import ProjectSettings
 from bot.models.promo_code import PromoCode
+from bot.models.quiz_result import QuizResult
 from bot.models.referral_stat import ReferralStat
 from bot.models.subscription import Subscription
 from bot.models.tariff import SignalTariff
@@ -16,6 +17,7 @@ __all__ = [
     "Payment",
     "ReferralStat",
     "PromoCode",
+    "QuizResult",
     "ProjectSettings",
     "ContactMessage",
 ]

@@ -6,22 +6,26 @@ import { useTmaStore } from '@/lib/tma/store';
 import { useLang } from '../shared/LanguageProvider';
 import { NationalFrame, DecorativeDivider } from '../shared/UzbekPattern';
 import { api } from '@/lib/tma/api';
+import type { TmaSubscription } from '@/lib/tma/store';
 
 export function AccountPage() {
   const { user, subscription, navigate, setSubscription } = useTmaStore();
   const { t, lang } = useLang();
   const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState<TmaSubscription[]>([]);
 
   useEffect(() => {
     async function load() {
       if (!user) return;
       try {
-        const [signalSub, courseSub] = await Promise.all([
+        const [signalSub, courseSub, hist] = await Promise.all([
           api.getSubscription(user.id, 'signal'),
           api.getSubscription(user.id, 'course'),
+          api.getSubscriptionHistory().catch(() => ({ history: [] })),
         ]);
         if (signalSub.subscription) setSubscription(signalSub.subscription);
         else if (courseSub.subscription) setSubscription(courseSub.subscription);
+        setHistory(hist.history ?? []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -106,6 +110,50 @@ export function AccountPage() {
                 >
                   {t('subscribe')}
                 </button>
+              </div>
+            )}
+          </div>
+
+          <DecorativeDivider />
+
+          {/* Subscription history */}
+          <div className="mt-4">
+            <h3 className="text-sm font-medium text-[#c0c0c0] mb-2">{t('subscription_history')}</h3>
+            {history.length === 0 ? (
+              <p className="text-sm text-[#5a5a5a] text-center py-3">{t('history_empty')}</p>
+            ) : (
+              <div className="space-y-2">
+                {history.map((h) => {
+                  const statusMap: Record<string, { label: string; color: string }> = {
+                    active: { label: t('status_active'), color: '#2dd4a0' },
+                    expired: { label: t('status_expired'), color: '#7c7b7b' },
+                    cancelled: { label: t('status_cancelled'), color: '#ef4444' },
+                    pending: { label: t('status_pending'), color: '#d4a72c' },
+                  };
+                  const st = statusMap[h.status] ?? { label: h.status, color: '#7c7b7b' };
+                  const fmt = (iso: string) =>
+                    new Date(iso).toLocaleDateString(
+                      lang === 'uz' ? 'uz-UZ' : lang === 'ru' ? 'ru-RU' : 'en-US'
+                    );
+                  return (
+                    <div
+                      key={h.id}
+                      className="p-3 rounded-xl bg-[#ffffff05] border border-[#ffffff08]"
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium">{h.tariffName}</span>
+                        <span className="text-xs font-medium" style={{ color: st.color }}>
+                          {st.label}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-[#7c7b7b]">
+                        <span>{fmt(h.startDate)}</span>
+                        <span>→</span>
+                        <span>{fmt(h.endDate)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
