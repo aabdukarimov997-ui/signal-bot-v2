@@ -331,6 +331,7 @@ def admin_payment_methods_kb(enabled_methods: set[str], crypto_auto: bool = True
         )
     auto_label = "🤖 Blokcheyn tekshiruvi: " + ("✅ Yoqilgan" if crypto_auto else "❌ O'chirilgan")
     buttons.append([InlineKeyboardButton(text=auto_label, callback_data="toggle_crypto_auto")])
+    buttons.append([InlineKeyboardButton(text="🩺 Hamyon sozlamalarini tekshirish", callback_data="crypto_diag")])
     buttons.append([InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
