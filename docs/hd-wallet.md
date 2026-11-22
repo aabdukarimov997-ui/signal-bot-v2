@@ -95,6 +95,17 @@ Barcha manzillar bitta seed'dan hosil bo'ladi. Trust Wallet'da:
   qilingan manzilga kirib (masalan, MetaMask'da HD account qo'shib) o'tkazma
   qilish mumkin.
 
+### Amaliy eslatmalar
+
+- **TRON**: USDT TRC20 qabul qilish uchun manzil "aktivlashtirilgan" bo'lishi
+  shart emas (token balansi kontraktda saqlanadi). Lekin o'sha manzildan
+  mablag'ni **yuborish** uchun manzilda TRX (energy/bandwidth uchun) bo'lishi
+  kerak. Shuning uchun yig'ishda avval kichik miqdorda TRX yuboriladi.
+- **BNB**: BEP20 qabul qilish va yuborish uchun manzilda BNB (gas) kerak.
+- Har bir mijoz alohida manzilga to'lagani uchun mablag' ko'p manzilga
+  tarqaladi. Yig'ish (sweep) uchun skript yozish mumkin, lekin u private
+  kalit talab qiladi — bu **serverda emas**, xavfsiz muhitda bajarilishi kerak.
+
 ## Sozlamalar kalitlari
 
 | Kalit | Ma'nosi |
