@@ -26,6 +26,19 @@ def _validate_setting_value(key: str, value: str) -> str | None:
     """Noto'g'ri kiritilgan qiymat uchun xabar matni, aks holda None."""
     if key in WALLET_KEYS or key in CONTRACT_KEYS:
         return find_contract_in_wallet_field(key, value)
+    if key in ("tron_hd_xpub", "bnb_hd_xpub"):
+        from bot.services.crypto_service import validate_hd_xpub
+
+        network = "tron" if key == "tron_hd_xpub" else "bnb"
+        error = validate_hd_xpub(network, value)
+        if error:
+            return (
+                f"❌ xpub noto'g'ri: {error}\n\n"
+                "Trust Wallet → Sozlamalar → Wallet → Back up → xpub ni emas, "
+                "<b>faqat account darajasidagi xpub</b> ni kiriting. "
+                "Seed phrase yoki private key yubormang."
+            )
+        return None
     if key == "bsc_rpc_url" and value and not BSC_RPC_RE.match(value):
         return "❌ BSC RPC URL noto'g'ri. `https://...` ko'rinishida kiriting."
     if key == "trongrid_api_key" and " " in value:
@@ -63,9 +76,11 @@ SETTINGS_CATEGORIES = {
         "tron_wallet_address",
         "tron_qr_code",
         "tron_usdt_contract",
+        "tron_hd_xpub",
         "bnb_wallet_address",
         "bnb_qr_code",
         "bnb_usdt_contract",
+        "bnb_hd_xpub",
         "bsc_rpc_url",
         "trongrid_api_key",
         "crypto_poll_seconds",

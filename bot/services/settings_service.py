@@ -34,6 +34,8 @@ SETTINGS_KEYS = {
     "ton_wallet_address": "TRON TRC20 wallet address (eski nom, endi tron_wallet_address)",
     "tron_wallet_address": "TRON TRC20 (USDT) wallet address",
     "bnb_wallet_address": "BNB BEP20 wallet address",
+    "tron_hd_xpub": "TRON HD xpub (har bir mijozga alohida manzil)",
+    "bnb_hd_xpub": "BNB HD xpub (har bir mijozga alohida manzil)",
     "tron_qr_code": "TRON TRC20 wallet QR code (rasm yuboring)",
     "bnb_qr_code": "BNB BEP20 wallet QR code (rasm yuboring)",
     "toncoin_wallet_address": "TON wallet address",

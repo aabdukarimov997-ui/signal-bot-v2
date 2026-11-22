@@ -36,7 +36,12 @@ class Settings(BaseSettings):
     CARD_HOLDER: str = ""
 
     TON_WALLET_ADDRESS: str = ""
+    TRON_WALLET_ADDRESS: str = ""
     BNB_WALLET_ADDRESS: str = ""
+
+    # HD hamyon — har bir mijozga alohida depozit manzili (faqat xpub!)
+    TRON_HD_XPUB: str = ""
+    BNB_HD_XPUB: str = ""
 
     # Kripto avtomatik to'lov (blokcheyndan tekshirish)
     CRYPTO_AUTO_ENABLED: bool = True

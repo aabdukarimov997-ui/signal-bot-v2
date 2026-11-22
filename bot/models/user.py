@@ -23,6 +23,10 @@ class User(BaseMixin, Base):
     phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # HD hamyon: har bir mijozga alohida depozit manzili beriladi.
+    # Indeks bir marta ajratiladi va doimiy qoladi.
+    hd_index: Mapped[int | None] = mapped_column(Integer, nullable=True, unique=True, index=True)
+
     last_activity: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

@@ -36,7 +36,11 @@ HTTP_TIMEOUT = 15
 
 
 async def _get_config(network: str) -> dict[str, str]:
-    """Tarmoq bo'yicha joriy sozlamalarni (wallet, kontrakt, RPC) beradi."""
+    """Tarmoq bo'yicha joriy sozlamalarni (wallet, kontrakt, RPC) beradi.
+
+    `xpub` mavjud bo'lsa — mijozga alohida manzil hosil qilinadi
+    (`crypto_address`), aks holda bitta umumiy hamyon ishlatiladi.
+    """
     from bot.config import settings
     from bot.services.settings_service import get_setting
 
@@ -44,13 +48,31 @@ async def _get_config(network: str) -> dict[str, str]:
         address = await get_setting("tron_wallet_address") or settings.TRON_WALLET_ADDRESS
         contract = await get_setting("tron_usdt_contract") or settings.TRON_USDT_CONTRACT
         api_key = await get_setting("trongrid_api_key") or settings.TRONGRID_API_KEY
-        return {"address": address, "contract": contract, "api_key": api_key}
+        xpub = await get_setting("tron_hd_xpub") or ""
+        return {"address": address, "contract": contract, "api_key": api_key, "xpub": xpub}
     if network == "bnb":
         address = await get_setting("bnb_wallet_address") or settings.BNB_WALLET_ADDRESS
         contract = await get_setting("bnb_usdt_contract") or settings.BNB_USDT_CONTRACT
         rpc = await get_setting("bsc_rpc_url") or settings.BSC_RPC_URL
-        return {"address": address, "contract": contract, "api_key": rpc}
+        xpub = await get_setting("bnb_hd_xpub") or ""
+        return {"address": address, "contract": contract, "api_key": rpc, "xpub": xpub}
     return {}
+
+
+def is_hd_enabled(cfg: dict[str, str]) -> bool:
+    """Shu tarmoq uchun HD (har bir mijozga alohida manzil) yoqilganmi."""
+    return bool((cfg.get("xpub") or "").strip())
+
+
+def validate_hd_xpub(network: str, xpub: str) -> str | None:
+    """xpub to'g'riligini tekshiradi. Xato matni yoki None."""
+    from bot.services.hd_wallet import HDWalletError, validate_xpub
+
+    try:
+        validate_xpub(xpub, network)
+    except HDWalletError as exc:
+        return str(exc)
+    return None
 
 
 def is_wallet_configured(network: str, cfg: dict[str, str]) -> bool:
@@ -68,16 +90,29 @@ def is_wallet_configured(network: str, cfg: dict[str, str]) -> bool:
         is_tron_address,
     )
 
-    address = (cfg.get("address") or "").strip()
     contract = (cfg.get("contract") or "").strip()
-    if not address or not contract:
+    if not contract:
+        return False
+
+    contract_key = CONTRACT_KEYS[0] if network == "tron" else CONTRACT_KEYS[1]
+    if find_contract_in_wallet_field(contract_key, contract):
+        return False
+
+    if is_hd_enabled(cfg):
+        # HD rejimda umumiy wallet manzili shart emas — manzillar xpub'dan
+        # hosil qilinadi. Faqat xpub va kontrakt to'g'ri bo'lishi kerak.
+        if validate_hd_xpub(network, cfg["xpub"]):
+            return False
+        if network == "tron":
+            return is_tron_address(contract)
+        return is_evm_address(contract)
+
+    address = (cfg.get("address") or "").strip()
+    if not address:
         return False
 
     wallet_key = WALLET_KEYS[0] if network == "tron" else WALLET_KEYS[1]
-    contract_key = CONTRACT_KEYS[0] if network == "tron" else CONTRACT_KEYS[1]
     if find_contract_in_wallet_field(wallet_key, address):
-        return False
-    if find_contract_in_wallet_field(contract_key, contract):
         return False
 
     if network == "tron":
@@ -217,6 +252,18 @@ async def _bnb_transfers(address: str, contract: str) -> list[dict]:
     return transfers
 
 
+async def get_transfers_for_address(network: str, address: str) -> list[dict]:
+    """Bitta manzilga kelgan USDT transferlari (HD rejim uchun)."""
+    cfg = await _get_config(network)
+    if not address:
+        return []
+    if network == "tron":
+        return await _tron_transfers(address, cfg["contract"], cfg.get("api_key") or "")
+    if network == "bnb":
+        return await _bnb_transfers(address, cfg["contract"])
+    return []
+
+
 async def get_wallet_transfers(network: str) -> list[dict]:
     """Tarmoq bo'yicha walletga kelgan USDT transferlari.
 
@@ -260,31 +307,46 @@ async def check_network_payments(network: str, bot=None) -> list[dict]:
     if not is_wallet_configured(network, cfg):
         return []
 
-    transfers = await get_wallet_transfers(network)
+    # Har bir invoice o'z manziliga ega bo'lishi mumkin (HD rejim) — shuning
+    # uchun manzillar bo'yicha guruhlab, har biri uchun transferlarni olamiz.
+    by_address: dict[str, list] = {}
+    for payment in pending:
+        address = (payment.crypto_address or cfg.get("address") or "").strip()
+        if not address:
+            continue
+        by_address.setdefault(address, []).append(payment)
 
     # Bir tranzaksiya faqat 1 marta ishlatilishi kerak
     used_hashes: set[str] = set()
     confirmed: list[dict] = []
 
-    for payment in pending:
-        for tx in transfers:
-            tx_hash = tx.get("tx_hash") or ""
-            if not tx_hash or tx_hash in used_hashes:
-                continue
-            if not amount_matches(float(payment.crypto_amount or 0), float(tx.get("amount") or 0)):
-                continue
-            if not await mark_crypto_paid(payment.id, tx_hash):
-                continue
-            used_hashes.add(tx_hash)
-            confirmed.append(
-                {
-                    "payment_id": payment.id,
-                    "tx_hash": tx_hash,
-                    "amount": float(tx.get("amount") or 0),
-                    "user_id": payment.user_id,
-                }
-            )
-            break
+    for address, payments in by_address.items():
+        if address == (cfg.get("address") or "").strip() and not is_hd_enabled(cfg):
+            transfers = await get_wallet_transfers(network)
+        else:
+            transfers = await get_transfers_for_address(network, address)
+        if not transfers:
+            continue
+
+        for payment in payments:
+            for tx in transfers:
+                tx_hash = tx.get("tx_hash") or ""
+                if not tx_hash or tx_hash in used_hashes:
+                    continue
+                if not amount_matches(float(payment.crypto_amount or 0), float(tx.get("amount") or 0)):
+                    continue
+                if not await mark_crypto_paid(payment.id, tx_hash):
+                    continue
+                used_hashes.add(tx_hash)
+                confirmed.append(
+                    {
+                        "payment_id": payment.id,
+                        "tx_hash": tx_hash,
+                        "amount": float(tx.get("amount") or 0),
+                        "user_id": payment.user_id,
+                    }
+                )
+                break
 
     return confirmed
 

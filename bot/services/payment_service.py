@@ -182,6 +182,74 @@ async def _generate_unique_crypto_amount(base_amount: float) -> float:
     return round(base_amount, 4)
 
 
+async def _next_hd_index() -> int:
+    """Keyingi bo'sh HD indeksni beradi (commit qilinmagan sessiyalarga bog'liq emas)."""
+    from sqlalchemy import func
+
+    from bot.models.user import User
+
+    async with get_session() as session:
+        result = await session.execute(select(func.max(User.hd_index)))
+        current = result.scalar()
+        return 0 if current is None else int(current) + 1
+
+
+async def _allocate_hd_index(user_id: str) -> int:
+    """Mijozga HD indeksni atomik ajratadi (parallel so'rovlarga chidamli).
+
+    Indeks alohida tranzaksiyada yoziladi; unique constraint to'qnashuvni
+    ushlab qolsa, qayta urinamiz va yangi bo'sh indeksni olamiz.
+    """
+    import asyncio
+
+    from sqlalchemy import update
+
+    from bot.models.user import User
+
+    for _ in range(10):
+        async with get_session() as session:
+            existing = await session.scalar(select(User.hd_index).where(User.id == user_id))
+            if existing is not None:
+                return int(existing)
+
+            candidate = await _next_hd_index()
+            try:
+                result = await session.execute(
+                    update(User)
+                    .where(User.id == user_id, User.hd_index.is_(None))
+                    .values(hd_index=candidate)
+                )
+            except IntegrityError:
+                result = None
+            if result is not None and result.rowcount:
+                return candidate
+
+        await asyncio.sleep(0.01)
+
+    raise ValueError("HD indeks ajratilmadi — keyinroq qayta urinib ko'ring")
+
+
+async def _resolve_deposit_address(user_id: str, network: str, cfg: dict) -> str:
+    """Mijoz uchun depozit manzilini beradi.
+
+    HD rejim yoqilgan bo'lsa — foydalanuvchining doimiy `hd_index` i asosida
+    xpub'dan manzil hosil qilinadi (har bir mijozga alohida manzil).
+    Aks holda umumiy hamyon manzili qaytadi.
+    """
+    from bot.services.crypto_service import is_hd_enabled
+    from bot.services.hd_wallet import HDWalletError, derive_address
+
+    if not is_hd_enabled(cfg):
+        return (cfg.get("address") or "").strip()
+
+    index = await _allocate_hd_index(user_id)
+
+    try:
+        return derive_address(cfg["xpub"], network, index)
+    except HDWalletError as exc:
+        raise ValueError(f"HD manzil hosil qilib bo'lmadi: {exc}") from exc
+
+
 async def create_crypto_invoice(
     user_id: str,
     product_type: str,
@@ -194,18 +262,20 @@ async def create_crypto_invoice(
 
     Noyob `crypto_amount` biriktiradi — blokcheyndan kelgan transfer aynan
     shu summaga mos kelsa, to'lov avtomatik tasdiqlanadi.
+
+    HD rejim yoqilgan bo'lsa, `crypto_address` — mijozning **shaxsiy**
+    manzili bo'ladi (har bir mijozga alohida).
     """
     from bot.services.crypto_service import _get_config, is_wallet_configured
 
     cfg = await _get_config(network)
-    address = (cfg.get("address") or "").strip()
     method = CRYPTO_METHODS.get(network)
-    if not method or not address:
-        raise ValueError(f"{network} wallet manzili sozlanmagan")
+    if not method:
+        raise ValueError(f"Noma'lum tarmoq: {network}")
     if not is_wallet_configured(network, cfg):
         raise ValueError(
             f"{network} wallet manzili noto'g'ri — invoys yaratilmadi. "
-            "Admin panelда to'g'ri hamyon manzilini kiriting."
+            "Admin panelda to'g'ri hamyon manzilini kiriting."
         )
 
     # Foydalanuvchida shu tarif uchun amaldagi invoice bo'lsa — qayta ishlatamiz
@@ -228,6 +298,7 @@ async def create_crypto_invoice(
     if existing:
         return existing
 
+    address = await _resolve_deposit_address(user_id, network, cfg)
     crypto_amount = await _generate_unique_crypto_amount(float(amount))
     expires_at = datetime.now(UTC) + timedelta(minutes=ttl_minutes)
     return await create_payment(

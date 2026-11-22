@@ -81,12 +81,18 @@ async def toggle_payment_method_handler(callback: CallbackQuery) -> None:
 
 @admin_payment_methods_router.callback_query(F.data == "crypto_diag")
 async def crypto_diag_handler(callback: CallbackQuery) -> None:
-    """Hamyon/kontrakt sozlamalarini tekshiradi va aniq xatoni ko'rsatadi."""
+    """Hamyon/kontrakt/xpub sozlamalarini tekshiradi va aniq xatoni ko'rsatadi."""
     if callback.from_user.id not in await get_admin_ids():
         await callback.answer("⛔ Ruxsat yo'q", show_alert=True)
         return
 
-    from bot.services.crypto_service import _get_config, is_wallet_configured
+    from bot.services.crypto_service import (
+        _get_config,
+        is_hd_enabled,
+        is_wallet_configured,
+        validate_hd_xpub,
+    )
+    from bot.services.hd_wallet import HDWalletError, derive_address, xpub_fingerprint
     from bot.utils.validators import (
         BNB_USDT_CONTRACT,
         TRON_USDT_CONTRACT,
@@ -106,22 +112,37 @@ async def crypto_diag_handler(callback: CallbackQuery) -> None:
         cfg = await _get_config(network)
         address = (cfg.get("address") or "").strip()
         contract = (cfg.get("contract") or "").strip()
+        xpub = (cfg.get("xpub") or "").strip()
 
         lines.append(f"<b>{label}</b>")
-        if not address:
-            lines.append("  ❌ Hamyon manzili kiritilmagan")
-            lines.append("")
-            continue
 
-        problem = find_contract_in_wallet_field(wallet_key, address)
-        if problem:
-            lines.append(f"  ❌ {problem}")
-        elif network == "tron" and not is_tron_address(address):
-            lines.append("  ❌ Manzil TRON formatida emas")
-        elif network == "bnb" and not is_evm_address(address):
-            lines.append("  ❌ Manzil BEP20 (0x...) formatida emas")
+        if is_hd_enabled(cfg):
+            error = validate_hd_xpub(network, xpub)
+            if error:
+                lines.append(f"  ❌ HD xpub noto'g'ri: {error}")
+            else:
+                try:
+                    sample = derive_address(xpub, network, 0)
+                    lines.append("  ✅ HD rejim YOQILGAN — har bir mijozga alohida manzil")
+                    lines.append(f"  🔑 xpub izi: <code>{xpub_fingerprint(xpub)}</code>")
+                    lines.append(f"  📍 0-mijoz manzili: <code>{sample}</code>")
+                except HDWalletError as exc:
+                    lines.append(f"  ❌ HD manzil hosil bo'lmadi: {exc}")
         else:
-            lines.append(f"  ✅ Hamyon: <code>{address}</code>")
+            if not address:
+                lines.append("  ❌ Hamyon manzili kiritilmagan va HD xpub yo'q")
+                lines.append("")
+                continue
+            problem = find_contract_in_wallet_field(wallet_key, address)
+            if problem:
+                lines.append(f"  ❌ {problem}")
+            elif network == "tron" and not is_tron_address(address):
+                lines.append("  ❌ Manzil TRON formatida emas")
+            elif network == "bnb" and not is_evm_address(address):
+                lines.append("  ❌ Manzil BEP20 (0x...) formatida emas")
+            else:
+                lines.append(f"  ✅ Umumiy hamyon: <code>{address}</code>")
+                lines.append("  ℹ️ HD xpub kiritilmagan — barcha mijozlar bitta manzilga to'laydi")
 
         expected_contract = TRON_USDT_CONTRACT if network == "tron" else BNB_USDT_CONTRACT
         if contract.lower() != expected_contract.lower():
@@ -129,18 +150,22 @@ async def crypto_diag_handler(callback: CallbackQuery) -> None:
         else:
             lines.append("  ✅ USDT kontrakti to'g'ri")
 
-        ok = await is_wallet_configured(network, cfg)
+        ok = is_wallet_configured(network, cfg)
         lines.append(f"  {'✅ Avtomatik tekshiruv ishlaydi' if ok else '❌ Avtomatik tekshiruv ISHLAMAYDI'}")
         lines.append("")
 
     lines.append(
-        "<i>Hamyon manzilini Trust Wallet → Receive → tarmoqni tanlash → Copy orqali oling. "
-        "Kontrakt manzilini hech qachon hamyon sifatida kiritmang.</i>"
+        "<i>HD rejim uchun account darajasidagi xpub kerak (xprv/seed EMAS):\n"
+        "TRON — m/44'/195'/0'  |  BNB — m/44'/60'/0'</i>"
     )
 
-    await safe_edit(callback.message, "\n".join(lines), reply_markup=admin_payment_methods_kb(
-        await get_enabled_payment_methods(), await is_crypto_auto_enabled()
-    ))
+    await safe_edit(
+        callback.message,
+        "\n".join(lines),
+        reply_markup=admin_payment_methods_kb(
+            await get_enabled_payment_methods(), await is_crypto_auto_enabled()
+        ),
+    )
 
 
 @admin_payment_methods_router.callback_query(F.data == "toggle_crypto_auto")
