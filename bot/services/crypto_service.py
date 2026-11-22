@@ -41,11 +41,7 @@ async def _get_config(network: str) -> dict[str, str]:
     from bot.services.settings_service import get_setting
 
     if network == "tron":
-        address = (
-            await get_setting("tron_wallet_address")
-            or await get_setting("ton_wallet_address")
-            or settings.TON_WALLET_ADDRESS
-        )
+        address = await get_setting("tron_wallet_address") or settings.TRON_WALLET_ADDRESS
         contract = await get_setting("tron_usdt_contract") or settings.TRON_USDT_CONTRACT
         api_key = await get_setting("trongrid_api_key") or settings.TRONGRID_API_KEY
         return {"address": address, "contract": contract, "api_key": api_key}
@@ -55,6 +51,48 @@ async def _get_config(network: str) -> dict[str, str]:
         rpc = await get_setting("bsc_rpc_url") or settings.BSC_RPC_URL
         return {"address": address, "contract": contract, "api_key": rpc}
     return {}
+
+
+def is_wallet_configured(network: str, cfg: dict[str, str]) -> bool:
+    """Manzil haqiqiy hamyonmi (kontrakt emasmi) va tarmoqqa mosmi.
+
+    Noto'g'ri kiritilgan (kontrakt yoki boshqa tarmoq manzili) qiymatlar
+    bo'lsa invoice yaratilmaydi va tranzaksiyalar tekshirilmaydi —
+    aks holda tasdiqlanmagan transferlar ham to'lov deb hisoblanishi mumkin.
+    """
+    from bot.utils.validators import (
+        CONTRACT_KEYS,
+        WALLET_KEYS,
+        find_contract_in_wallet_field,
+        is_evm_address,
+        is_tron_address,
+    )
+
+    address = (cfg.get("address") or "").strip()
+    contract = (cfg.get("contract") or "").strip()
+    if not address or not contract:
+        return False
+
+    wallet_key = WALLET_KEYS[0] if network == "tron" else WALLET_KEYS[1]
+    contract_key = CONTRACT_KEYS[0] if network == "tron" else CONTRACT_KEYS[1]
+    if find_contract_in_wallet_field(wallet_key, address):
+        return False
+    if find_contract_in_wallet_field(contract_key, contract):
+        return False
+
+    if network == "tron":
+        return (
+            is_tron_address(address)
+            and is_tron_address(contract)
+            and address != contract
+        )
+    if network == "bnb":
+        return (
+            is_evm_address(address)
+            and is_evm_address(contract)
+            and address.lower() != contract.lower()
+        )
+    return False
 
 
 async def _tron_transfers(address: str, contract: str, api_key: str) -> list[dict]:
@@ -186,7 +224,8 @@ async def get_wallet_transfers(network: str) -> list[dict]:
     """
     cfg = await _get_config(network)
     address = (cfg.get("address") or "").strip()
-    if not address:
+    if not is_wallet_configured(network, cfg):
+        logger.warning("Kripto tekshiruv o'chirilgan: %s hamyoni noto'g'ri sozlangan", network)
         return []
 
     if network == "tron":
@@ -217,9 +256,11 @@ async def check_network_payments(network: str, bot=None) -> list[dict]:
     if not pending:
         return []
 
-    transfers = await get_wallet_transfers(network)
-    if not transfers:
+    cfg = await _get_config(network)
+    if not is_wallet_configured(network, cfg):
         return []
+
+    transfers = await get_wallet_transfers(network)
 
     # Bir tranzaksiya faqat 1 marta ishlatilishi kerak
     used_hashes: set[str] = set()

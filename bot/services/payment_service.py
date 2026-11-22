@@ -195,13 +195,18 @@ async def create_crypto_invoice(
     Noyob `crypto_amount` biriktiradi — blokcheyndan kelgan transfer aynan
     shu summaga mos kelsa, to'lov avtomatik tasdiqlanadi.
     """
-    from bot.services.crypto_service import _get_config
+    from bot.services.crypto_service import _get_config, is_wallet_configured
 
     cfg = await _get_config(network)
     address = (cfg.get("address") or "").strip()
     method = CRYPTO_METHODS.get(network)
     if not method or not address:
         raise ValueError(f"{network} wallet manzili sozlanmagan")
+    if not is_wallet_configured(network, cfg):
+        raise ValueError(
+            f"{network} wallet manzili noto'g'ri — invoys yaratilmadi. "
+            "Admin panelда to'g'ri hamyon manzilini kiriting."
+        )
 
     # Foydalanuvchida shu tarif uchun amaldagi invoice bo'lsa — qayta ishlatamiz
     # (har bosishda yangi pending qator yaratilmasin).

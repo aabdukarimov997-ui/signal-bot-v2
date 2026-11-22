@@ -75,7 +75,8 @@ async def test_crypto_invoice_unique_amount(sample_user):
     from bot.services.payment_service import create_crypto_invoice
     from bot.services.settings_service import set_setting
 
-    await set_setting("tron_wallet_address", "TTestWalletAddress1234567890")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
+    await set_setting("bnb_wallet_address", "")
 
     first = await create_crypto_invoice(
         user_id=sample_user.id,
@@ -93,7 +94,7 @@ async def test_crypto_invoice_unique_amount(sample_user):
     )
 
     assert first.crypto_network == "tron"
-    assert first.crypto_address == "TTestWalletAddress1234567890"
+    assert first.crypto_address == "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a"
     assert float(first.crypto_amount) >= 25.0
     assert float(first.crypto_amount) < 26.0
     assert first.crypto_amount != second.crypto_amount
@@ -129,7 +130,7 @@ async def test_mark_crypto_paid_is_idempotent(sample_user):
     )
     from bot.services.settings_service import set_setting
 
-    await set_setting("tron_wallet_address", "TTestWalletAddress1234567890")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
     payment = await create_crypto_invoice(
         user_id=sample_user.id,
         product_type="signal",
@@ -162,7 +163,7 @@ async def test_check_network_payments_auto_approves(sample_user, monkeypatch):
     from bot.services.payment_service import create_crypto_invoice, get_payment_by_id
     from bot.services.settings_service import set_setting
 
-    await set_setting("tron_wallet_address", "TTestWalletAddress1234567890")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
     payment = await create_crypto_invoice(
         user_id=sample_user.id,
         product_type="signal",
@@ -201,7 +202,7 @@ async def test_check_network_payments_skips_used_tx(sample_user, monkeypatch):
     from bot.services.payment_service import create_crypto_invoice
     from bot.services.settings_service import set_setting
 
-    await set_setting("tron_wallet_address", "TTestWalletAddress1234567890")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
     first = await create_crypto_invoice(
         user_id=sample_user.id, product_type="signal", product_id="t1", network="tron", amount=25.0
     )
@@ -237,7 +238,7 @@ async def test_expire_stale_crypto_invoices(sample_user):
     from bot.services.payment_service import create_crypto_invoice, expire_stale_crypto_invoices
     from bot.services.settings_service import set_setting
 
-    await set_setting("tron_wallet_address", "TTestWalletAddress1234567890")
+    await set_setting("tron_wallet_address", "TQn9Y2khE4YQ8pA9nK9a1Kz2fSdq8mYQ3a")
     payment = await create_crypto_invoice(
         user_id=sample_user.id, product_type="signal", product_id="t1", network="tron", amount=25.0
     )

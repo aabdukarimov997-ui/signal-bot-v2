@@ -1,3 +1,5 @@
+import re
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ContentType, Message
@@ -13,8 +15,24 @@ from bot.services.settings_service import (
 from bot.utils.helpers import safe_edit
 from bot.utils.keyboards import InlineKeyboardButton, InlineKeyboardMarkup
 from bot.utils.states import AdminSettingsStates
+from bot.utils.validators import CONTRACT_KEYS, WALLET_KEYS, find_contract_in_wallet_field
 
 admin_settings_router = Router()
+
+BSC_RPC_RE = re.compile(r"^https?://[^\s]+$")
+
+
+def _validate_setting_value(key: str, value: str) -> str | None:
+    """Noto'g'ri kiritilgan qiymat uchun xabar matni, aks holda None."""
+    if key in WALLET_KEYS or key in CONTRACT_KEYS:
+        return find_contract_in_wallet_field(key, value)
+    if key == "bsc_rpc_url" and value and not BSC_RPC_RE.match(value):
+        return "❌ BSC RPC URL noto'g'ri. `https://...` ko'rinishida kiriting."
+    if key == "trongrid_api_key" and " " in value:
+        return "❌ TronGrid API kalitida bo'sh joy bo'lmasligi kerak."
+    if key == "crypto_poll_seconds" and (not value.isdigit() or int(value) < 30):
+        return "❌ Tekshirish oralig'i kamida 30 soniya bo'lsin."
+    return None
 
 
 # Settings grouped by category for cleaner UI
@@ -213,6 +231,16 @@ async def admin_save_setting(message: Message, state: FSMContext) -> None:
     # Handle text
     if message.text is not None:
         value = message.text.strip()
+
+        if value:
+            error = _validate_setting_value(key, value)
+            if error:
+                await message.answer(
+                    f"{error}\n\nIltimos, <b>{desc}</b> manzilini qayta kiriting yoki "
+                    "bekor qilish uchun /start bosing."
+                )
+                return
+
         await set_setting(key, value)
         await state.clear()
         await message.answer(f"✅ <b>{desc}</b> yangilandi!\nQiymat: <code>{value}</code>")
