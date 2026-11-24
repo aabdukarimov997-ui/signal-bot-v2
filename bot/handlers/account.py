@@ -99,8 +99,10 @@ async def subscription_history_handler(callback: CallbackQuery, user: User) -> N
 async def extend_subscription_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     """Redirect to signal tariffs for extension."""
     from bot.handlers.signals import send_signal_menu
+    from bot.services.pricing_service import build_price
     from bot.services.subscription_service import get_all_tariffs
 
     tariffs = await get_all_tariffs("signal")
-    await send_signal_menu(callback, tariffs, bot, is_edit=True)
+    prices = {t.id: await build_price(user.id, float(t.price), "signal") for t in tariffs}
+    await send_signal_menu(callback, tariffs, bot, is_edit=True, prices=prices)
     await callback.answer()

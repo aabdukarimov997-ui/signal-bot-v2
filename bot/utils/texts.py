@@ -55,6 +55,21 @@ COURSE_ALREADY_SUBSCRIBED_TEXT = (
     "✅ <b>Sizda darslar obunasi bor!</b>\n\nDarslar kanallari sizda mavjud. Kanallarga kirishingiz mumkin."
 )
 
+# Faol obunasi borlarga chegirma bildirishnomasi
+ACTIVE_SUB_DISCOUNT_NOTICE_TEXT = (
+    "✅ <b>Sizda faol obuna bor!</b>\n\n"
+    "Obunangizni uzaytirganda sizga <b>{discount}% chegirma</b> taqdim etiladi."
+)
+
+COURSE_ACTIVE_SUB_DISCOUNT_NOTICE_TEXT = (
+    "✅ <b>Sizda darslar obunasi bor!</b>\n\n"
+    "Darslarni uzaytirganda sizga <b>{discount}% chegirma</b> taqdim etiladi."
+)
+
+# Chegirma bilan narx satri
+DISCOUNTED_PRICE_LINE_TEXT = "💰 <b>Narx:</b> {price}  ({saved} tejaysiz)"
+ORIGINAL_PRICE_LINE_TEXT = "🏷 Asl narx: {price}"
+
 # Visa Payment
 VISA_PAYMENT_TEXT = (
     "💳 <b>Visa karta orqali to'lov</b>\n\n"

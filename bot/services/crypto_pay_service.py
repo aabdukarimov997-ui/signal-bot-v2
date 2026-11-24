@@ -59,14 +59,17 @@ async def create_invoice(user_id: str, tariff: SignalTariff) -> Payment:
         )
     if existing and valid_invoice_url(existing.telegram_charge_id or ""):
         return existing
+    from bot.services.pricing_service import build_price
+
+    price = await build_price(user_id, float(tariff.price), tariff.product_type)
     payment = await create_payment(
         user_id=user_id, product_type=tariff.product_type, product_id=tariff.id,
-        amount=float(tariff.price), payment_method="crypto_pay", status="pending",
+        amount=price.final, discount=price.saved, payment_method="crypto_pay", status="pending",
         crypto_expires_at=datetime.now(UTC) + timedelta(hours=1),
     )
     try:
         invoice = await api_call("createInvoice", {
-            "currency_type": "crypto", "asset": "USDT", "amount": str(tariff.price),
+            "currency_type": "crypto", "asset": "USDT", "amount": str(price.final),
             "payload": payment.id, "expires_in": 3600, "allow_comments": False, "allow_anonymous": False,
         })
         url = invoice.get("bot_invoice_url", "")

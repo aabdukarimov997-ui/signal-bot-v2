@@ -9,6 +9,7 @@ from bot.models.user import User
 from bot.services.channel_service import get_course_invite_links, get_invite_link, get_signal_channel_id
 from bot.services.exchange_service import format_payment_with_uzs
 from bot.services.payment_service import create_crypto_invoice, create_payment, get_payment_by_id
+from bot.services.pricing_service import Price, build_price
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting
 from bot.services.subscription_service import (
     create_subscription,
@@ -33,6 +34,7 @@ from bot.utils.keyboards import (
 )
 from bot.utils.states import PaymentStates
 from bot.utils.texts import (
+    ACTIVE_SUB_DISCOUNT_NOTICE_TEXT,
     ADMIN_PAYMENT_NOTIFICATION,
     ALREADY_SUBSCRIBED_TEXT,
     BNB_PAYMENT_TEXT,
@@ -61,7 +63,13 @@ signal_router = Router()
 # ─── Helper: Send Signal Subscription Message ──────────────────────
 
 
-async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
+async def send_signal_menu(
+    target: Message | CallbackQuery,
+    tariffs: list,
+    bot: Bot,
+    is_edit: bool = False,
+    prices: dict[str, Price] | None = None,
+) -> None:
     """Send the VIP signal subscription message with optional photo/video from DB settings."""
     signal_msg = await get_setting("signal_message") or SIGNAL_TEXT
     signal_img = await get_setting("signal_image")
@@ -70,7 +78,7 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
     if not tariffs:
         signal_msg += "\n\n❌ Hozircha tariflar mavjud emas."
 
-    kb = tariff_selection_kb(tariffs) if tariffs else None
+    kb = tariff_selection_kb(tariffs, prices) if tariffs else None
     message = target if isinstance(target, Message) else target.message
 
     # Priority: video > image > text-only (with fallback chain)
@@ -103,24 +111,42 @@ async def send_signal_menu(target: Message | CallbackQuery, tariffs: list, bot: 
             await safe_send(message, signal_msg, reply_markup=kb)
 
 
+async def _notify_active_subscription(
+    message: Message,
+    tariffs: list,
+    prices: dict[str, Price],
+) -> None:
+    """Faol obunasi bor foydalanuvchiga bitta qisqa xabar (chegirma yoki eslatma)."""
+    price = prices.get(tariffs[0].id) if tariffs and prices else None
+    if price is not None and price.has_discount:
+        await message.answer(ACTIVE_SUB_DISCOUNT_NOTICE_TEXT.format(discount=price.discount_percent))
+    else:
+        await message.answer(ALREADY_SUBSCRIBED_TEXT)
+
+
 # ─── Signal Menu: Show Tariffs ─────────────────────────────────────
 
 
 @signal_router.message(F.text == "📈 Signal kanal")
 async def signal_menu_handler(message: Message, user: User, bot: Bot) -> None:
-    sub = await get_active_subscription_by_type(user.id, "signal")
-    if sub:
-        await message.answer(ALREADY_SUBSCRIBED_TEXT)
+    tariffs = await get_all_tariffs("signal")
+    if not tariffs:
+        await message.answer("❌ Hozircha tariflar mavjud emas.")
         return
 
-    tariffs = await get_all_tariffs("signal")
-    await send_signal_menu(message, tariffs, bot)
+    prices = {t.id: await build_price(user.id, float(t.price), "signal") for t in tariffs}
+
+    # Faol obunasi bor bo'lsa ham tariflarni ko'rsatamiz — uzaytirishda chegirma beriladi.
+    if await get_active_subscription_by_type(user.id, "signal"):
+        await _notify_active_subscription(message, tariffs, prices)
+    await send_signal_menu(message, tariffs, bot, prices=prices)
 
 
 @signal_router.callback_query(F.data == "back_tariffs")
-async def back_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def back_tariffs_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariffs = await get_all_tariffs("signal")
-    await send_signal_menu(callback, tariffs, bot, is_edit=True)
+    prices = {t.id: await build_price(user.id, float(t.price), "signal") for t in tariffs}
+    await send_signal_menu(callback, tariffs, bot, is_edit=True, prices=prices)
     await callback.answer()
 
 
@@ -128,7 +154,7 @@ async def back_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
 
 
 @signal_router.callback_query(F.data.startswith("tariff_"))
-async def tariff_selected_handler(callback: CallbackQuery) -> None:
+async def tariff_selected_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("tariff_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -136,9 +162,10 @@ async def tariff_selected_handler(callback: CallbackQuery) -> None:
         return
 
     enabled_methods = await get_enabled_payment_methods()
+    price = await build_price(user.id, float(tariff.price), "signal")
     text = (
         f"📈 <b>{tariff.label}</b>\n\n"
-        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n"
+        f"💰 Narx: {price.format_html()}\n"
         f"📅 Muddati: <b>{tariff.duration_display}</b>\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
@@ -147,14 +174,15 @@ async def tariff_selected_handler(callback: CallbackQuery) -> None:
 
 
 @signal_router.callback_query(F.data.startswith("pay_method_"))
-async def pay_method_handler(callback: CallbackQuery) -> None:
+async def pay_method_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("pay_method_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
     enabled_methods = await get_enabled_payment_methods()
-    text = f"📈 <b>{tariff.label}</b>\n\n💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n{PAYMENT_METHOD_TEXT}"
+    price = await build_price(user.id, float(tariff.price), "signal")
+    text = f"📈 <b>{tariff.label}</b>\n\n💰 Narx: {price.format_html()}\n\n{PAYMENT_METHOD_TEXT}"
     await safe_edit(callback.message, text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
@@ -163,7 +191,7 @@ async def pay_method_handler(callback: CallbackQuery) -> None:
 
 
 @signal_router.callback_query(F.data.startswith("visa_"))
-async def visa_payment_handler(callback: CallbackQuery) -> None:
+async def visa_payment_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("visa_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -172,11 +200,13 @@ async def visa_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("visa_card_number") or await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("visa_card_holder") or await get_setting("card_owner") or settings.CARD_HOLDER
+    price = await build_price(user.id, float(tariff.price), "signal")
     text, rate = await format_payment_with_uzs(
-        usd_amount=float(tariff.price),
+        usd_amount=price.final,
         template=VISA_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
+        usd_label=price.format_final(),
     )
     await safe_edit(callback.message, text, reply_markup=visa_payment_kb(tariff.id))
     await callback.answer()
@@ -316,6 +346,7 @@ async def successful_payment_handler(message: Message, user: User, bot: Bot) -> 
 
 async def _refresh_rate_and_reply(
     callback: CallbackQuery,
+    user: User,
     tariff_id: str,
     template: str,
     card_num_key: str,
@@ -330,9 +361,11 @@ async def _refresh_rate_and_reply(
 
     card_num = await get_setting(card_num_key) or settings.CARD_NUMBER
     card_own = await get_setting(card_holder_key) or settings.CARD_HOLDER
+    price = await build_price(user.id, float(tariff.price), "signal")
 
     text, rate = await format_payment_with_uzs(
-        usd_amount=float(tariff.price),
+        usd_amount=price.final,
+        usd_label=price.format_final(),
         template=template,
         card_number=card_num,
         card_holder=card_own,
@@ -347,10 +380,11 @@ async def _refresh_rate_and_reply(
 
 
 @signal_router.callback_query(F.data.startswith("refresh_card_"))
-async def refresh_card_rate_handler(callback: CallbackQuery) -> None:
+async def refresh_card_rate_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("refresh_card_", "")
     await _refresh_rate_and_reply(
         callback,
+        user,
         tariff_id,
         CARD_PAYMENT_TEXT,
         "card_number",
@@ -360,10 +394,11 @@ async def refresh_card_rate_handler(callback: CallbackQuery) -> None:
 
 
 @signal_router.callback_query(F.data.startswith("refresh_visa_"))
-async def refresh_visa_rate_handler(callback: CallbackQuery) -> None:
+async def refresh_visa_rate_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("refresh_visa_", "")
     await _refresh_rate_and_reply(
         callback,
+        user,
         tariff_id,
         VISA_PAYMENT_TEXT,
         "visa_card_number",
@@ -373,7 +408,7 @@ async def refresh_visa_rate_handler(callback: CallbackQuery) -> None:
 
 
 @signal_router.callback_query(F.data.startswith("card_"))
-async def card_payment_handler(callback: CallbackQuery) -> None:
+async def card_payment_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("card_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -382,11 +417,13 @@ async def card_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("card_owner") or settings.CARD_HOLDER
+    price = await build_price(user.id, float(tariff.price), "signal")
     text, rate = await format_payment_with_uzs(
-        usd_amount=float(tariff.price),
+        usd_amount=price.final,
         template=CARD_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
+        usd_label=price.format_final(),
     )
     await safe_edit(callback.message, text, reply_markup=card_payment_kb(tariff.id))
     await callback.answer()
@@ -413,13 +450,15 @@ async def receipt_received_handler(message: Message, user: User, state: FSMConte
         return
 
     photo_file_id = message.photo[-1].file_id
+    price = await build_price(user.id, float(tariff.price), "signal")
 
-    # Create pending payment
+    # Create pending payment (chegirma hisobga olingan summa)
     payment = await create_payment(
         user_id=user.id,
         product_type="signal",
         product_id=tariff.id,
-        amount=float(tariff.price),
+        amount=price.final,
+        discount=price.saved,
         payment_method=payment_method,
         photo_file_id=photo_file_id,
     )
@@ -438,7 +477,7 @@ async def receipt_received_handler(message: Message, user: User, state: FSMConte
         full_name=user.full_name,
         telegram_id=user.telegram_id,
         tariff_name=tariff.label,
-        amount=float(tariff.price),
+        amount=price.final,
         payment_method=method_label,
         time=format_date(payment.created_at),
     )
@@ -477,10 +516,11 @@ async def invalid_receipt_handler(message: Message) -> None:
 
 
 @signal_router.callback_query(F.data == "cancel_upload", PaymentStates.upload_receipt)
-async def cancel_upload_handler(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+async def cancel_upload_handler(callback: CallbackQuery, user: User, state: FSMContext, bot: Bot) -> None:
     await state.clear()
     tariffs = await get_all_tariffs("signal")
-    await send_signal_menu(callback, tariffs, bot, is_edit=True)
+    prices = {t.id: await build_price(user.id, float(t.price), "signal") for t in tariffs}
+    await send_signal_menu(callback, tariffs, bot, is_edit=True, prices=prices)
     await callback.answer("❌ Bekor qilindi")
 
 
@@ -495,14 +535,16 @@ async def tron_payment_handler(callback: CallbackQuery, user: User, bot: Bot) ->
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
-    # Avtomatik to'lov — noyob summa bilan invoice yaratamiz
+    # Avtomatik to'lov — chegirma hisobga olingan summa bilan invoice yaratamiz
+    price = await build_price(user.id, float(tariff.price), tariff.product_type or "signal")
     try:
         payment = await create_crypto_invoice(
             user_id=user.id,
             product_type=tariff.product_type or "signal",
             product_id=tariff.id,
             network="tron",
-            amount=float(tariff.price),
+            amount=price.final,
+            discount=price.saved,
         )
     except ValueError:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
@@ -536,13 +578,15 @@ async def bnb_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> 
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    price = await build_price(user.id, float(tariff.price), tariff.product_type or "signal")
     try:
         payment = await create_crypto_invoice(
             user_id=user.id,
             product_type=tariff.product_type or "signal",
             product_id=tariff.id,
             network="bnb",
-            amount=float(tariff.price),
+            amount=price.final,
+            discount=price.saved,
         )
     except ValueError:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)

@@ -70,6 +70,8 @@ SETTINGS_KEYS = {
     "premium_gift_link": "Telegram Premium sovg'a linki",
     "admin_ids": "Admin Telegram IDs (JSON list)",
     "setup_completed": "Setup completed (true/false)",
+    # Chegirmalar
+    "loyalty_discount_percent": "Faol obunasi borlarga chegirma foizi (%)",
     # Viktorina
     "quiz_enabled": "Viktorina (yoqilgan/o'chirilgan)",
     "quiz_pass_percent": "Viktorinadan o'tish foizi (%)",

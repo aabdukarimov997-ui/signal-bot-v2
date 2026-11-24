@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMar
 
 from bot.models.user import User
 from bot.services.crypto_pay_service import create_invoice
+from bot.services.pricing_service import build_price
 from bot.services.subscription_service import get_tariff_by_id
 from bot.utils.helpers import safe_edit
 from bot.utils.texts import CRYPTO_PAY_GUIDE_TEXT
@@ -17,6 +18,7 @@ async def crypto_pay_invoice(callback: CallbackQuery, user: User, bot: Bot) -> N
         await callback.answer("Tarif topilmadi", show_alert=True)
         return
     await callback.answer("Invoice yaratilmoqda")
+    price = await build_price(user.id, float(tariff.price), tariff.product_type)
     try:
         payment = await create_invoice(user.id, tariff)
     except ValueError as exc:
@@ -24,7 +26,7 @@ async def crypto_pay_invoice(callback: CallbackQuery, user: User, bot: Bot) -> N
         return
     await safe_edit(
         callback.message,
-        f"<b>Crypto Pay orqali qulay to'lov</b>\n\nSumma: {tariff.price} USDT\n"
+        f"<b>Crypto Pay orqali qulay to'lov</b>\n\nSumma: {price.final} USDT\n"
         f"{CRYPTO_PAY_GUIDE_TEXT}\n\n"
         "Tasdiqlangan to'lov server orqali tekshiriladi va obuna avtomatik faollashadi.",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[

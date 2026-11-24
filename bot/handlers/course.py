@@ -9,6 +9,7 @@ from bot.models.tariff import SignalTariff
 from bot.models.user import User
 from bot.services.exchange_service import format_payment_with_uzs
 from bot.services.payment_service import create_crypto_invoice, create_payment
+from bot.services.pricing_service import Price, build_price
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting
 from bot.services.subscription_service import (
     get_active_subscription_by_type,
@@ -34,6 +35,7 @@ from bot.utils.texts import (
     CARD_PAYMENT_TEXT,
     CHECK_RECEIVED_TEXT,
     CHECK_UPLOAD_TEXT,
+    COURSE_ACTIVE_SUB_DISCOUNT_NOTICE_TEXT,
     COURSE_ALREADY_SUBSCRIBED_TEXT,
     PAYMENT_METHOD_TEXT,
     TON_PAYMENT_TEXT,
@@ -49,32 +51,47 @@ course_router = Router()
 # ─── Helper: Build Course Menu Text ────────────────────────────────
 
 
-def _build_course_text(course_name: str, course_description: str, tariffs: list[SignalTariff]) -> str:
+def _build_course_text(
+    course_name: str,
+    course_description: str,
+    tariffs: list[SignalTariff],
+    prices: dict[str, Price] | None = None,
+) -> str:
     """Build course menu text with name, description, and tariff prices."""
+    prices = prices or {}
     text = f"📚 <b>{course_name}</b>\n\n"
     if course_description:
         text += f"{course_description}\n\n"
     text += "Tariflar:"
     for t in tariffs:
-        text += f"\n• {t.name} — ${float(t.price):.0f}"
+        if t.id in prices:
+            text += f"\n• {t.name} — {prices[t.id].format_html()}"
+        else:
+            text += f"\n• {t.name} — ${float(t.price):.0f}"
     return text
 
 
 # ─── Helper: Send Course Menu Message ──────────────────────────────
 
 
-async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: Bot, is_edit: bool = False) -> None:
+async def send_course_menu(
+    target: Message | CallbackQuery,
+    tariffs: list,
+    bot: Bot,
+    is_edit: bool = False,
+    prices: dict[str, Price] | None = None,
+) -> None:
     """Send the Darslar subscription message with optional photo/video from DB settings."""
     course_name = await get_setting("course_tariff_name") or "Darslar"
     course_description = await get_setting("course_description") or ""
     course_msg = await get_setting("course_message")
 
     # If custom message exists, show ONLY the custom message (no auto-generated text)
-    text = course_msg or _build_course_text(course_name, course_description, tariffs)
+    text = course_msg or _build_course_text(course_name, course_description, tariffs, prices)
 
     course_img = await get_setting("course_image")
     course_vid = await get_setting("course_video")
-    kb = course_tariff_selection_kb(tariffs)
+    kb = course_tariff_selection_kb(tariffs, prices)
     message = target if isinstance(target, Message) else target.message
 
     # Send: text + image (if set) + video (if set) — all together
@@ -109,22 +126,29 @@ async def send_course_menu(target: Message | CallbackQuery, tariffs: list, bot: 
 
 @course_router.message(F.text == "📚 Darslar")
 async def course_menu_handler(message: Message, user: User, bot: Bot) -> None:
-    sub = await get_active_subscription_by_type(user.id, "course")
-    if sub:
-        await message.answer(COURSE_ALREADY_SUBSCRIBED_TEXT)
-        return
-
     tariffs = await get_all_tariffs("course")
     if not tariffs:
         await message.answer("❌ Hozircha darslar tariflar mavjud emas.")
         return
-    await send_course_menu(message, tariffs, bot)
+
+    prices = {t.id: await build_price(user.id, float(t.price), "course") for t in tariffs}
+
+    if await get_active_subscription_by_type(user.id, "course"):
+        first = prices[tariffs[0].id]
+        if first.has_discount:
+            await message.answer(
+                COURSE_ACTIVE_SUB_DISCOUNT_NOTICE_TEXT.format(discount=first.discount_percent)
+            )
+        else:
+            await message.answer(COURSE_ALREADY_SUBSCRIBED_TEXT)
+    await send_course_menu(message, tariffs, bot, prices=prices)
 
 
 @course_router.callback_query(F.data == "back_course_tariffs")
-async def back_course_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def back_course_tariffs_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariffs = await get_all_tariffs("course")
-    await send_course_menu(callback, tariffs, bot, is_edit=True)
+    prices = {t.id: await build_price(user.id, float(t.price), "course") for t in tariffs}
+    await send_course_menu(callback, tariffs, bot, is_edit=True, prices=prices)
     await callback.answer()
 
 
@@ -132,7 +156,7 @@ async def back_course_tariffs_handler(callback: CallbackQuery, bot: Bot) -> None
 
 
 @course_router.callback_query(F.data.startswith("course_tariff_"))
-async def course_tariff_selected_handler(callback: CallbackQuery) -> None:
+async def course_tariff_selected_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("course_tariff_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -140,9 +164,10 @@ async def course_tariff_selected_handler(callback: CallbackQuery) -> None:
         return
 
     enabled_methods = await get_enabled_payment_methods()
+    price = await build_price(user.id, float(tariff.price), "course")
     text = (
         f"📚 <b>{tariff.name}</b>\n\n"
-        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n"
+        f"💰 Narx: {price.format_html()}\n"
         f"📅 Muddati: <b>{tariff.duration_display}</b>\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
@@ -151,14 +176,15 @@ async def course_tariff_selected_handler(callback: CallbackQuery) -> None:
 
 
 @course_router.callback_query(F.data.startswith("course_pay_method_"))
-async def course_pay_method_handler(callback: CallbackQuery) -> None:
+async def course_pay_method_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("course_pay_method_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
     enabled_methods = await get_enabled_payment_methods()
-    text = f"📚 <b>{tariff.name}</b>\n\n💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n{PAYMENT_METHOD_TEXT}"
+    price = await build_price(user.id, float(tariff.price), "course")
+    text = f"📚 <b>{tariff.name}</b>\n\n💰 Narx: {price.format_html()}\n\n{PAYMENT_METHOD_TEXT}"
     await safe_edit(callback.message, text, reply_markup=course_payment_method_kb(tariff.id, enabled_methods))
     await callback.answer()
 
@@ -167,7 +193,7 @@ async def course_pay_method_handler(callback: CallbackQuery) -> None:
 
 
 @course_router.callback_query(F.data.startswith("course_stars_"))
-async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> None:
+async def course_stars_payment_handler(callback: CallbackQuery, user: User, bot: Bot) -> None:
     tariff_id = callback.data.replace("course_stars_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -177,6 +203,10 @@ async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> Non
     stars_key = f"course_stars_{tariff.duration_months}_month"
     stars_from_db = await get_setting(stars_key)
     stars_amount = int(stars_from_db) if stars_from_db else tariff.stars_price
+
+    price = await build_price(user.id, float(tariff.price), "course")
+    if price.has_discount and stars_amount:
+        stars_amount = max(1, round(int(stars_amount) * (100 - price.discount_percent) / 100))
 
     course_name = await get_setting("course_tariff_name") or "Darslar"
     prices = [LabeledPrice(label=tariff.name, amount=stars_amount)]
@@ -198,7 +228,7 @@ async def course_stars_payment_handler(callback: CallbackQuery, bot: Bot) -> Non
 
 
 @course_router.callback_query(F.data.startswith("refresh_course_card_"))
-async def refresh_course_card_rate_handler(callback: CallbackQuery) -> None:
+async def refresh_course_card_rate_handler(callback: CallbackQuery, user: User) -> None:
     """Kursni yangilab, UZS summani qayta ko'rsatish (darslar uchun)."""
     tariff_id = callback.data.replace("refresh_course_card_", "")
     tariff = await get_tariff_by_id(tariff_id)
@@ -208,12 +238,14 @@ async def refresh_course_card_rate_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("card_owner") or settings.CARD_HOLDER
+    price = await build_price(user.id, float(tariff.price), "course")
     text, rate = await format_payment_with_uzs(
-        usd_amount=float(tariff.price),
+        usd_amount=price.final,
         template=CARD_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
         force_refresh=True,
+        usd_label=price.format_final(),
     )
     await safe_edit(callback.message, text, reply_markup=course_card_payment_kb(tariff.id))
     rate_str = f"{rate:,.0f}".replace(",", " ")
@@ -221,7 +253,7 @@ async def refresh_course_card_rate_handler(callback: CallbackQuery) -> None:
 
 
 @course_router.callback_query(F.data.startswith("course_card_"))
-async def course_card_payment_handler(callback: CallbackQuery) -> None:
+async def course_card_payment_handler(callback: CallbackQuery, user: User) -> None:
     tariff_id = callback.data.replace("course_card_", "")
     tariff = await get_tariff_by_id(tariff_id)
     if not tariff:
@@ -230,11 +262,13 @@ async def course_card_payment_handler(callback: CallbackQuery) -> None:
 
     card_num = await get_setting("card_number") or settings.CARD_NUMBER
     card_own = await get_setting("card_owner") or settings.CARD_HOLDER
+    price = await build_price(user.id, float(tariff.price), "course")
     text, rate = await format_payment_with_uzs(
-        usd_amount=float(tariff.price),
+        usd_amount=price.final,
         template=CARD_PAYMENT_TEXT,
         card_number=card_num,
         card_holder=card_own,
+        usd_label=price.format_final(),
     )
     await safe_edit(callback.message, text, reply_markup=course_card_payment_kb(tariff.id))
     await callback.answer()
@@ -260,13 +294,15 @@ async def course_tron_payment_handler(callback: CallbackQuery, user: User, bot: 
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    price = await build_price(user.id, float(tariff.price), "course")
     try:
         payment = await create_crypto_invoice(
             user_id=user.id,
             product_type="course",
             product_id=tariff.id,
             network="tron",
-            amount=float(tariff.price),
+            amount=price.final,
+            discount=price.saved,
         )
     except ValueError:
         await callback.answer("❌ TRON wallet sozlanmagan", show_alert=True)
@@ -300,13 +336,15 @@ async def course_bnb_payment_handler(callback: CallbackQuery, user: User, bot: B
         await callback.answer("❌ Tarif topilmadi", show_alert=True)
         return
 
+    price = await build_price(user.id, float(tariff.price), "course")
     try:
         payment = await create_crypto_invoice(
             user_id=user.id,
             product_type="course",
             product_id=tariff.id,
             network="bnb",
-            amount=float(tariff.price),
+            amount=price.final,
+            discount=price.saved,
         )
     except ValueError:
         await callback.answer("❌ BNB wallet sozlanmagan", show_alert=True)
@@ -381,12 +419,14 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         return
 
     photo_file_id = message.photo[-1].file_id
+    price = await build_price(user.id, float(tariff.price), "course")
 
     payment = await create_payment(
         user_id=user.id,
         product_type="course",
         product_id=tariff.id,
-        amount=float(tariff.price),
+        amount=price.final,
+        discount=price.saved,
         payment_method=payment_method,
         photo_file_id=photo_file_id,
     )
@@ -404,7 +444,7 @@ async def course_receipt_received_handler(message: Message, user: User, state: F
         full_name=user.full_name,
         telegram_id=user.telegram_id,
         tariff_name=f"📚 Darslar: {tariff.name}",
-        amount=float(tariff.price),
+        amount=price.final,
         payment_method=method_label,
         time=format_date(payment.created_at),
     )

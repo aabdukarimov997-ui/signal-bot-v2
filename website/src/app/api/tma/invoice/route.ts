@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
 import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
+import { applyStarsDiscount, resolvePrice } from '@/lib/tma/pricing';
 
 export const runtime = 'nodejs';
 
@@ -46,6 +47,10 @@ export async function POST(request: Request) {
     if (!starsAmount || starsAmount <= 0) {
       return NextResponse.json({ error: 'Stars narxi sozlanmagan' }, { status: 400 });
     }
+
+    // Faol obunasi bor foydalanuvchiga chegirma (botdagi bilan bir xil qoida)
+    const price = await resolvePrice(auth.user.id, parseFloat(tariff.price), tariff.product_type);
+    starsAmount = applyStarsDiscount(starsAmount, price.discountPercent);
 
     const productLabel = tariff.product_type === 'course' ? 'Kurs' : 'Signal';
     const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {

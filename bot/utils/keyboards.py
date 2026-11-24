@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -6,6 +8,9 @@ from aiogram.types import (
 )
 
 from bot.models.tariff import SignalTariff
+
+if TYPE_CHECKING:
+    from bot.services.pricing_service import Price
 
 # ─── Main Menu (Reply Keyboard) ───────────────────────────────────────
 
@@ -28,11 +33,16 @@ def main_menu_kb(is_admin: bool = False, quiz_enabled: bool = False) -> ReplyKey
 # ─── Signal Tariffs (Inline) ──────────────────────────────────────────
 
 
-def tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
+def tariff_selection_kb(
+    tariffs: list[SignalTariff],
+    prices: dict[str, "Price"] | None = None,
+) -> InlineKeyboardMarkup:
+    """Tariflar tugmalari. prices berilsa — chegirma hisoblangan narx ko'rsatiladi."""
+    prices = prices or {}
     buttons = [
         [
             InlineKeyboardButton(
-                text=f"{t.label} — ${float(t.price):.0f}",
+                text=f"{t.label} — {prices[t.id].button_label() if t.id in prices else f'${float(t.price):.0f}'}",
                 callback_data=f"tariff_{t.id}",
             )
         ]
@@ -382,11 +392,16 @@ def admin_social_kb() -> InlineKeyboardMarkup:
 # ─── Course Tariffs (Inline) ─────────────────────────────────────────
 
 
-def course_tariff_selection_kb(tariffs: list[SignalTariff]) -> InlineKeyboardMarkup:
+def course_tariff_selection_kb(
+    tariffs: list[SignalTariff],
+    prices: dict[str, "Price"] | None = None,
+) -> InlineKeyboardMarkup:
+    """Darslar tariflari tugmalari. prices berilsa — chegirma hisoblangan narx ko'rsatiladi."""
+    prices = prices or {}
     buttons = [
         [
             InlineKeyboardButton(
-                text=f"{t.name} — ${float(t.price):.0f}",
+                text=f"{t.name} — {prices[t.id].button_label() if t.id in prices else f'${float(t.price):.0f}'}",
                 callback_data=f"course_tariff_{t.id}",
             )
         ]

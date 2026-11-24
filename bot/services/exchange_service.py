@@ -119,11 +119,14 @@ async def format_payment_with_uzs(
     card_number: str,
     card_holder: str,
     force_refresh: bool = False,
+    usd_label: str | None = None,
 ) -> tuple[str, float]:
     """
     To'lov matnini USD va jonli UZS kursi bilan formatlaydi.
 
     force_refresh=True bo'lsa, cache'ni tozalab qayta yuklaydi.
+    usd_label berilsa, matnda aynan shu yozuv (masalan chegirmali "$18.75")
+    ko'rsatiladi; UZS summa esa usd_amount asosida hisoblanadi.
 
     Returns: (formatted_text, exchange_rate)
     """
@@ -134,7 +137,7 @@ async def format_payment_with_uzs(
     text = template.format(
         card_number=card_number,
         card_holder=card_holder,
-        usd_amount=f"${usd_amount:.0f}",
+        usd_amount=usd_label or f"${usd_amount:.0f}",
         uzs_amount=uzs_str,
         exchange_rate=f"{rate:,.0f}".replace(",", " "),
     )

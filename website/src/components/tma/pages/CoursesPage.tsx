@@ -39,6 +39,9 @@ export function CoursesPage() {
     );
   }
 
+  const discountPercent =
+    tariffs.find((tr) => tr.discountPercent && tr.discountPercent > 0)?.discountPercent || 0;
+
   if (subscription?.productType === 'course' && subscription.status === 'active') {
     return (
       <div className="px-4 pt-4">
@@ -47,6 +50,11 @@ export function CoursesPage() {
             <span className="text-4xl block mb-3">📚</span>
             <h2 className="text-lg font-semibold text-[#2dd4a0] mb-2">{t('already_subscribed')}</h2>
             <p className="text-sm text-[#7c7b7b]">{t('expiry_date')}: {new Date(subscription.endDate).toLocaleDateString()}</p>
+            {discountPercent > 0 && (
+              <p className="text-sm text-[#2dd4a0] mt-2">
+                🎁 {t('active_sub_discount_notice', { percent: discountPercent })}
+              </p>
+            )}
           </div>
         </NationalFrame>
       </div>
@@ -80,7 +88,19 @@ export function CoursesPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-[#2dd4a0]">${tariff.price}</p>
+                      {!!tariff.discountPercent && !!tariff.originalPrice ? (
+                        <>
+                          <p className="text-[11px] text-[#7c7b7b] line-through">${tariff.originalPrice}</p>
+                          <p className="font-bold text-[#2dd4a0]">
+                            ${tariff.price}{' '}
+                            <span className="text-[10px] font-medium text-[#d4a72c]">
+                              {t('discount_badge', { percent: tariff.discountPercent })}
+                            </span>
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-bold text-[#2dd4a0]">${tariff.price}</p>
+                      )}
                     </div>
                   </div>
                 </button>

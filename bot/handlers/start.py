@@ -13,6 +13,7 @@ from aiogram.types import LabeledPrice, Message
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.pricing_service import build_price
 from bot.services.quiz_service import is_quiz_enabled
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting, is_setup_completed
 from bot.services.subscription_service import get_tariff_by_id
@@ -197,6 +198,10 @@ async def _handle_pay_stars(message: Message, user: User, bot: Bot, tariff_id: s
         await message.answer("❌ Stars narxi sozlanmagan. Iltimos, karta orqali to'lang yoki admin bilan bog'laning.")
         return
 
+    price = await build_price(user.id, float(tariff.price), "signal")
+    if price.has_discount:
+        stars_amount = max(1, round(stars_amount * (100 - price.discount_percent) / 100))
+
     prices = [LabeledPrice(label=tariff.label or tariff.name, amount=int(stars_amount))]
     await bot.send_invoice(
         chat_id=message.chat.id,
@@ -218,9 +223,10 @@ async def _handle_pay_card(message: Message, user: User, bot: Bot, tariff_id: st
         return
 
     enabled_methods = await get_enabled_payment_methods()
+    price = await build_price(user.id, float(tariff.price), "signal")
     text = (
         f"📈 <b>{tariff.label or tariff.name}</b>\n\n"
-        f"💰 Narx: <b>${float(tariff.price):.0f}</b>\n\n"
+        f"💰 Narx: {price.format_html()}\n\n"
         f"{PAYMENT_METHOD_TEXT}"
     )
     await message.answer(text, reply_markup=payment_method_kb(tariff.id, enabled_methods))

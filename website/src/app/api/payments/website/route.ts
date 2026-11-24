@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query, TABLES } from '@/lib/tma/db';
+import { resolvePrice } from '@/lib/tma/pricing';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -88,8 +89,8 @@ export async function POST(request: Request) {
     if (!tariff || !tariff.is_active) {
       return NextResponse.json({ error: 'Tarif topilmadi yoki faol emas' }, { status: 400 });
     }
-    const amount = parseFloat(tariff.price);
-    if (!amount || amount <= 0) {
+    const baseAmount = parseFloat(tariff.price);
+    if (!baseAmount || baseAmount <= 0) {
       return NextResponse.json({ error: 'Tarif narxi noto‘g‘ri' }, { status: 400 });
     }
 
@@ -111,18 +112,22 @@ export async function POST(request: Request) {
       dbUser = userRes.rows[0];
     }
 
-    // ── 2. Payment yaratamiz (pending) ──
+    // ── 2. Narxni server tomonda hisoblaymiz — faol obunasi borlarga chegirma ──
+    const price = await resolvePrice(dbUser.id, baseAmount, productType);
+    const amount = price.final;
+
+    // ── 3. Payment yaratamiz (pending) ──
     const invoiceId = await generateInvoiceId();
     const payRes = await query(
       `INSERT INTO ${TABLES.payments}
        (id, user_id, product_type, product_id, invoice_id, amount, currency, payment_method, status, discount, created_at, updated_at)
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 'USD', $6, 'pending', 0, NOW(), NOW())
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, 'USD', $6, 'pending', $7, NOW(), NOW())
        RETURNING *`,
-      [dbUser.id, productType, productId, invoiceId, amount, paymentMethod]
+      [dbUser.id, productType, productId, invoiceId, amount, paymentMethod, price.saved]
     );
     const payment = payRes.rows[0];
 
-    // ── 3. Skrinshotni barcha adminlarga yuboramiz (approve/reject tugmalari bilan) ──
+    // ── 4. Skrinshotni barcha adminlarga yuboramiz (approve/reject tugmalari bilan) ──
     const methodLabel = METHOD_LABELS[paymentMethod] || '💳 To‘lov';
     const caption = [
       '💳 <b>Yangi to‘lov (Sayt orqali)</b>',
@@ -131,7 +136,7 @@ export async function POST(request: Request) {
       `👤 Foydalanuvchi: ${escapeHtml(fullName || dbUser.full_name)}`,
       `🆔 Telegram: <code>${escapeHtml(telegramId)}</code>`,
       `💰 Tarif: ${escapeHtml(tariff?.name || productId)}`,
-      `💵 Summa: $${amount}`,
+      `💵 Summa: $${amount}${price.saved > 0 ? ` (chegirma: -$${price.saved})` : ''}`,
       `🔗 Usul: ${methodLabel}`,
       `📅 Vaqt: ${new Date().toLocaleString('uz-UZ')}`,
       '',

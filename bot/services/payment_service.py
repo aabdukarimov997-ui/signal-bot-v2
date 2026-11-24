@@ -257,6 +257,7 @@ async def create_crypto_invoice(
     network: str,
     amount: float,
     ttl_minutes: int = 60,
+    discount: float = 0,
 ) -> Payment:
     """Kripto to'lov uchun invoice yaratadi.
 
@@ -314,6 +315,7 @@ async def create_crypto_invoice(
         product_type=product_type,
         product_id=product_id,
         amount=float(amount),
+        discount=discount,
         payment_method=method,
         status="pending",
         crypto_network=network,

@@ -38,7 +38,10 @@ export interface TmaTariff {
   durationMonths: number;
   durationDays?: number | null;
   price: number;
+  originalPrice?: number;
+  discountPercent?: number;
   starsPrice: number;
+  originalStarsPrice?: number;
   isActive: boolean;
   productType: string;
 }

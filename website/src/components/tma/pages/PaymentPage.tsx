@@ -294,6 +294,14 @@ export function PaymentPage() {
           <p className="text-3xl font-bold text-center text-[#d4a72c] mb-1">
             ${selectedTariff.price}
           </p>
+          {!!selectedTariff.discountPercent && !!selectedTariff.originalPrice && (
+            <p className="text-xs text-center mb-1">
+              <span className="text-[#7c7b7b] line-through mr-2">${selectedTariff.originalPrice}</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#2dd4a0]/15 text-[#2dd4a0]">
+                {t('discount_badge', { percent: selectedTariff.discountPercent })} · {t('you_save')} ${(selectedTariff.originalPrice - selectedTariff.price).toFixed(2)}
+              </span>
+            </p>
+          )}
           <p className="text-xs text-[#7c7b7b] text-center mb-6">
             {formatTmaTariffDuration(selectedTariff, t('months'))}
           </p>

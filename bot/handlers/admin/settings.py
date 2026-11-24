@@ -45,6 +45,8 @@ def _validate_setting_value(key: str, value: str) -> str | None:
         return "❌ TronGrid API kalitida bo'sh joy bo'lmasligi kerak."
     if key == "crypto_poll_seconds" and (not value.isdigit() or int(value) < 30):
         return "❌ Tekshirish oralig'i kamida 30 soniya bo'lsin."
+    if key == "loyalty_discount_percent" and (not value.isdigit() or not (0 <= int(value) <= 100)):
+        return "❌ Chegirma foizi 0 dan 100 gacha bo'lishi kerak."
     return None
 
 
@@ -107,6 +109,7 @@ SETTINGS_CATEGORIES = {
     ],
     "🌐 Ijtimoiy": ["instagram_url", "twitter_url", "youtube_url", "website_url"],
     "📢 Marketing": ["marketing_enabled", "marketing_interval_hours", "marketing_message", "marketing_image"],
+    "🎁 Chegirma": ["loyalty_discount_percent"],
     "🎯 Viktorina": ["quiz_enabled", "quiz_pass_percent", "quiz_promo_code"],
     "🎁 Bonus": ["premium_gift_link", "admin_ids"],
 }

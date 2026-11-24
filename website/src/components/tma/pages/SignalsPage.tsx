@@ -14,6 +14,7 @@ export function SignalsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTariff, setSelected] = useState<TmaTariff | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [showTariffs, setShowTariffs] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -43,8 +44,11 @@ export function SignalsPage() {
     );
   }
 
-  // If already subscribed
-  if (subscription && subscription.productType === 'signal' && subscription.status === 'active') {
+  const hasDiscount = tariffs.some((tr) => tr.discountPercent && tr.discountPercent > 0);
+  const discountPercent = tariffs.find((tr) => tr.discountPercent && tr.discountPercent > 0)?.discountPercent;
+
+  // Faol obunasi bor foydalanuvchi ham tariflarni ko'radi (uzaytirish + chegirma)
+  if (subscription && subscription.productType === 'signal' && subscription.status === 'active' && !showPayment && !showTariffs) {
     return (
       <div className="px-4 pt-4">
         <NationalFrame>
@@ -53,9 +57,20 @@ export function SignalsPage() {
             <h2 className="text-lg font-semibold text-[#2dd4a0] mb-2">{t('already_subscribed')}</h2>
             <p className="text-sm text-[#7c7b7b] mb-1">{t('subscription_status')}: {t('status_active')}</p>
             <p className="text-sm text-[#7c7b7b]">{t('expiry_date')}: {new Date(subscription.endDate).toLocaleDateString()}</p>
+            {hasDiscount && (
+              <p className="text-sm text-[#2dd4a0] mt-2">
+                🎁 {t('active_sub_discount_notice', { percent: discountPercent || 0 })}
+              </p>
+            )}
+            <button
+              onClick={() => setShowTariffs(true)}
+              className="mt-4 px-6 py-2 rounded-xl bg-[#2dd4a0]/10 text-[#2dd4a0] text-sm border border-[#2dd4a0]/20 hover:bg-[#2dd4a0]/20 transition-all"
+            >
+              {t('select_tariff')}
+            </button>
             <button
               onClick={() => navigate('account')}
-              className="mt-4 px-6 py-2 rounded-xl bg-[#d4a72c]/10 text-[#d4a72c] text-sm border border-[#d4a72c]/20 hover:bg-[#d4a72c]/20 transition-all"
+              className="mt-2 px-6 py-2 rounded-xl bg-[#d4a72c]/10 text-[#d4a72c] text-sm border border-[#d4a72c]/20 hover:bg-[#d4a72c]/20 transition-all"
             >
               {t('account_title')}
             </button>
@@ -80,9 +95,17 @@ export function SignalsPage() {
         
         <NationalFrame>
           <h2 className="text-lg font-semibold text-center mb-2">{selectedTariff.name}</h2>
-          <p className="text-2xl font-bold text-center text-[#d4a72c] mb-4">
+          <p className="text-2xl font-bold text-center text-[#d4a72c] mb-1">
             ${selectedTariff.price} <span className="text-sm text-[#7c7b7b]">/ {formatTmaTariffDuration(selectedTariff, t('months'))}</span>
           </p>
+          {!!selectedTariff.discountPercent && !!selectedTariff.originalPrice && (
+            <div className="text-center mb-3">
+              <span className="text-sm text-[#7c7b7b] line-through mr-2">${selectedTariff.originalPrice}</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[#2dd4a0]/15 text-[#2dd4a0]">
+                {t('discount_badge', { percent: selectedTariff.discountPercent })} · {t('you_save')} ${(selectedTariff.originalPrice - selectedTariff.price).toFixed(2)}
+              </span>
+            </div>
+          )}
           
           <h3 className="text-sm font-medium text-[#c0c0c0] mb-3">{t('payment_method')}:</h3>
           <div className="space-y-2">
@@ -121,6 +144,13 @@ export function SignalsPage() {
           <h2 className="text-lg font-semibold text-center mb-1">{t('signal_title')}</h2>
           <p className="text-xs text-[#7c7b7b] text-center mb-4">{t('signal_desc')}</p>
           
+          {hasDiscount && (
+            <div className="mb-3 px-3 py-2 rounded-lg bg-[#2dd4a0]/10 border border-[#2dd4a0]/20">
+              <p className="text-xs text-[#2dd4a0] text-center">
+                🎁 {t('active_sub_discount_notice', { percent: discountPercent || 0 })}
+              </p>
+            </div>
+          )}
           <h3 className="text-sm font-medium text-[#c0c0c0] mb-3">{t('select_tariff')}:</h3>
           <div className="space-y-3">
             {tariffs.map((tariff) => (
@@ -143,7 +173,19 @@ export function SignalsPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-[#d4a72c]">${tariff.price}</p>
+                    {!!tariff.discountPercent && !!tariff.originalPrice ? (
+                      <>
+                        <p className="text-[11px] text-[#7c7b7b] line-through">${tariff.originalPrice}</p>
+                        <p className="font-bold text-[#d4a72c]">
+                          ${tariff.price}{' '}
+                          <span className="text-[10px] font-medium text-[#2dd4a0]">
+                            {t('discount_badge', { percent: tariff.discountPercent })}
+                          </span>
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-bold text-[#d4a72c]">${tariff.price}</p>
+                    )}
                     <p className="text-[10px] text-[#7c7b7b]">{tariff.starsPrice} ⭐</p>
                   </div>
                 </div>

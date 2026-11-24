@@ -3,6 +3,7 @@ import { query, TABLES } from '@/lib/tma/db';
 import { sendAdminPaymentNotification } from '@/lib/tma/telegram';
 import { getAuthenticatedUser, getInitDataFromRequest } from '@/lib/tma/verify';
 import { createCryptoPayInvoice, isCryptoPayAvailable } from '@/lib/tma/cryptopay';
+import { resolvePrice } from '@/lib/tma/pricing';
 import { randomUUID } from 'node:crypto';
 
 export const runtime = 'nodejs';
@@ -74,10 +75,12 @@ export async function POST(request: Request) {
     if (!tariff) {
       return NextResponse.json({ error: 'Tarif topilmadi' }, { status: 404 });
     }
-    const amount = parseFloat(tariff.price);
     // Mahsulot turi faqat tarifdan olinadi — client yuborgan productType ga ishonmaymiz
     // (aks holda 'course' tarifni 'signal' deb belgilash mumkin bo'ladi).
     const resolvedProductType = tariff.product_type;
+    // Narx server tomonda hisoblanadi — faol obunasi borlarga chegirma qo'llanadi.
+    const price = await resolvePrice(userId, parseFloat(tariff.price), resolvedProductType);
+    const amount = price.final;
 
     if (paymentMethod === CRYPTO_PAY_METHOD && !isCryptoPayAvailable()) {
       return NextResponse.json({ error: 'Crypto Pay mavjud emas' }, { status: 400 });
@@ -132,11 +135,11 @@ export async function POST(request: Request) {
       `INSERT INTO ${TABLES.payments} 
        (id, user_id, product_type, product_id, amount, currency, payment_method, status, discount, photo_file_id,
         crypto_network, crypto_address, crypto_amount, crypto_expires_at, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10, $11, $12, $13, NOW())
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
        RETURNING *`,
       [
         paymentId, userId, resolvedProductType, productId, amount, 'USD', paymentMethod, 'pending',
-        photoFileId || null, network || null, cryptoAddress, cryptoAmount,
+        price.saved, photoFileId || null, network || null, cryptoAddress, cryptoAmount,
         cryptoPayExpiresAt || cryptoExpiresAt,
       ]
     );
@@ -145,7 +148,7 @@ export async function POST(request: Request) {
 
     if (paymentMethod === CRYPTO_PAY_METHOD) {
       try {
-        const invoice = await createCryptoPayInvoice(String(tariff.price), paymentId);
+        const invoice = await createCryptoPayInvoice(String(amount), paymentId);
         const updated = await query(
           `UPDATE ${TABLES.payments}
            SET provider_charge_id = $1, telegram_charge_id = $2
