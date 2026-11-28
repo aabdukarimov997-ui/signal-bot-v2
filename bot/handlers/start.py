@@ -13,6 +13,7 @@ from aiogram.types import LabeledPrice, Message
 
 from bot.config import settings
 from bot.models.user import User
+from bot.services.interface_service import user_menu
 from bot.services.pricing_service import build_price
 from bot.services.quiz_service import is_quiz_enabled
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting, is_setup_completed
@@ -125,7 +126,7 @@ async def start_handler(message: Message, command: CommandObject, user: User, bo
     is_admin = user.telegram_id in await get_admin_ids()
     quiz_on = await is_quiz_enabled()
     await _send_welcome(
-        bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
+        bot, message.chat.id, welcome_msg, await user_menu(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
     )
 
 
@@ -154,7 +155,7 @@ async def start_button_handler(message: Message, user: User, bot: Bot, state: FS
     is_admin = user.telegram_id in await get_admin_ids()
     quiz_on = await is_quiz_enabled()
     await _send_welcome(
-        bot, message.chat.id, welcome_msg, main_menu_kb(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
+        bot, message.chat.id, welcome_msg, await user_menu(is_admin=is_admin, quiz_enabled=quiz_on), welcome_video
     )
 
 
@@ -230,3 +231,14 @@ async def _handle_pay_card(message: Message, user: User, bot: Bot, tariff_id: st
         f"{PAYMENT_METHOD_TEXT}"
     )
     await message.answer(text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
+
+
+@start_router.message(F.text == "📱 Oldingi menyu")
+async def classic_menu_handler(message: Message, user: User, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer(
+        "📱 Oldingi menyu. Mini App uchun /start bosing.",
+        reply_markup=main_menu_kb(
+            is_admin=user.telegram_id in await get_admin_ids(), quiz_enabled=await is_quiz_enabled()
+        ),
+    )

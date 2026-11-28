@@ -257,6 +257,7 @@ def admin_menu_kb() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🎯 Viktorina", callback_data="admin_quiz")],
             [InlineKeyboardButton(text="📝 Blog post", callback_data="admin_blog_post")],
             [InlineKeyboardButton(text="📊 Diagnostika", callback_data="admin_diagnostic")],
+            [InlineKeyboardButton(text="📱 Mini App / Oldingi rejim", callback_data="admin_interface")],
             [InlineKeyboardButton(text="⚙️ Sozlamalar", callback_data="admin_settings")],
             [InlineKeyboardButton(text="❓ Yordam", callback_data="admin_help")],
             [InlineKeyboardButton(text="⬅️ Chiqish", callback_data="back_main")],

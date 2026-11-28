@@ -16,6 +16,8 @@ PRICE_TARIFF_MAP = {
 
 # Default settings keys with descriptions
 SETTINGS_KEYS = {
+    "interface_mode": "Bot interfeysi (classic/miniapp)",
+    "miniapp_url": "Mini App HTTPS manzili",
     "project_name": "Loyiha nomi",
     "logo_url": "Logo URL",
     "admin_username": "Admin username",

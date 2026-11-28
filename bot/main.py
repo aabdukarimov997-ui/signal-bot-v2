@@ -5,6 +5,7 @@ import sys
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.memory import SimpleEventIsolation
 
 from bot.config import settings
 from bot.handlers.account import account_router
@@ -27,7 +28,7 @@ from bot.scheduler.setup import setup_scheduler, start_scheduler
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
-dp = Dispatcher()
+dp = Dispatcher(events_isolation=SimpleEventIsolation())
 bot = Bot(
     token=settings.BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -71,6 +72,10 @@ async def on_startup() -> None:
 async def main() -> None:
     register_routers()
     register_middlewares()
+
+    from bot.healthcheck import start_http_server
+
+    http_runner = await start_http_server(bot, dp)
 
     # ─── Delete webhook FIRST, before any DB work ─────────────────
     # This prevents race conditions where another service re-sets
@@ -202,7 +207,10 @@ async def main() -> None:
 
     asyncio.create_task(webhook_watchdog())
 
-    await dp.start_polling(bot, allowed_updates=["message", "callback_query", "pre_checkout_query", "chat_member"])
+    try:
+        await dp.start_polling(bot, allowed_updates=["message", "callback_query", "pre_checkout_query", "chat_member"])
+    finally:
+        await http_runner.cleanup()
 
 
 if __name__ == "__main__":

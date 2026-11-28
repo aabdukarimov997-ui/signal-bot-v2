@@ -43,3 +43,6 @@ next-env.d.ts
 *.swo
 *~
 .DS_Store
+
+# Local previews, browser dependencies and generated screenshots
+.cache/

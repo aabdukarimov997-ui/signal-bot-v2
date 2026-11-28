@@ -19,9 +19,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from bot.services.interface_service import user_menu
 from bot.services.quiz_service import is_quiz_enabled
 from bot.services.settings_service import get_admin_ids, get_setting
-from bot.utils.keyboards import main_menu_kb
 from bot.utils.texts import START_TEXT
 
 escape_router = Router()
@@ -42,7 +42,7 @@ async def send_main_menu(bot: Bot, chat_id: int, user) -> None:
     welcome_video = await get_setting("welcome_video")
 
     is_admin = user is not None and user.telegram_id in await get_admin_ids()
-    reply_markup = main_menu_kb(is_admin=is_admin, quiz_enabled=await is_quiz_enabled())
+    reply_markup = await user_menu(is_admin=is_admin, quiz_enabled=await is_quiz_enabled())
 
     if welcome_video:
         try:
