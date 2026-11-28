@@ -17,7 +17,11 @@ Rejim almashtirish **Telegram botning `/admin` paneliga** qo‘shilgan.
 3. Botda `/admin` → **📱 Mini App / Oldingi rejim** → **🔗 Mini App URL sozlash**.
    To‘liq manzil yuboring, masalan:
    `https://BOT-SERVICE.up.railway.app/miniapp`.
+   Faqat `https://BOT-SERVICE.up.railway.app` domenini kiritsangiz ham `/miniapp`
+   avtomatik qo‘shiladi. `/health` yoki `/admin` kabi boshqa yo‘llar qabul qilinmaydi.
    Muqobil: `.env` ichida `MINIAPP_URL` sozlang. DB orqali saqlangan URL ustun turadi.
+   Ikkalasi ham bo‘sh bo‘lsa, Railway taqdim etgan `RAILWAY_PUBLIC_DOMAIN` ishlatiladi.
+   Bu faqat URLni aniqlaydi; public domen yaratmaydi va rejimni avtomatik yoqmaydi.
 4. Shu panelda **🚀 Mini App rejimi** tugmasini bosing.
 5. Foydalanuvchi botning **shaxsiy chatida** `/start` yoki `/menu` yuboradi va
    **🚀 Mini App ochish** tugmasini bosadi. Guruhda Web App keyboard ishlamaydi.
@@ -96,3 +100,26 @@ pytest -q
 callback ownership, admin huquqi bekor qilinishi, FSM va rasm upload oqimini Telegramga
 ulanmasdan tekshiradi. Production Telegram to‘lovini haqiqiy bot va test hisobi bilan
 alohida smoke-test qiling.
+
+## Mini App ochilmasa
+
+1. Botning shaxsiy chatida `/miniapp` yuboring. Buyruq javobsiz qolsa, yangi kod
+   deploy qilinmagan bo‘lishi mumkin. Buyruq URL yo‘qligi yoki rejim o‘chirilganini
+   alohida tushuntiradi. Admin o‘chirilgan rejimda ham previewni tekshira oladi.
+2. `/admin` → **Mini App / Oldingi rejim** → **Mini App ni tekshirish** tugmasi
+   konfiguratsiyadagi aynan shu URLni Telegram Web App sifatida ochadi.
+3. Bot domenida `/miniapp/status` manzilini oching:
+   - `404` yoki sayt HTML sahifasi — boshqa servis/domen yoki eski deploy.
+   - `runtime: "preview"` — faqat `bot.healthcheck` ishlayapti; production start
+     buyrug‘i `bash entrypoint.sh` yoki `python -m bot.main` bo‘lishi kerak.
+   - `runtime: "bot"` — Mini App API bot Dispatcheriga biriktirilgan.
+   - `revision` — Railway bergan commit SHA; mavjud bo‘lmasa `unknown`.
+   Bu diagnostika DB, foydalanuvchi ma’lumotlari yoki tokenlarni ochmaydi va
+   Telegram tarmoq ulanishi/DB tayyorligini to‘liq tasdiqlamaydi.
+4. `401` — Telegram imzosi yo‘q/noto‘g‘ri yoki seans tugagan. URLni oddiy
+   brauzerda emas, botdagi Web App tugmasi orqali qayta oching.
+5. `403` — Mini App rejimi o‘chirilgan yoki hisob bloklangan.
+6. `503` — APIga jonli bot ulanmagan; start buyrug‘ini tekshiring.
+
+Skrinshot, ochilgan public URL va `/miniapp/status` javobi muammoni farqlashga
+imkon beradi. Token, parol yoki `initData` qiymatini yubormang.

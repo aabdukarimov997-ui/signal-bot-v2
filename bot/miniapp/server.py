@@ -8,6 +8,7 @@ callback injection (especially admin/payment callbacks) is not accepted.
 
 import asyncio
 import logging
+import os
 import secrets
 import time
 from collections import OrderedDict
@@ -156,6 +157,19 @@ class MiniApp:
         self.conversations.move_to_end(user_id)
         result.touched = now
         return result
+
+    async def status(self, request):
+        """No account data or credentials: diagnose old deployments/wrong services."""
+        return web.json_response(
+            {
+                "status": "ok",
+                "service": "signal-bot-v2",
+                "miniapp": True,
+                "runtime": "bot" if self.bot is not None and self.dispatcher is not None else "preview",
+                "revision": os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown"),
+            },
+            headers={"Cache-Control": "no-store"},
+        )
 
     async def bootstrap(self, request):
         tg_user, user, admin = await self.authenticate(request)
@@ -361,6 +375,7 @@ def install(app: web.Application, bot: Bot | None = None, dispatcher: Dispatcher
     app.middlewares.append(errors)
     app.router.add_get("/miniapp", redirect_to_app)
     app.router.add_get("/miniapp/", index)
+    app.router.add_get("/miniapp/status", adapter.status)
     app.router.add_get("/miniapp/api/bootstrap", adapter.bootstrap)
     app.router.add_post("/miniapp/api/action", adapter.action)
     app.router.add_post("/miniapp/api/upload", adapter.upload)

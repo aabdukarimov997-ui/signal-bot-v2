@@ -9,11 +9,11 @@ import time
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
-from aiogram.types import LabeledPrice, Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice, Message, WebAppInfo
 
 from bot.config import settings
 from bot.models.user import User
-from bot.services.interface_service import user_menu
+from bot.services.interface_service import interface_mode, miniapp_url, user_menu
 from bot.services.pricing_service import build_price
 from bot.services.quiz_service import is_quiz_enabled
 from bot.services.settings_service import get_admin_ids, get_enabled_payment_methods, get_setting, is_setup_completed
@@ -225,11 +225,7 @@ async def _handle_pay_card(message: Message, user: User, bot: Bot, tariff_id: st
 
     enabled_methods = await get_enabled_payment_methods()
     price = await build_price(user.id, float(tariff.price), "signal")
-    text = (
-        f"📈 <b>{tariff.label or tariff.name}</b>\n\n"
-        f"💰 Narx: {price.format_html()}\n\n"
-        f"{PAYMENT_METHOD_TEXT}"
-    )
+    text = f"📈 <b>{tariff.label or tariff.name}</b>\n\n💰 Narx: {price.format_html()}\n\n{PAYMENT_METHOD_TEXT}"
     await message.answer(text, reply_markup=payment_method_kb(tariff.id, enabled_methods))
 
 
@@ -240,5 +236,35 @@ async def classic_menu_handler(message: Message, user: User, state: FSMContext) 
         "📱 Oldingi menyu. Mini App uchun /start bosing.",
         reply_markup=main_menu_kb(
             is_admin=user.telegram_id in await get_admin_ids(), quiz_enabled=await is_quiz_enabled()
+        ),
+    )
+
+
+@start_router.message(Command("miniapp"))
+async def miniapp_command_handler(message: Message, user: User, state: FSMContext) -> None:
+    """A direct, discoverable entry point with actionable configuration errors."""
+    await state.clear()
+    if message.chat.type != "private":
+        await message.answer("Mini App'ni botning shaxsiy chatida /miniapp orqali oching.")
+        return
+    admin = user.telegram_id in await get_admin_ids()
+    url = await miniapp_url()
+    if not url:
+        await message.answer(
+            "❌ Mini App manzili sozlanmagan yoki noto'g'ri.\n"
+            "Admin: /admin → Mini App / Oldingi rejim → Mini App URL sozlash.\n"
+            "Tayyor sayt emas, bot servisining HTTPS domenini kiriting."
+        )
+        return
+    if await interface_mode() != "miniapp" and not admin:
+        await message.answer(
+            "📱 Mini App hozir o'chirilgan. Oldingi menyu uchun /start bosing. "
+            "Admin uni /admin → Mini App / Oldingi rejim orqali yoqishi mumkin."
+        )
+        return
+    await message.answer(
+        "🚀 Mini App'ni quyidagi tugma orqali Telegram ichida oching.",
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="🚀 Mini App ochish", web_app=WebAppInfo(url=url + "/"))]]
         ),
     )
