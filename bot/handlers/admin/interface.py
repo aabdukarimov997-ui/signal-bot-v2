@@ -3,10 +3,10 @@ from html import escape
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 
 from bot.models.user import User
-from bot.services.interface_service import interface_mode, miniapp_url, validate_miniapp_url
+from bot.services.interface_service import interface_mode, miniapp_url, normalize_miniapp_url, validate_miniapp_url
 from bot.services.settings_service import get_admin_ids, set_setting
 from bot.utils.helpers import safe_edit
 
@@ -22,7 +22,8 @@ async def panel() -> tuple[str, InlineKeyboardMarkup]:
         f"Joriy rejim: <b>{'Mini App' if mode == 'miniapp' else 'Oldingi menyu'}</b>\n"
         f"Mini App: <code>{escape(url or 'Hali sozlanmagan')}</code>\n\n"
         "Almashtirish foydalanuvchi /start yoki /menu bosganida ko'rinadi.\n"
-        "Obunalar, to'lovlar va tayyor veb-sayt o'zgarmaydi."
+        "Obunalar, to'lovlar va tayyor veb-sayt o'zgarmaydi.\n\n"
+        "Tekshirish: /miniapp buyrug'i. URL bot servisiga tegishli bo'lishi kerak, tayyor saytga emas."
     )
     kb = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -32,6 +33,11 @@ async def panel() -> tuple[str, InlineKeyboardMarkup]:
             [InlineKeyboardButton(text="⬅️ Orqaga", callback_data="admin_back")],
         ]
     )
+    if url:
+        kb.inline_keyboard.insert(
+            0, [InlineKeyboardButton(text="🔎 Mini App ni tekshirish", web_app=WebAppInfo(url=url + "/"))]
+        )
+        text += f"\nDiagnostika: <code>{escape(url)}/status</code>"
     return text, kb
 
 
@@ -53,7 +59,7 @@ async def interface_handler(callback: CallbackQuery, user: User, state: FSMConte
     if callback.data == "interface_url":
         await state.set_state(URL_STATE)
         await callback.message.answer(
-            "Bot xizmatining HTTPS manzilini /miniapp bilan yuboring.\n"
+            "Bot xizmatining HTTPS domenini yoki /miniapp manzilini yuboring.\n"
             "Masalan: https://BOT-SERVICE.up.railway.app/miniapp\n\nBekor qilish: /cancel"
         )
     else:
@@ -74,9 +80,11 @@ async def interface_url_handler(message: Message, user: User, state: FSMContext)
     if user.telegram_id not in await get_admin_ids():
         await state.clear()
         return
-    url = (message.text or "").strip().rstrip("/")
-    if not validate_miniapp_url(url):
-        await message.answer("❌ HTTPS manzil yuboring. Login, parol, query yoki # ishlatmang.")
+    url = normalize_miniapp_url(message.text or "")
+    if not url:
+        await message.answer(
+            "❌ Bot servisining HTTPS domenini yoki /miniapp manzilini yuboring. Login, query yoki # ishlatmang."
+        )
         return
     await set_setting("miniapp_url", url)
     await state.clear()

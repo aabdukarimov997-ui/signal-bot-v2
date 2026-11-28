@@ -391,3 +391,103 @@ async def test_real_bot_handlers_signal_course_quiz_and_support(sample_tariff):
             assert messages[0].message_text == "Mini App orqali yordam kerak"
     await dp.storage.close()
     await bot.session.close()
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("https://bot.example", "https://bot.example/miniapp"),
+        ("https://bot.example/", "https://bot.example/miniapp"),
+        (" https://bot.example/miniapp/ ", "https://bot.example/miniapp"),
+        ("https://bot.example/health", ""),
+        ("https://bot.example/admin", ""),
+        ("https://bot.example:invalid", ""),
+        ("https://bot example/miniapp", ""),
+    ],
+)
+def test_normalize_miniapp_url_never_opens_health_or_website_paths(source, expected):
+    from bot.services.interface_service import normalize_miniapp_url
+
+    assert normalize_miniapp_url(source) == expected
+
+
+async def test_railway_domain_discovery_and_explicit_url_precedence(monkeypatch):
+    from bot.services.interface_service import miniapp_url
+
+    monkeypatch.setattr(settings, "MINIAPP_URL", "")
+    monkeypatch.setenv("RAILWAY_PUBLIC_DOMAIN", "bot-service.up.railway.app")
+    assert await miniapp_url() == "https://bot-service.up.railway.app/miniapp"
+    await set_setting("interface_mode", "miniapp")
+    assert (await user_menu()).keyboard[0][0].web_app.url.endswith("/miniapp/")
+    await set_setting("miniapp_url", "https://custom.example")
+    assert await miniapp_url() == "https://custom.example/miniapp"
+    await set_setting("miniapp_url", "https://custom.example/admin")
+    assert await miniapp_url() == ""
+    assert (await user_menu()).keyboard[0][0].text == "📈 Signal kanal"
+
+
+async def test_saved_bare_domain_is_repaired_when_building_launch_button():
+    await set_setting("interface_mode", "miniapp")
+    await set_setting("miniapp_url", "https://bot.example/")
+    assert (await user_menu()).keyboard[0][0].web_app.url == "https://bot.example/miniapp/"
+
+
+async def test_admin_url_input_saves_normalized_domain():
+    from bot.handlers.admin.interface import interface_url_handler, panel
+
+    message = AsyncMock()
+    message.text = "https://bot.example/"
+    user = AsyncMock()
+    user.telegram_id = 12345
+    state = AsyncMock()
+    await interface_url_handler(message, user, state)
+    assert await get_setting("miniapp_url") == "https://bot.example/miniapp"
+    text, keyboard = await panel()
+    assert keyboard.inline_keyboard[0][0].web_app.url == "https://bot.example/miniapp/"
+    assert "/miniapp/status" in text
+
+
+async def test_miniapp_command_explains_mode_and_missing_url(monkeypatch):
+    from bot.handlers.start import miniapp_command_handler
+
+    monkeypatch.delenv("RAILWAY_PUBLIC_DOMAIN", raising=False)
+    monkeypatch.setattr(settings, "MINIAPP_URL", "")
+    message = AsyncMock()
+    message.chat.type = "private"
+    user = AsyncMock()
+    user.telegram_id = 23456
+    state = AsyncMock()
+    await miniapp_command_handler(message, user, state)
+    assert "manzili sozlanmagan" in message.answer.call_args.args[0]
+    await set_setting("miniapp_url", "https://bot.example")
+    await miniapp_command_handler(message, user, state)
+    assert "o'chirilgan" in message.answer.call_args.args[0]
+    await set_setting("interface_mode", "miniapp")
+    await miniapp_command_handler(message, user, state)
+    keyboard = message.answer.call_args.kwargs["reply_markup"]
+    assert keyboard.inline_keyboard[0][0].web_app.url == "https://bot.example/miniapp/"
+    message.chat.type = "group"
+    await miniapp_command_handler(message, user, state)
+    assert "shaxsiy chatida" in message.answer.call_args.args[0]
+
+
+async def test_public_diagnostics_identifies_preview_without_exposing_settings(monkeypatch):
+    from bot.miniapp.server import install
+
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "diagnostic-test-revision")
+    app = web.Application()
+    install(app)
+    async with TestClient(TestServer(app)) as client:
+        response = await client.get("/miniapp/status")
+        assert response.status == 200
+        payload = await response.json()
+        assert payload == {
+            "status": "ok",
+            "service": "signal-bot-v2",
+            "miniapp": True,
+            "runtime": "preview",
+            "revision": "diagnostic-test-revision",
+        }
+        assert response.headers["Cache-Control"] == "no-store"
+        response = await client.get("/miniapp/api/bootstrap")
+        assert response.status == 503
