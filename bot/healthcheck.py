@@ -25,23 +25,35 @@ async def handle_ready(request: web.Request) -> web.Response:
     return web.json_response({"status": "ready"})
 
 
-async def run_healthcheck_server() -> None:
-    """Run a lightweight HTTP server for Railway health checks."""
-    app = web.Application()
+async def start_http_server(bot=None, dispatcher=None) -> web.AppRunner:
+    """Serve health checks and the isolated Mini App in the polling process."""
+    from bot.miniapp.server import install
 
-    app.router.add_get("/", handle_health)
+    app = web.Application(client_max_size=9 * 1024 * 1024)
+    if bot is None:
+        from bot.miniapp.server import redirect_to_app
+
+        app.router.add_get("/", redirect_to_app)
+    else:
+        app.router.add_get("/", handle_health)
     app.router.add_get("/health", handle_health)
     app.router.add_get("/ready", handle_ready)
-
+    install(app, bot, dispatcher)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
-
-    logger.info("Healthcheck server running on 0.0.0.0:%d", PORT)
     await site.start()
+    logger.info("HTTP / Mini App server running on 0.0.0.0:%d", PORT)
+    return runner
 
-    # Keep running forever
-    await asyncio.Event().wait()
+
+async def run_healthcheck_server() -> None:
+    """Standalone static preview; authenticated API needs the live bot process."""
+    runner = await start_http_server()
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await runner.cleanup()
 
 
 if __name__ == "__main__":

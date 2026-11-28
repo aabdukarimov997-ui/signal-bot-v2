@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     BOT_TOKEN: str
     BOT_USERNAME: str = ""
+    MINIAPP_URL: str = ""  # Public HTTPS bot service URL ending in /miniapp
 
     DB_TYPE: str = "postgresql"
     DB_HOST: str = "localhost"

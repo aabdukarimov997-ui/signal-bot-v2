@@ -132,3 +132,10 @@ Expired users are automatically removed from channel.
 - **SQLite** — Test database
 - **APScheduler** — Cron jobs
 - **Docker** — Containerization
+
+## 📱 3D Telegram Mini App
+
+Mavjud saytga tegmasdan, botning `/miniapp/` manzilida alohida Mini App qo‘shilgan.
+Botda `/admin` → **📱 Mini App / Oldingi rejim** orqali HTTPS URLni sozlang va
+rejimni almashtiring. Default: oldingi menyu. To‘liq sozlash, funksiyalar va native
+Telegram chatida davom etadigan oqimlar: [Mini App qo‘llanmasi](docs/MINIAPP.md).

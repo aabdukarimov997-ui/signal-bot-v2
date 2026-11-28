@@ -4,6 +4,7 @@ from .course_content import admin_course_content_router
 from .dashboard import admin_router
 from .diagnostic import admin_diagnostic_router
 from .help import admin_help_router
+from .interface import admin_interface_router
 from .marketing import admin_marketing_router
 from .messages import admin_messages_router
 from .payment_methods import admin_payment_methods_router
@@ -19,6 +20,7 @@ from .users import admin_users_router
 # Barcha admin routelarni bitta joyda yig'amiz
 routers = [
     admin_router,
+    admin_interface_router,
     admin_payments_router,
     admin_tariffs_router,
     admin_users_router,
